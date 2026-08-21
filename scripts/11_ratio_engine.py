@@ -161,15 +161,19 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     rev = get_col(wide, "revenue").abs()
 
     # --- operating profit (EBIT) ---
-    # Priority: standard IFRS tag > L'Oreal extension > LVMH extensions
-    # All measure operating profit; company extensions may include/exclude
-    # slightly different items but are the best available for each filer
+    # Priority: standard IFRS tag > L'Oreal extension > Essity > LVMH > Shell
+    # Shell doesn't tag operating profit directly - they tag revenue_and_other_income
+    # and operating_expense separately, so we compute: revenue - opex
+    shell_rev = get_col(wide, "revenue_and_other_income")
+    shell_opex = get_col(wide, "operating_expense").abs()
+    shell_ebit = shell_rev - shell_opex  # NaN if either input is missing
+
     ebit = get_best(wide,
         "profit_loss_from_operating_activities",   # standard IFRS - 9 companies
         "resultat_dexploitation",                   # L'Oreal
-        "operating_profit_excl_i_a_c",              # Essity (excl. items affecting comparability)
+        "operating_profit_excl_i_a_c",              # Essity
         "profit_loss_from_operating_activities_after_share_of_prof_etc",  # LVMH
-    )
+    ).combine_first(shell_ebit)  # Shell: computed from revenue - opex
     r["operating_margin"] = safe_div(ebit, rev, scale=100)
     r["_ebit"] = ebit
 
@@ -187,12 +191,24 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
 
     # --- effective tax rate ---
     tax = get_col(wide, "income_tax_expense_continuing_operations")
-    # PBT: standard IFRS tag > L'Oreal French extension > Essity extension
+
+    # PBT fallback chain:
+    # 1. Standard IFRS tag (7 companies have this)
+    # 2. L'Oreal French extension
+    # 3. Essity extension
+    # 4. APPROXIMATE: EBIT + finance items (for Danone, LVMH, Pernod Ricard
+    #    which don't tag PBT directly but we can reconstruct it)
+    #    PBT = Operating Profit + Finance Income/Cost + Share of Associates
+    finance = get_col(wide, "finance_income_cost")
+    associates = get_col(wide, "share_of_profit_loss_of_associates_and_joint_ventures_acc_etc")
+    pbt_approx = ebit + finance.fillna(0) + associates.fillna(0)
+
     pbt = get_best(wide,
-        "profit_loss_before_tax",                              # standard - 7 companies
-        "resultat_avant_impot_et_societes_mises_en_equivalence",  # L'Oreal
-        "profit_before_tax_excl_i_a_c",                        # Essity
-    )
+        "profit_loss_before_tax",
+        "resultat_avant_impot_et_societes_mises_en_equivalence",
+        "profit_before_tax_excl_i_a_c",
+    ).combine_first(pbt_approx)  # use approximation where direct tag is missing
+
     # abs() handles sign convention differences across filers
     # Multiply by 100 to match the percentage scale used by all other ratios
     r["tax_rate"] = safe_div(tax.abs(), pbt.abs(), scale=100).clip(0, 60)
