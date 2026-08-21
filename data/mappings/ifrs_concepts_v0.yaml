@@ -1,0 +1,404 @@
+income_statement:
+  advertising_expense:
+    display_label: Advertising Expense
+    xbrl_tags:
+    - ifrs-full:AdvertisingExpense
+  basic_earnings_loss_per_share:
+    display_label: Basic Earnings per Share
+    xbrl_tags:
+    - ifrs-full:BasicEarningsLossPerShare
+  comprehensive_income_attributable_to_noncontrolling_inter_etc:
+    display_label: Comprehensive Income Attributable to Non-controlling Interests
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeAttributableToNoncontrollingInterests
+  comprehensive_income_attributable_to_owners_of_parent:
+    display_label: Comprehensive Income Attributable to Owners of Parent
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeAttributableToOwnersOfParent
+  cost_of_sales:
+    display_label: Cost of Sales
+    xbrl_tags:
+    - ifrs-full:CostOfSales
+  diluted_earnings_loss_per_share:
+    display_label: Diluted Earnings per Share
+    xbrl_tags:
+    - ifrs-full:DilutedEarningsLossPerShare
+  gross_profit:
+    display_label: Gross Profit
+    xbrl_tags:
+    - ifrs-full:GrossProfit
+  income_tax_expense_continuing_operations:
+    display_label: Income Tax Expense
+    xbrl_tags:
+    - ifrs-full:IncomeTaxExpenseContinuingOperations
+  interest_income_on_cash_and_cash_equivalents:
+    display_label: Interest Income on Cash and Cash Equivalents
+    xbrl_tags:
+    - ifrs-full:InterestIncomeOnCashAndCashEquivalents
+  other_finance_income_cost:
+    display_label: Other Finance Income/(Cost)
+    xbrl_tags:
+    - ifrs-full:OtherFinanceIncomeCost
+  profit_loss_from_operating_activities:
+    display_label: Operating Profit (EBIT)
+    xbrl_tags:
+    - ifrs-full:ProfitLossFromOperatingActivities
+  research_and_development_expense:
+    display_label: Research and Development Expense
+    xbrl_tags:
+    - ifrs-full:ResearchAndDevelopmentExpense
+  revenue:
+    display_label: Revenue
+    xbrl_tags:
+    - ifrs-full:Revenue
+  revenue_from_dividends:
+    display_label: Dividend Revenue
+    xbrl_tags:
+    - ifrs-full:RevenueFromDividends
+  selling_general_and_administrative_expense:
+    display_label: Selling, General and Administrative Expense
+    xbrl_tags:
+    - ifrs-full:SellingGeneralAndAdministrativeExpense
+  share_of_profit_loss_of_associates_and_joint_ventures_acc_etc:
+    display_label: Share of Profit/(Loss) of Associates and Joint Ventures
+    xbrl_tags:
+    - ifrs-full:ShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod
+  autres_produits_et_charges_non_recurrent:
+    display_label: Other Non-recurring Income and Expenses
+    xbrl_tags:
+    - loreal:AutresProduitsEtChargesNonRecurrent
+  cout_de_lendettement_financier_brut:
+    display_label: Gross Cost of Financial Debt
+    xbrl_tags:
+    - loreal:CoutDeLendettementFinancierBrut
+  cout_de_lendettement_financier_net:
+    display_label: Net Cost of Financial Debt
+    xbrl_tags:
+    - loreal:CoutDeLendettementFinancierNet
+  resultat_avant_impot_et_societes_mises_en_equivalence:
+    display_label: Profit Before Tax and Equity-accounted Investees
+    xbrl_tags:
+    - loreal:ResultatAvantImpotEtSocietesMisesEnEquivalence
+  resultat_dexploitation:
+    display_label: Operating Profit (L'Oreal definition)
+    xbrl_tags:
+    - loreal:ResultatDexploitation
+  resultat_net_dilue_par_action_hors_elements_non_recurrent_etc:
+    display_label: Diluted Net EPS excl. Non-recurring Items, Group Share
+    xbrl_tags:
+    - loreal:ResultatNetDilueParActionHorsElementsNonRecurrentsPartDuGroupe
+  resultat_net_par_action_hors_elements_non_recurrents_part_etc:
+    display_label: Net EPS excl. Non-recurring Items, Group Share
+    xbrl_tags:
+    - loreal:ResultatNetParActionHorsElementsNonRecurrentsPartDuGroupe
+balance_sheet:
+  accumulated_other_comprehensive_income:
+    display_label: Accumulated Other Comprehensive Income
+    xbrl_tags:
+    - ifrs-full:AccumulatedOtherComprehensiveIncome
+  additional_paidin_capital:
+    display_label: Additional Paid-in Capital
+    xbrl_tags:
+    - ifrs-full:AdditionalPaidinCapital
+  assets:
+    display_label: Total Assets
+    xbrl_tags:
+    - ifrs-full:Assets
+  current_assets:
+    display_label: Total Current Assets
+    xbrl_tags:
+    - ifrs-full:CurrentAssets
+  current_borrowings_and_current_portion_of_noncurrent_borr_etc:
+    display_label: Current Borrowings
+    xbrl_tags:
+    - ifrs-full:CurrentBorrowingsAndCurrentPortionOfNoncurrentBorrowings
+  current_lease_liabilities:
+    display_label: Current Lease Liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentLeaseLiabilities
+  current_liabilities:
+    display_label: Total Current Liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentLiabilities
+  current_provisions:
+    display_label: Current Provisions
+    xbrl_tags:
+    - ifrs-full:CurrentProvisions
+  current_tax_assets_current:
+    display_label: Current Tax Assets
+    xbrl_tags:
+    - ifrs-full:CurrentTaxAssetsCurrent
+  current_tax_liabilities_current:
+    display_label: Current Tax Liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentTaxLiabilitiesCurrent
+  current_tax_liabilities_noncurrent:
+    display_label: Non-current Tax Liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentTaxLiabilitiesNoncurrent
+  current_trade_receivables:
+    display_label: Trade Receivables
+    xbrl_tags:
+    - ifrs-full:CurrentTradeReceivables
+  deferred_tax_assets:
+    display_label: Deferred Tax Assets
+    xbrl_tags:
+    - ifrs-full:DeferredTaxAssets
+  deferred_tax_liabilities:
+    display_label: Deferred Tax Liabilities
+    xbrl_tags:
+    - ifrs-full:DeferredTaxLiabilities
+  equity_and_liabilities:
+    display_label: Total Equity and Liabilities
+    xbrl_tags:
+    - ifrs-full:EquityAndLiabilities
+  equity_attributable_to_owners_of_parent:
+    display_label: Equity Attributable to Owners of Parent
+    xbrl_tags:
+    - ifrs-full:EquityAttributableToOwnersOfParent
+  goodwill:
+    display_label: Goodwill
+    xbrl_tags:
+    - ifrs-full:Goodwill
+  intangible_assets_other_than_goodwill:
+    display_label: Intangible Assets (excluding Goodwill)
+    xbrl_tags:
+    - ifrs-full:IntangibleAssetsOtherThanGoodwill
+  inventories:
+    display_label: Inventories
+    xbrl_tags:
+    - ifrs-full:Inventories
+  investment_accounted_for_using_equity_method:
+    display_label: Investments Accounted for Using Equity Method
+    xbrl_tags:
+    - ifrs-full:InvestmentAccountedForUsingEquityMethod
+  issued_capital:
+    display_label: Issued (Share) Capital
+    xbrl_tags:
+    - ifrs-full:IssuedCapital
+  longterm_borrowings:
+    display_label: Long-term Borrowings
+    xbrl_tags:
+    - ifrs-full:LongtermBorrowings
+  noncontrolling_interests:
+    display_label: Non-controlling Interests
+    xbrl_tags:
+    - ifrs-full:NoncontrollingInterests
+  noncurrent_assets:
+    display_label: Total Non-current Assets
+    xbrl_tags:
+    - ifrs-full:NoncurrentAssets
+  noncurrent_financial_assets:
+    display_label: Non-current Financial Assets
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinancialAssets
+  noncurrent_lease_liabilities:
+    display_label: Non-current Lease Liabilities
+    xbrl_tags:
+    - ifrs-full:NoncurrentLeaseLiabilities
+  noncurrent_liabilities:
+    display_label: Total Non-current Liabilities
+    xbrl_tags:
+    - ifrs-full:NoncurrentLiabilities
+  noncurrent_provisions_for_employee_benefits:
+    display_label: Non-current Provisions for Employee Benefits
+    xbrl_tags:
+    - ifrs-full:NoncurrentProvisionsForEmployeeBenefits
+  other_longterm_provisions:
+    display_label: Other Long-term Provisions
+    xbrl_tags:
+    - ifrs-full:OtherLongtermProvisions
+  property_plant_and_equipment:
+    display_label: Property, Plant and Equipment
+    xbrl_tags:
+    - ifrs-full:PropertyPlantAndEquipment
+  retained_earnings_excluding_profit_loss_for_reporting_period:
+    display_label: Retained Earnings (excl. Current Period Profit)
+    xbrl_tags:
+    - ifrs-full:RetainedEarningsExcludingProfitLossForReportingPeriod
+  retained_earnings_profit_loss_for_reporting_period:
+    display_label: Profit for the Period (within Retained Earnings)
+    xbrl_tags:
+    - ifrs-full:RetainedEarningsProfitLossForReportingPeriod
+  rightofuse_assets:
+    display_label: Right-of-use Assets
+    xbrl_tags:
+    - ifrs-full:RightofuseAssets
+  trade_and_other_current_payables_to_trade_suppliers:
+    display_label: Trade Payables
+    xbrl_tags:
+    - ifrs-full:TradeAndOtherCurrentPayablesToTradeSuppliers
+  actifs_courants_autres:
+    display_label: Other Current Assets
+    xbrl_tags:
+    - loreal:ActifsCourantsAutres
+  passifs_courants_autres:
+    display_label: Other Current Liabilities
+    xbrl_tags:
+    - loreal:PassifsCourantsAutres
+cash_flow:
+  adjustments_for_deferred_tax_expense:
+    display_label: Adjustments for Deferred Tax Expense
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDeferredTaxExpense
+  adjustments_for_losses_gains_on_disposal_of_noncurrent_as_etc:
+    display_label: Adjustments for (Gains)/Losses on Disposal of Non-current Assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForLossesGainsOnDisposalOfNoncurrentAssets
+  adjustments_for_sharebased_payments:
+    display_label: Adjustments for Share-based Payments
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForSharebasedPayments
+  adjustments_for_undistributed_profits_of_investments_acco_etc:
+    display_label: Adjustments for Undistributed Profits of Equity-method Investments
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForUndistributedProfitsOfInvestmentsAccountedForUsingEquityMethod
+  cash_flows_from_used_in_financing_activities:
+    display_label: Cash Flow from Financing Activities
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInFinancingActivities
+  cash_flows_from_used_in_increase_decrease_in_current_borr_etc:
+    display_label: Increase/(Decrease) in Current Borrowings
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInIncreaseDecreaseInCurrentBorrowings
+  cash_flows_from_used_in_investing_activities:
+    display_label: Cash Flow from Investing Activities
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInInvestingActivities
+  cash_flows_from_used_in_operating_activities:
+    display_label: Cash Flow from Operating Activities
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInOperatingActivities
+  cash_flows_from_used_in_operations_before_changes_in_work_etc:
+    display_label: Cash Flow from Operations before Working Capital Changes
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapital
+  cash_outflow_for_leases:
+    display_label: Cash Outflow for Leases
+    xbrl_tags:
+    - ifrs-full:CashOutflowForLeases
+  dividends_paid_classified_as_financing_activities:
+    display_label: Dividends Paid
+    xbrl_tags:
+    - ifrs-full:DividendsPaidClassifiedAsFinancingActivities
+  dividends_received_classified_as_operating_activities:
+    display_label: Dividends Received
+    xbrl_tags:
+    - ifrs-full:DividendsReceivedClassifiedAsOperatingActivities
+  effect_of_exchange_rate_changes_on_cash_and_cash_equivalents:
+    display_label: Effect of Exchange Rate Changes on Cash
+    xbrl_tags:
+    - ifrs-full:EffectOfExchangeRateChangesOnCashAndCashEquivalents
+  income_taxes_paid_refund:
+    display_label: Income Taxes Paid
+    xbrl_tags:
+    - ifrs-full:IncomeTaxesPaidRefund
+  increase_decrease_in_cash_and_cash_equivalents:
+    display_label: Net Increase/(Decrease) in Cash and Cash Equivalents
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseInCashAndCashEquivalents
+  increase_decrease_in_working_capital:
+    display_label: Change in Working Capital
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseInWorkingCapital
+  interest_paid_classified_as_operating_activities:
+    display_label: Interest Paid
+    xbrl_tags:
+    - ifrs-full:InterestPaidClassifiedAsOperatingActivities
+  other_adjustments_for_noncash_items:
+    display_label: Other Non-cash Adjustments
+    xbrl_tags:
+    - ifrs-full:OtherAdjustmentsForNoncashItems
+  payments_from_changes_in_ownership_interests_in_subsidiaries:
+    display_label: Payments from Changes in Ownership Interests in Subsidiaries
+    xbrl_tags:
+    - ifrs-full:PaymentsFromChangesInOwnershipInterestsInSubsidiaries
+  payments_of_lease_liabilities_classified_as_financing_act_etc:
+    display_label: Payments of Lease Liabilities
+    xbrl_tags:
+    - ifrs-full:PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities
+  proceeds_from_issuing_shares:
+    display_label: Proceeds from Issuing Shares
+    xbrl_tags:
+    - ifrs-full:ProceedsFromIssuingShares
+  proceeds_from_noncurrent_borrowings:
+    display_label: Proceeds from Non-current Borrowings
+    xbrl_tags:
+    - ifrs-full:ProceedsFromNoncurrentBorrowings
+  repayments_of_noncurrent_borrowings:
+    display_label: Repayments of Non-current Borrowings
+    xbrl_tags:
+    - ifrs-full:RepaymentsOfNoncurrentBorrowings
+  acquisitions_d_immobilisations_corporelles_et_incorporelles:
+    display_label: Purchases of PP&E and Intangible Assets (Capex)
+    xbrl_tags:
+    - loreal:AcquisitionsDImmobilisationsCorporellesEtIncorporelles
+  cessions_d_immobilisations_corporelles_et_incorporelle:
+    display_label: Proceeds from Disposal of PP&E and Intangible Assets
+    xbrl_tags:
+    - loreal:CessionsDImmobilisationsCorporellesEtIncorporelle
+  elimination_de_produits_sans_incidence_sur_la_tresorerie__etc:
+    display_label: D&A, Provisions and Other Non-cash / Non-operating Adjustments
+    xbrl_tags:
+    - loreal:EliminationDeProduitsSansIncidenceSurLaTresorerieOuNonLiesALactiviteAmortissementsProvisionsEtAutresPassifsNonCourants
+  incidence_des_variations_de_perimetre:
+    display_label: Impact of Changes in Scope of Consolidation
+    xbrl_tags:
+    - loreal:IncidenceDesVariationsDePerimetre
+  interets_payes_sur_dettes_de_location:
+    display_label: Interest Paid on Lease Liabilities
+    xbrl_tags:
+    - loreal:InteretsPayesSurDettesDeLocation
+  valeur_de_cession_acquisition_des_actions_propres:
+    display_label: Proceeds/(Payments) from Sale/(Purchase) of Treasury Shares
+    xbrl_tags:
+    - loreal:ValeurDeCessionAcquisitionDesActionsPropres
+  variation_des_autres_actifs_financiers_y_compris_les_titr_etc:
+    display_label: Change in Other Financial Assets (incl. Unconsolidated Securities)
+    xbrl_tags:
+    - loreal:VariationDesAutresActifsFinanciersYComprisLesTitresNonConsolides
+  variations_nettes_des_titres_loreal_auto_detenus:
+    display_label: Net Change in L'Oreal Treasury Shares Held
+    xbrl_tags:
+    - loreal:VariationsNettesDesTitresLorealAutoDetenus
+other:
+  income_tax_relating_to_cash_flow_hedges_of_other_comprehe_etc:
+    display_label: Income Tax on Cash Flow Hedges (OCI)
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToCashFlowHedgesOfOtherComprehensiveIncome
+  income_tax_relating_to_components_of_other_comprehensive__etc:
+    display_label: Income Tax on OCI Components
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToComponentsOfOtherComprehensiveIncome
+  income_tax_relating_to_financial_assets_measured_at_fair__etc:
+    display_label: Income Tax on FVOCI Financial Assets
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome
+  income_tax_relating_to_remeasurements_of_defined_benefit__etc:
+    display_label: Income Tax on Remeasurements of Defined Benefit Plans (OCI)
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToRemeasurementsOfDefinedBenefitPlansOfOtherComprehensiveIncome
+  increase_decrease_in_number_of_ordinary_shares_issued:
+    display_label: Change in Number of Ordinary Shares Issued
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseInNumberOfOrdinarySharesIssued
+  other_comprehensive_income:
+    display_label: Other Comprehensive Income
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncome
+  other_comprehensive_income_before_tax_cash_flow_hedges:
+    display_label: OCI before Tax - Cash Flow Hedges
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxCashFlowHedges
+  other_comprehensive_income_before_tax_exchange_difference_etc:
+    display_label: OCI before Tax - Currency Translation Differences
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxExchangeDifferencesOnTranslation
+  other_comprehensive_income_before_tax_financial_assets_me_etc:
+    display_label: OCI before Tax - FVOCI Financial Assets
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome
+  other_comprehensive_income_before_tax_gains_losses_on_rem_etc:
+    display_label: OCI before Tax - Remeasurements of Defined Benefit Plans
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxGainsLossesOnRemeasurementsOfDefinedBenefitPlans

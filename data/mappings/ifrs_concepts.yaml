@@ -1,0 +1,42 @@
+# Semantic mapping layer: normalized concept -> possible raw XBRL tags
+# Fill this in during Week 3, after exploring raw facts in Week 1-2.
+# One normalized concept can map to multiple XBRL tags because taxonomy
+# versions/companies sometimes tag the same line item differently.
+
+income_statement:
+  revenue:
+    display_label: "Revenue"
+    xbrl_tags:
+      - "ifrs-full:Revenue"
+      - "ifrs-full:RevenueFromContractsWithCustomers"
+  ebit:
+    display_label: "EBIT / Operating Profit"
+    xbrl_tags:
+      - "ifrs-full:ProfitLossFromOperatingActivities"
+  net_income:
+    display_label: "Net Income"
+    xbrl_tags:
+      - "ifrs-full:ProfitLoss"
+
+balance_sheet:
+  total_assets:
+    display_label: "Total Assets"
+    xbrl_tags:
+      - "ifrs-full:Assets"
+  total_equity:
+    display_label: "Total Equity"
+    xbrl_tags:
+      - "ifrs-full:Equity"
+  net_debt:
+    display_label: "Net Debt"
+    xbrl_tags: []   # usually not tagged directly - compute from debt - cash
+
+cash_flow:
+  operating_cash_flow:
+    display_label: "Cash Flow from Operations"
+    xbrl_tags:
+      - "ifrs-full:CashFlowsFromUsedInOperatingActivities"
+  capex:
+    display_label: "Capital Expenditure"
+    xbrl_tags:
+      - "ifrs-full:PurchaseOfPropertyPlantAndEquipment"
