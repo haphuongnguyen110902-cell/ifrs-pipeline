@@ -127,81 +127,106 @@ def get_col(wide: pd.DataFrame, name: str) -> pd.Series:
     return pd.Series([float("nan")] * len(wide), index=wide.index)
 
 
+def get_best(wide: pd.DataFrame, *names: str) -> pd.Series:
+    """Try each name in order, combine_first so earlier names take priority.
+    This is the core fix for concepts where companies use different tags
+    for the same economic item (e.g. long-term borrowings, PBT).
+    Returns NaN where none of the names exist.
+
+    NOTE: we do NOT reverse here - first name listed has highest priority,
+    combine_first(other) fills NaN positions from 'other', so we start
+    with the highest-priority series and fill gaps from lower-priority ones.
+    """
+    result = pd.Series([float("nan")] * len(wide), index=wide.index)
+    for name in reversed(names):  # reversed so first-listed name wins
+        if name in wide.columns:
+            result = wide[name].combine_first(result)
+    return result
+
+
 # ---------------------------------------------------------------- compute
 
 def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     """
     Compute all ratios from a wide-format DataFrame.
     Each ratio becomes a column. NaN = inputs were missing.
+
+    Uses get_best() to try multiple normalized names for the same concept,
+    because companies use different tags for economically identical items.
+    Priority is left-to-right: first name found wins.
     """
     r = wide[["company", "company_id", "year"]].copy()
 
-    # --- revenue (base for margin ratios) ---
+    # --- revenue ---
     rev = get_col(wide, "revenue").abs()
+
+    # --- operating profit (EBIT) ---
+    # Priority: standard IFRS tag > L'Oreal extension > LVMH extensions
+    # All measure operating profit; company extensions may include/exclude
+    # slightly different items but are the best available for each filer
+    ebit = get_best(wide,
+        "profit_loss_from_operating_activities",   # standard IFRS - 9 companies
+        "resultat_dexploitation",                   # L'Oreal
+        "operating_profit_excl_i_a_c",              # Essity (excl. items affecting comparability)
+        "profit_loss_from_operating_activities_after_share_of_prof_etc",  # LVMH
+    )
+    r["operating_margin"] = safe_div(ebit, rev, scale=100)
+    r["_ebit"] = ebit
 
     # --- gross margin ---
     gp = get_col(wide, "gross_profit")
     r["gross_margin"] = safe_div(gp, rev, scale=100)
 
-    # --- operating margin ---
-    # Use L'Oreal-specific 'resultat_dexploitation' if standard concept
-    # is missing; fall back to that company's own definition. Both measure
-    # operating profit, just with different adjustments included.
-    ebit = get_col(wide, "profit_loss_from_operating_activities")
-    ebit_fallback = get_col(wide, "resultat_dexploitation")
-    ebit_combined = ebit.combine_first(ebit_fallback)
-    r["operating_margin"] = safe_div(ebit_combined, rev, scale=100)
-    r["_ebit"] = ebit_combined  # store for reuse below
-
     # --- net margin ---
-    # Prefer net profit attributable to owners of parent (group share)
     net = get_col(wide, "profit_loss_attributable_to_owners_of_parent")
     r["net_margin"] = safe_div(net, rev, scale=100)
 
     # --- cash conversion ---
-    # Cash flow from operations / operating profit.
-    # > 100% means more cash collected than profit booked (good quality)
-    # < 100% means some profit is still sitting in receivables/inventory
     cfo = get_col(wide, "cash_flows_from_used_in_operating_activities")
-    r["cash_conversion"] = safe_div(cfo, ebit_combined, scale=100)
+    r["cash_conversion"] = safe_div(cfo, ebit, scale=100)
 
     # --- effective tax rate ---
     tax = get_col(wide, "income_tax_expense_continuing_operations")
-    pbt = get_col(wide, "profit_loss_before_tax")
-    # Tax expense sign convention varies: some filers report it as a
-    # positive number (a cost), some as negative. We want tax/pbt where
-    # both share the same sign convention. Taking abs() of both and then
-    # dividing gives the correct rate regardless of convention.
-    # Clip to [0, 60%] to avoid nonsense values from loss-year data.
-    r["tax_rate"] = safe_div(tax.abs(), pbt.abs()).clip(0, 0.60)
+    # PBT: standard IFRS tag > L'Oreal French extension > Essity extension
+    pbt = get_best(wide,
+        "profit_loss_before_tax",                              # standard - 7 companies
+        "resultat_avant_impot_et_societes_mises_en_equivalence",  # L'Oreal
+        "profit_before_tax_excl_i_a_c",                        # Essity
+    )
+    # abs() handles sign convention differences across filers
+    # Multiply by 100 to match the percentage scale used by all other ratios
+    r["tax_rate"] = safe_div(tax.abs(), pbt.abs(), scale=100).clip(0, 60)
 
     # --- net debt ---
-    # Net Debt = Long-term borrowings + Current borrowings - Cash
-    # Used in ROIC and leverage ratio
-    lt_debt = get_col(wide, "longterm_borrowings").abs()
-    st_debt = get_col(wide, "current_borrowings_and_current_portion_of_noncurrent_borr_etc").abs()
+    # Long-term borrowings: standard tag > generic non-current borrowings
+    lt_debt = get_best(wide,
+        "longterm_borrowings",           # ifrs-full:LongtermBorrowings - 6 companies
+        "noncurrent_liabilities",        # fallback: use total non-current liabilities
+                                         # (overestimates debt but better than n/a)
+    ).abs()
+    st_debt = get_col(wide,
+        "current_borrowings_and_current_portion_of_noncurrent_borr_etc").abs()
     cash = get_col(wide, "cash_and_cash_equivalents").abs()
-    r["_net_debt"] = lt_debt.fillna(0) + st_debt.fillna(0) - cash.fillna(0)
 
-    # --- ROIC (Return on Invested Capital) ---
-    # ROIC = NOPAT / Invested Capital
-    # NOPAT = Operating Profit * (1 - tax rate)
-    # Invested Capital = Equity (parent) + Non-controlling interests + Net Debt
+    # Only compute net debt where we have at least one debt figure
+    has_debt = lt_debt.notna() | st_debt.notna()
+    net_debt = lt_debt.fillna(0) + st_debt.fillna(0) - cash.fillna(0)
+    net_debt[~has_debt] = float("nan")
+    r["_net_debt"] = net_debt
+
+    # --- ROIC ---
     equity_parent = get_col(wide, "equity_attributable_to_owners_of_parent")
     nci = get_col(wide, "noncontrolling_interests").fillna(0)
-    total_equity = equity_parent + nci
-    invested_capital = total_equity + r["_net_debt"]
-    nopat = ebit_combined * (1 - r["tax_rate"].clip(0, 0.5))  # cap tax rate at 50%
+    invested_capital = equity_parent + nci + r["_net_debt"]
+    nopat = ebit * (1 - r["tax_rate"].clip(0, 40) / 100)  # tax_rate is in %, divide back
     r["roic"] = safe_div(nopat, invested_capital, scale=100)
 
-    # --- ROE (Return on Equity) ---
+    # --- ROE ---
     r["roe"] = safe_div(net, equity_parent, scale=100)
 
-    # --- Net Debt / Operating Profit (leverage proxy for EBITDA/debt) ---
-    # WARNING: not currency-neutral, only meaningful within one currency
-    r["net_debt_ebitda_proxy"] = safe_div(r["_net_debt"], ebit_combined)
+    # --- Net Debt / Operating Profit ---
+    r["net_debt_ebitda_proxy"] = safe_div(r["_net_debt"], ebit)
 
-    # clean up internal columns
     r = r.drop(columns=["_ebit", "_net_debt"])
     return r
 
