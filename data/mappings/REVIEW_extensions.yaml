@@ -1,0 +1,22 @@
+_instructions: 'Fill in ''statement'' for each entry: income_statement / balance_sheet
+  / cash_flow / other. Then run: python scripts/12_apply_review.py'
+needs_review:
+- xbrl_tag: LVM:IncreaseDecreaseInNumberOfSharesIssueOfEquity
+  suggested_key: increase_decrease_in_number_of_shares_issue_of_equity
+  display_label: Increase (decrease) in number of shares issued through issue of equity
+  statement: other
+  balance: n/a
+  reason: role keyword 'changes in equity'
+- xbrl_tag: LVM:OperatingInvestmentsClassifiedAsInvestingActivities
+  suggested_key: operating_investments_classified_as_investing_activities
+  display_label: Operating investments, classified as investing activities
+  statement: cash_flow
+  balance: credit
+  reason: role keyword 'cash flow'
+- xbrl_tag: ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersPerShare
+  suggested_key: dividends_proposed_or_declared_before_financial_statements_a_etc
+  display_label: Dividends proposed or declared before financial statements authorised
+    for issue but not recognised as distribution to owners per share
+  statement: other
+  balance: n/a
+  reason: ''

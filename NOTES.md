@@ -190,6 +190,143 @@ Free tiers may suspend or delete inactive projects. Worth reading Neon's
 retention policy. Recoverable (the pipeline can re-run) but better known in
 advance than discovered.
 
+## V4 design idea: fully autonomous company discovery + onboarding (logged 2026-08-21)
+
+**The full vision:** the system discovers new companies and filings on its own,
+processes them automatically, and only involves a human for extension tag review.
+No manual "add this company" step at all.
+
+**The three layers needed:**
+
+### Layer 1: Company universe (what companies should we track?)
+The system needs a source of truth for "which companies exist."
+Options in order of effort:
+  - filings.xbrl.org full index: already have the API (`00_find_filing.py`),
+    can page through ALL filers by country. Already returns LEI + name + filing dates.
+  - ESMA OAM list: authoritative EU listed companies, public but less structured
+  - Market index (CAC 40, Euro Stoxx 600): curated, sector-sortable, but requires
+    a data source for index composition
+
+Recommended starting point: filings.xbrl.org by country filter. Can enumerate
+all French, Italian, Spanish, Swedish filers in one API call. Skip DE and IE
+(documented gaps). Store each company's LEI and last-seen filing date in a DB table.
+
+### Layer 2: Filing detection (when does a new filing appear?)
+Run a scheduled job (GitHub Actions cron, weekly) that:
+  1. Pages through filings.xbrl.org for all tracked companies
+  2. Compares filing dates against what's already loaded
+  3. Queues new filings for processing
+
+This is a straightforward extension of `00_find_filing.py` — already does the
+API calls, just needs a loop and a "last seen" comparison.
+
+### Layer 3: Human-in-the-loop for extension tags
+Same as the design above — auto-classify standard tags, route extensions to
+a reviewer via notification. The reviewer only sees the hard part.
+
+**What a run looks like:**
+1. Scheduler triggers weekly
+2. System scans filings.xbrl.org for all tracked companies
+3. For each new filing found: download -> parse -> auto-classify -> load standard tags
+4. If extensions exist: send notification with review link
+5. After review (or immediately if no extensions): update ratios + dashboard
+
+**The notification mechanism** (simple starting point):
+  - GitHub Actions can send email on completion via built-in notifications
+  - A Slack webhook is ~10 lines of Python and free
+  - Even a simple text file written to a "review_queue/" folder works as V4.0
+
+**Prerequisites:**
+  - A `company_universe` table in the DB (LEI, name, country, sector, last_filing_date)
+  - `00_find_filing.py` extended with a --scan-all --country FR mode
+  - GitHub Actions workflow calling the pipeline on a schedule
+  - The review notification mechanism (start with email, upgrade to UI later)
+
+**Note on scale and the extension tag problem:**
+At 1,000 companies, extension tags are a shrinking fraction of work. Most
+companies reuse a small vocabulary — once you've seen all the major French luxury
+and consumer companies, new ones mostly reuse the same extensions. A shared
+extension library grows over time, so new reviews become rarer.
+
+The human workload grows sublinearly, not proportionally to company count.
+At some point (maybe 200-300 companies) the review queue becomes so rare that
+it barely needs monitoring.
+
+## V4 design idea: human-in-the-loop company onboarding (logged 2026-08-21)
+
+**The idea:** instead of running 4 manual commands to add a new company, build a
+UI where someone clicks "add company X" and the system handles everything
+automatically — except the extension tag review step, which it routes to a human
+via notification.
+
+**The precise flow:**
+1. User clicks "Add company" in a UI (or triggers via API/scheduler)
+2. System: find filing -> download -> parse -> auto-classify standard tags
+3. If extension tags exist: send notification (email/Slack) to reviewer with
+   a link to a simple review form
+4. Reviewer classifies the extensions (10 min, only the hard part)
+5. System: completes load -> runs validation -> updates dashboard automatically
+
+**Why this is the right architecture:**
+This is called "human-in-the-loop" automation — you don't eliminate judgment,
+you automate everything AROUND it so humans only see what genuinely needs
+their attention. Same pattern as: content moderation at scale, fraud detection,
+document processing. The key insight is that 12_prep_company.py already does
+the separation correctly (auto vs REVIEW) — V4 just wraps orchestration and
+notification around what already exists.
+
+**Prerequisites before building this:**
+- V2/V3 complete (ratio engine solid, dashboard exists — something worth updating)
+- A scheduler (GitHub Actions cron is free and already planned)
+- A notification mechanism (email via SendGrid free tier, or Slack webhook)
+- A review UI (could start as a simple web form that writes to REVIEW_extensions.yaml)
+
+**Note on scale:**
+At thousands of companies, extension tags are a shrinking fraction of the work —
+most companies reuse the same small vocabulary of extensions, so a growing shared
+library means fewer new reviews over time. The human workload grows sublinearly,
+not proportionally.
+
+## How to add a new company (V1 workflow)
+
+**Standard workflow — 4 commands + ~10 min review:**
+
+```
+# 1. Find and download the filing
+python scripts\00_find_filing.py --search "CompanyName"
+python scripts\00_find_filing.py --entity <id> --download --out data\raw\companyname.zip
+
+# 2. Auto-classify: standard ifrs-full: tags go in automatically,
+#    extension tags (company:Tag) are written to REVIEW file
+python scripts\12_prep_company.py --zip data\raw\companyname.zip
+
+# 3. REQUIRED: open the REVIEW file and fill in 'statement' for each extension tag
+#    Valid values: income_statement / balance_sheet / cash_flow / other
+notepad data\mappings\REVIEW_extensions.yaml
+python scripts\12_apply_review.py
+
+# 4. Add company to data\companies.yaml (name, expected_currency, sector)
+#    Then load and validate
+python scripts\09_batch_load.py --only companyname
+python scripts\08_validate.py --company "CompanyName"
+```
+
+**IMPORTANT - extension tag review is NOT optional:**
+Standard ifrs-full: tags classify themselves from the taxonomy - zero manual work.
+Company extension tags (loreal:, LVM:, essi:, shel:, etc.) MUST be reviewed because:
+  - The taxonomy cannot classify what it doesn't define
+  - A misclassified extension tag (e.g. cash flow item on income statement) will
+    silently corrupt ratios for that company
+  - It takes ~10 minutes for a typical company (3-10 extension tags)
+  - Run with --dry-run first to see what's coming before committing
+
+**What 12_prep_company.py does precisely:**
+  - Reads the presentation linkbase (the filing's own statement structure)
+  - For standard tags: uses IFRS role numbers ([3xxxxx]=P&L, [5xxxxx]=CF, etc.)
+  - For extension tags with clear linkbase placement: auto-classifies (marked AUTO)
+  - For extension tags without clear placement: writes to REVIEW file, NOT loaded
+  - The REVIEW file overwrites each time - apply it before running for a second company
+
 ## How to link this together autonomously (the plan)
 
 The current scripts are standalone CLI tools that each re-implement loading, DB connection, and year logic. To make the pipeline self-running, three refactors in order:
