@@ -326,7 +326,8 @@ if __name__ == "__main__":
 
                     cur.execute(
                         "INSERT INTO fact_value (filing_id, period_id, concept_id, raw_xbrl_tag, "
-                        "value, currency, decimals, context_ref) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                        "value, currency, decimals, context_ref) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
+                        "ON CONFLICT (filing_id, period_id, concept_id) DO NOTHING",
                         (filing_id, period_id, concept_id, tag, raw_value,
                          currency, decimals, row.get("context_id")))
                     inserted += 1
