@@ -91,6 +91,210 @@ income_statement:
     display_label: Net EPS excl. Non-recurring Items, Group Share
     xbrl_tags:
     - loreal:ResultatNetParActionHorsElementsNonRecurrentsPartDuGroupe
+  cost_of_net_debt:
+    display_label: Cost of Net Debt
+    xbrl_tags:
+    - LVM:CostOfNetDebt
+  profit_loss_from_operating_activities_after_share_of_prof_etc:
+    display_label: Operating Profit after Share of Associates/JVs
+    xbrl_tags:
+    - LVM:ProfitLossFromOperatingActivitiesAfterShareOfProfitLossOfAssociatesAndJointVentures
+  profit_loss_from_operating_activities_after_share_of_prof_etc_v2:
+    display_label: Operating Profit after Share of Associates/JVs (Operating Activity)
+    xbrl_tags:
+    - LVM:ProfitLossFromOperatingActivitiesAfterShareOfProfitLossOfAssociatesAndJointVenturesInOperatingActivity
+  profit_loss_from_operating_activities_recurring_including_etc:
+    display_label: Recurring Operating Profit incl. Equity-accounted Investees
+    xbrl_tags:
+    - LVM:ProfitLossFromOperatingActivitiesRecurringIncludingShareOfProfitOfEquityAccountedInvestees
+  amortization_of_acquisition_related_intangible_assets_exc_etc:
+    display_label: Amortization of Acquisition-related Intangibles (excl. IAC)
+    xbrl_tags:
+    - essi:AmortizationOfAcquisitionRelatedIntangibleAssetsExcludingItemsAffectingComparability
+  cost_of_goods_sold_excluding_items_affecting_comparability:
+    display_label: Cost of Goods Sold (excl. IAC)
+    xbrl_tags:
+    - essi:CostOfGoodsSoldExcludingItemsAffectingComparability
+  gross_profit_excl_i_a_c:
+    display_label: Gross Profit (excl. IAC)
+    xbrl_tags:
+    - essi:GrossProfitExclIAC
+  items_affecting_comparability_amortization_of_acquisition_etc:
+    display_label: IAC - Amortization of Acquisition-related Intangibles
+    xbrl_tags:
+    - essi:ItemsAffectingComparabilityAmortizationOfAcquisitionRelatedIntangibleAssets
+  items_affecting_comparability_cost_of_goods_sold:
+    display_label: IAC - Cost of Goods Sold
+    xbrl_tags:
+    - essi:ItemsAffectingComparabilityCostOfGoodsSold
+  items_affecting_comparability_sales_general_and_administr_etc:
+    display_label: IAC - SG&A
+    xbrl_tags:
+    - essi:ItemsAffectingComparabilitySalesGeneralAndAdministration
+  operating_profit_before_amortization_of_acquisition_relat_etc:
+    display_label: EBITA excl. IAC
+    xbrl_tags:
+    - essi:OperatingProfitBeforeAmortizationOfAcquisitionRelatedIntangibleAssetEBITAExclIAC
+  operating_profit_before_amortization_of_acquisition_relat_etc_v2:
+    display_label: EBITA (Operating Profit before Amortization of Acquisition Intangibles)
+    xbrl_tags:
+    - essi:OperatingProfitBeforeAmortizationOfAcquisitionRelatedIntangibleAssetsEBITA
+  operating_profit_excl_i_a_c:
+    display_label: Operating Profit (excl. IAC)
+    xbrl_tags:
+    - essi:OperatingProfitExclIAC
+  operating_profit_excluding_non_cash_items:
+    display_label: Operating Profit (excl. Non-cash Items)
+    xbrl_tags:
+    - essi:OperatingProfitExcludingNonCashItems
+  other_financial_items:
+    display_label: Other Financial Items
+    xbrl_tags:
+    - essi:OtherFinancialItems
+  profit_before_tax_excl_i_a_c:
+    display_label: Profit Before Tax (excl. IAC)
+    xbrl_tags:
+    - essi:ProfitBeforeTaxExclIAC
+  profit_for_the_period_excl_i_a_c_continuing_operations:
+    display_label: Profit for the Period (excl. IAC, Continuing Operations)
+    xbrl_tags:
+    - essi:ProfitForThePeriodExclIACContinuingOperations
+  sales_general_and_administration_excluding_items_affectin_etc:
+    display_label: SG&A (excl. IAC)
+    xbrl_tags:
+    - essi:SalesGeneralAndAdministrationExcludingItemsAffectingComparability
+  adjusted_weighted_average_shares:
+    display_label: Adjusted Weighted Average Shares
+    xbrl_tags:
+    - ifrs-full:AdjustedWeightedAverageShares
+  administrative_expense:
+    display_label: Administrative Expense
+    xbrl_tags:
+    - ifrs-full:AdministrativeExpense
+  basic_earnings_loss_per_share_from_continuing_operations:
+    display_label: Basic EPS from Continuing Operations
+    xbrl_tags:
+    - ifrs-full:BasicEarningsLossPerShareFromContinuingOperations
+  basic_earnings_loss_per_share_from_discontinued_operations:
+    display_label: Basic EPS from Discontinued Operations
+    xbrl_tags:
+    - ifrs-full:BasicEarningsLossPerShareFromDiscontinuedOperations
+  comprehensive_income:
+    display_label: Total Comprehensive Income
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncome
+  comprehensive_income_from_continuing_operations:
+    display_label: Comprehensive Income (Continuing Operations)
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeFromContinuingOperations
+  comprehensive_income_from_discontinued_operations:
+    display_label: Comprehensive Income (Discontinued Operations)
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeFromDiscontinuedOperations
+  diluted_earnings_loss_per_share_from_continuing_operations:
+    display_label: Diluted EPS from Continuing Operations
+    xbrl_tags:
+    - ifrs-full:DilutedEarningsLossPerShareFromContinuingOperations
+  diluted_earnings_loss_per_share_from_discontinued_operations:
+    display_label: Diluted EPS from Discontinued Operations
+    xbrl_tags:
+    - ifrs-full:DilutedEarningsLossPerShareFromDiscontinuedOperations
+  distribution_costs:
+    display_label: Distribution Costs
+    xbrl_tags:
+    - ifrs-full:DistributionCosts
+  expense_arising_from_exploration_for_and_evaluation_of_mi_etc:
+    display_label: Exploration & Evaluation Expense
+    xbrl_tags:
+    - ifrs-full:ExpenseArisingFromExplorationForAndEvaluationOfMineralResources
+  finance_costs:
+    display_label: Finance Costs
+    xbrl_tags:
+    - ifrs-full:FinanceCosts
+  finance_income:
+    display_label: Finance Income
+    xbrl_tags:
+    - ifrs-full:FinanceIncome
+  finance_income_cost:
+    display_label: Finance Income/(Cost), Net
+    xbrl_tags:
+    - ifrs-full:FinanceIncomeCost
+  income_from_continuing_operations_attributable_to_owners__etc:
+    display_label: Income from Continuing Operations Attributable to Owners
+    xbrl_tags:
+    - ifrs-full:IncomeFromContinuingOperationsAttributableToOwnersOfParent
+  income_from_discontinued_operations_attributable_to_owner_etc:
+    display_label: Income from Discontinued Operations Attributable to Owners
+    xbrl_tags:
+    - ifrs-full:IncomeFromDiscontinuedOperationsAttributableToOwnersOfParent
+  interest_expense:
+    display_label: Interest Expense
+    xbrl_tags:
+    - ifrs-full:InterestExpense
+  interest_expense_on_lease_liabilities:
+    display_label: Interest Expense on Lease Liabilities
+    xbrl_tags:
+    - ifrs-full:InterestExpenseOnLeaseLiabilities
+  operating_expense:
+    display_label: Operating Expense
+    xbrl_tags:
+    - ifrs-full:OperatingExpense
+  other_expense_by_nature:
+    display_label: Other Expense by Nature
+    xbrl_tags:
+    - ifrs-full:OtherExpenseByNature
+  other_operating_income_expense:
+    display_label: Other Operating Income/(Expense)
+    xbrl_tags:
+    - ifrs-full:OtherOperatingIncomeExpense
+  profit_loss_attributable_to_noncontrolling_interests:
+    display_label: Profit/(Loss) Attributable to Non-controlling Interests
+    xbrl_tags:
+    - ifrs-full:ProfitLossAttributableToNoncontrollingInterests
+  profit_loss_attributable_to_owners_of_parent:
+    display_label: Net Profit Attributable to Owners of Parent
+    xbrl_tags:
+    - ifrs-full:ProfitLossAttributableToOwnersOfParent
+  profit_loss_before_tax:
+    display_label: Profit Before Tax
+    xbrl_tags:
+    - ifrs-full:ProfitLossBeforeTax
+  profit_loss_from_continuing_operations_attributable_to_no_etc:
+    display_label: Profit from Continuing Operations Attributable to NCI
+    xbrl_tags:
+    - ifrs-full:ProfitLossFromContinuingOperationsAttributableToNoncontrollingInterests
+  profit_loss_from_discontinued_operations_attributable_to__etc:
+    display_label: Profit from Discontinued Operations Attributable to NCI
+    xbrl_tags:
+    - ifrs-full:ProfitLossFromDiscontinuedOperationsAttributableToNoncontrollingInterests
+  raw_materials_and_consumables_used:
+    display_label: Raw Materials and Consumables Used
+    xbrl_tags:
+    - ifrs-full:RawMaterialsAndConsumablesUsed
+  weighted_average_shares:
+    display_label: Weighted Average Shares
+    xbrl_tags:
+    - ifrs-full:WeightedAverageShares
+  comprehensive_income_including_remeasurement_of_interest__etc:
+    display_label: Comprehensive Income incl. Remeasurement of JV Interest
+    xbrl_tags:
+    - shel:ComprehensiveIncomeIncludingRemeasurementOfInterestInJointVenture
+  interest_and_other_income:
+    display_label: Interest and Other Income
+    xbrl_tags:
+    - shel:InterestAndOtherIncome
+  net_gains_on_sale_and_revaluation_of_non_current_assets_a_etc:
+    display_label: Net Gains on Sale/Revaluation of Non-current Assets and Businesses
+    xbrl_tags:
+    - shel:NetGainsOnSaleAndRevaluationOfNonCurrentAssetsAndBusinesses
+  revenue_and_other_income:
+    display_label: Revenue and Other Income
+    xbrl_tags:
+    - shel:RevenueAndOtherIncome
+  tangible_exploration_and_evaluation_assets_amount_charged_etc:
+    display_label: Exploration & Evaluation Assets Charged to Expense
+    xbrl_tags:
+    - shel:TangibleExplorationAndEvaluationAssetsAmountChargedToExpense
 balance_sheet:
   accumulated_other_comprehensive_income:
     display_label: Accumulated Other Comprehensive Income
@@ -236,6 +440,118 @@ balance_sheet:
     display_label: Other Current Liabilities
     xbrl_tags:
     - loreal:PassifsCourantsAutres
+  current_provisions_and_other_current_liabilities:
+    display_label: Current Provisions and Other Current Liabilities
+    xbrl_tags:
+    - LVM:CurrentProvisionsAndOtherCurrentLiabilities
+  non_current_provisions_and_other_non_current_liabilities:
+    display_label: Non-current Provisions and Other Non-current Liabilities
+    xbrl_tags:
+    - LVM:NonCurrentProvisionsAndOtherNonCurrentLiabilities
+  total_assets_continuing_operations:
+    display_label: Total Assets (Continuing Operations)
+    xbrl_tags:
+    - essi:TotalAssetsContinuingOperations
+  total_liabilities_continuing_operations:
+    display_label: Total Liabilities (Continuing Operations)
+    xbrl_tags:
+    - essi:TotalLiabilitiesContinuingOperations
+  cash_and_cash_equivalents:
+    display_label: Cash and Cash Equivalents
+    xbrl_tags:
+    - ifrs-full:CashAndCashEquivalents
+  current_assets_other_than_assets_or_disposal_groups_class_etc:
+    display_label: Current Assets (excl. Held-for-sale)
+    xbrl_tags:
+    - ifrs-full:CurrentAssetsOtherThanAssetsOrDisposalGroupsClassifiedAsHeldForSaleOrAsHeldForDistributionToOwners
+  current_liabilities_other_than_liabilities_included_in_di_etc:
+    display_label: Current Liabilities (excl. Held-for-sale)
+    xbrl_tags:
+    - ifrs-full:CurrentLiabilitiesOtherThanLiabilitiesIncludedInDisposalGroupsClassifiedAsHeldForSale
+  liabilities_included_in_disposal_groups_classified_as_hel_etc:
+    display_label: Liabilities in Disposal Groups Held for Sale
+    xbrl_tags:
+    - ifrs-full:LiabilitiesIncludedInDisposalGroupsClassifiedAsHeldForSale
+  noncurrent_assets_or_disposal_groups_classified_as_held_f_etc:
+    display_label: Non-current Assets/Disposal Groups Held for Sale
+    xbrl_tags:
+    - ifrs-full:NoncurrentAssetsOrDisposalGroupsClassifiedAsHeldForSale
+  noncurrent_financial_assets_availableforsale:
+    display_label: Non-current Available-for-sale Financial Assets
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinancialAssetsAvailableforsale
+  noncurrent_investments_other_than_investments_accounted_f_etc:
+    display_label: Non-current Investments (excl. Equity-method)
+    xbrl_tags:
+    - ifrs-full:NoncurrentInvestmentsOtherThanInvestmentsAccountedForUsingEquityMethod
+  noncurrent_recognised_assets_defined_benefit_plan:
+    display_label: Non-current Defined Benefit Plan Assets
+    xbrl_tags:
+    - ifrs-full:NoncurrentRecognisedAssetsDefinedBenefitPlan
+  noncurrent_recognised_liabilities_defined_benefit_plan:
+    display_label: Non-current Defined Benefit Plan Liabilities
+    xbrl_tags:
+    - ifrs-full:NoncurrentRecognisedLiabilitiesDefinedBenefitPlan
+  other_current_assets:
+    display_label: Other Current Assets
+    xbrl_tags:
+    - ifrs-full:OtherCurrentAssets
+  other_current_financial_assets:
+    display_label: Other Current Financial Assets
+    xbrl_tags:
+    - ifrs-full:OtherCurrentFinancialAssets
+  other_current_financial_liabilities:
+    display_label: Other Current Financial Liabilities
+    xbrl_tags:
+    - ifrs-full:OtherCurrentFinancialLiabilities
+  other_current_payables:
+    display_label: Other Current Payables
+    xbrl_tags:
+    - ifrs-full:OtherCurrentPayables
+  other_current_receivables:
+    display_label: Other Current Receivables
+    xbrl_tags:
+    - ifrs-full:OtherCurrentReceivables
+  other_noncurrent_assets:
+    display_label: Other Non-current Assets
+    xbrl_tags:
+    - ifrs-full:OtherNoncurrentAssets
+  other_noncurrent_financial_liabilities:
+    display_label: Other Non-current Financial Liabilities
+    xbrl_tags:
+    - ifrs-full:OtherNoncurrentFinancialLiabilities
+  other_noncurrent_liabilities:
+    display_label: Other Non-current Liabilities
+    xbrl_tags:
+    - ifrs-full:OtherNoncurrentLiabilities
+  other_noncurrent_nonfinancial_assets:
+    display_label: Other Non-current Non-financial Assets
+    xbrl_tags:
+    - ifrs-full:OtherNoncurrentNonfinancialAssets
+  other_reserves:
+    display_label: Other Reserves
+    xbrl_tags:
+    - ifrs-full:OtherReserves
+  other_shortterm_provisions:
+    display_label: Other Short-term Provisions
+    xbrl_tags:
+    - ifrs-full:OtherShorttermProvisions
+  retained_earnings:
+    display_label: Retained Earnings
+    xbrl_tags:
+    - ifrs-full:RetainedEarnings
+  trade_and_other_current_payables:
+    display_label: Trade and Other Current Payables
+    xbrl_tags:
+    - ifrs-full:TradeAndOtherCurrentPayables
+  trade_and_other_current_receivables:
+    display_label: Trade and Other Current Receivables
+    xbrl_tags:
+    - ifrs-full:TradeAndOtherCurrentReceivables
+  undated_subordinated_liabilities:
+    display_label: Undated Subordinated Liabilities
+    xbrl_tags:
+    - ifrs-full:UndatedSubordinatedLiabilities
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense
@@ -361,6 +677,275 @@ cash_flow:
     display_label: Net Change in L'Oreal Treasury Shares Held
     xbrl_tags:
     - loreal:VariationsNettesDesTitresLorealAutoDetenus
+  adjustments_for_depreciation_right_of_use_assets:
+    display_label: Adjustments for Depreciation of Right-of-use Assets
+    xbrl_tags:
+    - LVM:AdjustmentsForDepreciationRightOfUseAssets
+  adjustments_for_provisions_and_adjustments_for_depreciati_etc:
+    display_label: D&A, Provisions and Impairment Adjustments
+    xbrl_tags:
+    - LVM:AdjustmentsForProvisionsAndAdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
+  increase_decrease_in_current_financial_assets_available_f_etc:
+    display_label: Change in Current Available-for-sale Financial Assets
+    xbrl_tags:
+    - LVM:IncreaseDecreaseInCurrentFinancialAssetsAvailableForSaleClassifiedAsFinancingActivities
+  increase_decrease_in_equity_classified_as_financing_activ_etc:
+    display_label: Other Change in Equity (Financing)
+    xbrl_tags:
+    - LVM:IncreaseDecreaseInEquityClassifiedAsFinancingActivities
+  interest_paid_on_lease_liabilities_classified_as_operatin_etc:
+    display_label: Interest Paid on Lease Liabilities
+    xbrl_tags:
+    - LVM:InterestPaidOnLeaseLiabilitiesClassifiedAsOperatingActivities
+  interest_paid_other_than_lease_liabilities_classified_as__etc:
+    display_label: Interest Paid (excluding Leases)
+    xbrl_tags:
+    - LVM:InterestPaidOtherThanLeaseLiabilitiesClassifiedAsOperatingActivities
+  operating_free_cash_flow:
+    display_label: Operating Free Cash Flow
+    xbrl_tags:
+    - LVM:OperatingFreeCashFlow
+  proceeds_from_changes_in_ownership_interests_in_subsidiar_etc:
+    display_label: Proceeds/(Payments) from Changes in Ownership of Subsidiaries
+    xbrl_tags:
+    - LVM:ProceedsFromChangesInOwnershipInterestsInSubsidiariesAndPaymentsFromChangesInOwnershipInterestsInSubsidiaries
+  purchase_and_proceeds_from_sale_of_consolidated_investmen_etc:
+    display_label: Purchase/(Sale) of Consolidated Investments
+    xbrl_tags:
+    - LVM:PurchaseAndProceedsFromSaleOfConsolidatedInvestmentsClassifiedAsInvestingActivities
+  purchase_and_proceeds_from_sale_of_non_current_available__etc:
+    display_label: Purchase/(Sale) of Non-current AFS Financial Assets
+    xbrl_tags:
+    - LVM:PurchaseAndProceedsFromSaleOfNonCurrentAvailableForSaleFinancialAssetsClassifiedAsInvestingActivities
+  capitalized_expenditure_to_fulfill_contracts_with_customers:
+    display_label: Capitalized Expenditure to Fulfill Customer Contracts
+    xbrl_tags:
+    - essi:CapitalizedExpenditureToFulfillContractsWithCustomers
+  cash_flow_for_the_period_continuing_operations:
+    display_label: Net Cash Flow for the Period (Continuing Operations)
+    xbrl_tags:
+    - essi:CashFlowForThePeriodContinuingOperations
+  change_in_liabilities_relating_to_restructuring_programs_etc:
+    display_label: Change in Restructuring-related Liabilities
+    xbrl_tags:
+    - essi:ChangeInLiabilitiesRelatingToRestructuringProgramsEtc
+  adjustments_for_decrease_increase_in_inventories:
+    display_label: Adjustments for Decrease/(Increase) in Inventories
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInInventories
+  adjustments_for_decrease_increase_in_trade_and_other_rece_etc:
+    display_label: Adjustments for Decrease/(Increase) in Trade Receivables
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInTradeAndOtherReceivables
+  adjustments_for_depreciation_and_amortisation_expense_and_etc:
+    display_label: Depreciation, Amortization and Impairment Adjustments
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
+  adjustments_for_increase_decrease_in_employee_benefit_lia_etc:
+    display_label: Adjustments for Increase/(Decrease) in Employee Benefit Liabilities
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInEmployeeBenefitLiabilities
+  adjustments_for_increase_decrease_in_trade_and_other_paya_etc:
+    display_label: Adjustments for Increase/(Decrease) in Trade Payables
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInTradeAndOtherPayables
+  adjustments_for_interest_expense:
+    display_label: Adjustments for Interest Expense
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForInterestExpense
+  adjustments_for_provisions:
+    display_label: Adjustments for Provisions
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForProvisions
+  adjustments_to_reconcile_profit_loss_other_than_changes_i_etc:
+    display_label: Adjustments to Reconcile Profit/Loss (excl. Working Capital)
+    xbrl_tags:
+    - ifrs-full:AdjustmentsToReconcileProfitLossOtherThanChangesInWorkingCapital
+  cash_flows_from_losing_control_of_subsidiaries_or_other_b_etc:
+    display_label: Cash Flows from Losing Control of Subsidiaries
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromLosingControlOfSubsidiariesOrOtherBusinessesClassifiedAsInvestingActivities
+  cash_flows_from_used_in_decrease_increase_in_shortterm_de_etc:
+    display_label: Change in Short-term Deposits and Investments
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInDecreaseIncreaseInShorttermDepositsAndInvestments
+  cash_flows_from_used_in_financing_activities_continuing_o_etc:
+    display_label: Cash Flow from Financing Activities (Continuing Operations)
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInFinancingActivitiesContinuingOperations
+  cash_flows_from_used_in_financing_activities_discontinued_etc:
+    display_label: Cash Flow from Financing Activities (Discontinued Operations)
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInFinancingActivitiesDiscontinuedOperations
+  cash_flows_from_used_in_investing_activities_continuing_o_etc:
+    display_label: Cash Flow from Investing Activities (Continuing Operations)
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInInvestingActivitiesContinuingOperations
+  cash_flows_from_used_in_investing_activities_discontinued_etc:
+    display_label: Cash Flow from Investing Activities (Discontinued Operations)
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInInvestingActivitiesDiscontinuedOperations
+  cash_flows_from_used_in_operating_activities_continuing_o_etc:
+    display_label: Cash Flow from Operating Activities (Continuing Operations)
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInOperatingActivitiesContinuingOperations
+  cash_flows_from_used_in_operating_activities_discontinued_etc:
+    display_label: Cash Flow from Operating Activities (Discontinued Operations)
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInOperatingActivitiesDiscontinuedOperations
+  cash_flows_used_in_obtaining_control_of_subsidiaries_or_o_etc:
+    display_label: Cash Used in Obtaining Control of Subsidiaries
+    xbrl_tags:
+    - ifrs-full:CashFlowsUsedInObtainingControlOfSubsidiariesOrOtherBusinessesClassifiedAsInvestingActivities
+  depreciation_amortisation_and_impairment_loss_reversal_of_etc:
+    display_label: Depreciation, Amortization and Impairment (P&L)
+    xbrl_tags:
+    - ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
+  dividends_paid:
+    display_label: Dividends Paid
+    xbrl_tags:
+    - ifrs-full:DividendsPaid
+  dividends_paid_to_equity_holders_of_parent_classified_as__etc:
+    display_label: Dividends Paid to Parent's Equity Holders
+    xbrl_tags:
+    - ifrs-full:DividendsPaidToEquityHoldersOfParentClassifiedAsFinancingActivities
+  dividends_paid_to_noncontrolling_interests_classified_as__etc:
+    display_label: Dividends Paid to Non-controlling Interests
+    xbrl_tags:
+    - ifrs-full:DividendsPaidToNoncontrollingInterestsClassifiedAsFinancingActivities
+  dividends_received_classified_as_investing_activities:
+    display_label: Dividends Received
+    xbrl_tags:
+    - ifrs-full:DividendsReceivedClassifiedAsInvestingActivities
+  income_taxes_paid_classified_as_operating_activities:
+    display_label: Income Taxes Paid (Operating)
+    xbrl_tags:
+    - ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities
+  income_taxes_paid_refund_classified_as_investing_activities:
+    display_label: Income Taxes Paid (Investing)
+    xbrl_tags:
+    - ifrs-full:IncomeTaxesPaidRefundClassifiedAsInvestingActivities
+  income_taxes_paid_refund_classified_as_operating_activities:
+    display_label: Income Taxes Paid (Operating)
+    xbrl_tags:
+    - ifrs-full:IncomeTaxesPaidRefundClassifiedAsOperatingActivities
+  increase_decrease_in_cash_and_cash_equivalents_before_eff_etc:
+    display_label: Increase/(Decrease) in Cash Before FX Effect
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseInCashAndCashEquivalentsBeforeEffectOfExchangeRateChanges
+  increase_decrease_in_cash_and_cash_equivalents_discontinu_etc:
+    display_label: Increase/(Decrease) in Cash (Discontinued Operations)
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseInCashAndCashEquivalentsDiscontinuedOperations
+  interest_paid_classified_as_financing_activities:
+    display_label: Interest Paid (Financing)
+    xbrl_tags:
+    - ifrs-full:InterestPaidClassifiedAsFinancingActivities
+  interest_paid_classified_as_investing_activities:
+    display_label: Interest Paid (Investing)
+    xbrl_tags:
+    - ifrs-full:InterestPaidClassifiedAsInvestingActivities
+  interest_received_classified_as_investing_activities:
+    display_label: Interest Received (Investing)
+    xbrl_tags:
+    - ifrs-full:InterestReceivedClassifiedAsInvestingActivities
+  interest_received_classified_as_operating_activities:
+    display_label: Interest Received (Operating)
+    xbrl_tags:
+    - ifrs-full:InterestReceivedClassifiedAsOperatingActivities
+  other_adjustments_to_reconcile_profit_loss:
+    display_label: Other Adjustments to Reconcile Profit/Loss
+    xbrl_tags:
+    - ifrs-full:OtherAdjustmentsToReconcileProfitLoss
+  other_inflows_outflows_of_cash_classified_as_operating_ac_etc:
+    display_label: Other Operating Cash Flows
+    xbrl_tags:
+    - ifrs-full:OtherInflowsOutflowsOfCashClassifiedAsOperatingActivities
+  payments_to_acquire_or_redeem_entitys_shares:
+    display_label: Payments to Acquire/Redeem Own Shares
+    xbrl_tags:
+    - ifrs-full:PaymentsToAcquireOrRedeemEntitysShares
+  proceeds_from_borrowings_classified_as_financing_activities:
+    display_label: Proceeds from Borrowings
+    xbrl_tags:
+    - ifrs-full:ProceedsFromBorrowingsClassifiedAsFinancingActivities
+  proceeds_from_disposals_of_property_plant_and_equipment_i_etc:
+    display_label: Proceeds from Disposals of PP&E, Intangibles and Other Non-current
+      Assets
+    xbrl_tags:
+    - ifrs-full:ProceedsFromDisposalsOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets
+  proceeds_from_sales_of_property_plant_and_equipment_class_etc:
+    display_label: Proceeds from Sale of PP&E
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities
+  proceeds_from_sales_or_maturity_of_financial_instruments__etc:
+    display_label: Proceeds from Sale/Maturity of Financial Instruments
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSalesOrMaturityOfFinancialInstrumentsClassifiedAsInvestingActivities
+  purchase_of_financial_instruments_classified_as_investing_etc:
+    display_label: Purchase of Financial Instruments
+    xbrl_tags:
+    - ifrs-full:PurchaseOfFinancialInstrumentsClassifiedAsInvestingActivities
+  purchase_of_interests_in_investments_accounted_for_using__etc:
+    display_label: Purchase of Equity-method Investments
+    xbrl_tags:
+    - ifrs-full:PurchaseOfInterestsInInvestmentsAccountedForUsingEquityMethod
+  purchase_of_other_longterm_assets_classified_as_investing_etc:
+    display_label: Purchase of Other Long-term Assets
+    xbrl_tags:
+    - ifrs-full:PurchaseOfOtherLongtermAssetsClassifiedAsInvestingActivities
+  purchase_of_property_plant_and_equipment_intangible_asset_etc:
+    display_label: Purchase of PP&E, Intangibles and Other Non-current Assets
+    xbrl_tags:
+    - ifrs-full:PurchaseOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets
+  purchase_of_treasury_shares:
+    display_label: Purchase of Treasury Shares
+    xbrl_tags:
+    - ifrs-full:PurchaseOfTreasuryShares
+  repayments_of_borrowings_classified_as_financing_activities:
+    display_label: Repayments of Borrowings
+    xbrl_tags:
+    - ifrs-full:RepaymentsOfBorrowingsClassifiedAsFinancingActivities
+  variations_de_perimetre:
+    display_label: Changes in Scope of Consolidation
+    xbrl_tags:
+    - loreal:VariationsDePerimetre
+  adjustments_for_increase_decrease_in_derivative_financial_etc:
+    display_label: Adjustments for Change in Derivative Financial Instruments
+    xbrl_tags:
+    - shel:AdjustmentsForIncreaseDecreaseInDerivativeFinancialInstruments
+  cash_flows_from_used_in_increase_decrease_in_derivative_f_etc:
+    display_label: Change in Derivative Financial Instruments
+    xbrl_tags:
+    - shel:CashFlowsFromUsedInIncreaseDecreaseInDerivativeFinancialInstruments
+  cash_outflow_for_total_cash_capital_expenditure:
+    display_label: Total Cash Capital Expenditure
+    xbrl_tags:
+    - shel:CashOutflowForTotalCashCapitalExpenditure
+  net_increase_decrease_in_debt_with_maturity_period_within_etc:
+    display_label: Net Change in Short-term Debt (<3 Months)
+    xbrl_tags:
+    - shel:NetIncreaseDecreaseInDebtWithMaturityPeriodWithinThreeMonths
+  net_purchases_and_dividends_received_shares_held_in_trust_etc:
+    display_label: Net Purchases/Dividends on Shares Held in Trust
+    xbrl_tags:
+    - shel:NetPurchasesAndDividendsReceivedSharesHeldInTrustClassifiedAsFinancingActivities
+  other_inflows_of_cash_classified_as_investing_activities:
+    display_label: Other Investing Cash Inflows
+    xbrl_tags:
+    - shel:OtherInflowsOfCashClassifiedAsInvestingActivities
+  other_outflows_of_cash_classified_as_investing_activities:
+    display_label: Other Investing Cash Outflows
+    xbrl_tags:
+    - shel:OtherOutflowsOfCashClassifiedAsInvestingActivities
+  proceeds_from_joint_ventures_and_associates_from_sale_cap_etc:
+    display_label: Proceeds from JVs/Associates (Sale, Capital Reduction, Loan Repayment)
+    xbrl_tags:
+    - shel:ProceedsFromJointVenturesAndAssociatesFromSaleCapitalReductionAndRepaymentOfLongTermLoans
+  dividends_paid_v2:
+    display_label: Dividends Paid
+    xbrl_tags:
+    - puig:DividendsPaid
 other:
   income_tax_relating_to_cash_flow_hedges_of_other_comprehe_etc:
     display_label: Income Tax on Cash Flow Hedges (OCI)
@@ -402,3 +987,236 @@ other:
     display_label: OCI before Tax - Remeasurements of Defined Benefit Plans
     xbrl_tags:
     - ifrs-full:OtherComprehensiveIncomeBeforeTaxGainsLossesOnRemeasurementsOfDefinedBenefitPlans
+  commitments_to_purchase_non_controlling_interests_equity:
+    display_label: Commitments to Purchase Non-controlling Interests (Equity Impact)
+    xbrl_tags:
+    - LVM:CommitmentsToPurchaseNonControllingInterestsEquity
+  gains_losses_on_change_in_value_of_time_value_of_options__etc:
+    display_label: OCI before Tax - Hedge Cost/Time Value Components
+    xbrl_tags:
+    - LVM:GainsLossesOnChangeInValueOfTimeValueOfOptionsBeforeTaxGainsLossesOnChangeInValueOfForwardElementsOfForwardContractsBeforeTaxAndGainsLossesOnChangeInValueOfForeignCurrencyBasisSpreadsBeforeTax
+  gains_losses_on_exchange_differences_on_translation_befor_etc:
+    display_label: OCI before Tax - Translation & Net Investment Hedges
+    xbrl_tags:
+    - LVM:GainsLossesOnExchangeDifferencesOnTranslationBeforeTaxAndGainsLossesOnHedgesOfNetInvestmentsInForeignOperationsBeforeTax
+  income_tax_relating_to_change_in_value_of_time_value_of_o_etc:
+    display_label: Income Tax on Hedge Cost/Time Value Components (OCI)
+    xbrl_tags:
+    - LVM:IncomeTaxRelatingToChangeInValueOfTimeValueOfOptionsOfOtherComprehensiveIncomeIncomeTaxRelatingToChangeInValueOfForwardElementsOfForwardContractsOfOtherComprehensiveIncomeAndIncomeTaxRelatingToChangeInValueOfForeignCurrencyBasisSpreadsOfOtherComprehensiveIncome
+  increase_decrease_in_number_of_shares_issued_through_canc_etc:
+    display_label: Change in Shares Issued via Cancellation of Treasury Shares
+    xbrl_tags:
+    - LVM:IncreaseDecreaseInNumberOfSharesIssuedThroughCancellationOfTreasuryShares
+  increase_decrease_through_acquisition_of_subsidiary_and_i_etc:
+    display_label: Change in Equity from Acquisition/Disposal of Subsidiary
+    xbrl_tags:
+    - LVM:IncreaseDecreaseThroughAcquisitionOfSubsidiaryAndIncreaseDecreaseThroughDisposalOfSubsidiary
+  non_current_commitments_to_purchase_non_controlling_inter_etc:
+    display_label: Non-current Commitments to Purchase Non-controlling Interests
+    xbrl_tags:
+    - LVM:NonCurrentCommitmentsToPurchaseNonControllingInterests
+  other_comprehensive_income_before_tax_gains_losses_on_rev_etc:
+    display_label: OCI before Tax - Vineyard Land Revaluation
+    xbrl_tags:
+    - LVM:OtherComprehensiveIncomeBeforeTaxGainsLossesOnRevaluationVineyardLand
+  other_comprehensive_income_net_of_tax_change_in_value_of__etc:
+    display_label: OCI Net of Tax - Hedge Cost/Time Value Components
+    xbrl_tags:
+    - LVM:OtherComprehensiveIncomeNetOfTaxChangeInValueOfTimeValueOfOptionsOtherComprehensiveIncomeNetOfTaxChangeInValueOfForwardElementsOfForwardContractsAndOtherComprehensiveIncomeNetOfTaxChangeInValueOfForeignCurrencyBasisSpreads
+  other_comprehensive_income_net_of_tax_gains_losses_on_rev_etc:
+    display_label: OCI Net of Tax - Vineyard Land Revaluation
+    xbrl_tags:
+    - LVM:OtherComprehensiveIncomeNetOfTaxGainsLossesOnRevaluationVineyardLand
+  reclassification_adjustments_on_change_in_value_of_time_v_etc:
+    display_label: OCI Reclassification - Hedge Cost/Time Value Components
+    xbrl_tags:
+    - LVM:ReclassificationAdjustmentsOnChangeInValueOfTimeValueOfOptionsBeforeTaxReclassificationAdjustmentsOnChangeInValueOfForwardElementsOfForwardContractsBeforeTaxAndReclassificationAdjustmentsOnChangeInValueOfForeignCurrencyBasisSpreadsBeforeTax
+  reclassification_adjustments_on_exchange_differences_on_t_etc:
+    display_label: OCI Reclassification - Translation & Net Investment Hedges
+    xbrl_tags:
+    - LVM:ReclassificationAdjustmentsOnExchangeDifferencesOnTranslationBeforeTaxAndReclassificationAdjustmentsOnHedgesOfNetInvestmentsInForeignOperationsBeforeTax
+  reclassification_adjustments_on_gains_losses_on_revaluati_etc:
+    display_label: OCI Reclassification - Vineyard Land Revaluation to Retained Earnings
+    xbrl_tags:
+    - LVM:ReclassificationAdjustmentsOnGainsLossesOnRevaluationToRetainedEarningsBeforeTaxVineyardLand
+  actuarial_gains_losses_on_defined_benefit_pension_plans_c_etc:
+    display_label: Actuarial Gains/Losses on Defined Benefit Pension Plans
+    xbrl_tags:
+    - essi:ActuarialGainsLossesOnDefinedBenefitPensionPlansContinuingOperations
+  gains_losses_from_hedges_of_net_investments_in_foreign_op_etc:
+    display_label: OCI - Hedges of Net Investments in Foreign Operations
+    xbrl_tags:
+    - essi:GainsLossesFromHedgesOfNetInvestmentsInForeignOperationsContinuingOperations
+  income_tax_attributable_to_components_in_other_comprehens_etc:
+    display_label: Income Tax on OCI Components
+    xbrl_tags:
+    - essi:IncomeTaxAttributableToComponentsInOtherComprehensiveContinuingOperations
+  other_comprehensive_income_for_the_period_net_of_tax_cont_etc:
+    display_label: Other Comprehensive Income, Net of Tax (Continuing Operations)
+    xbrl_tags:
+    - essi:OtherComprehensiveIncomeForThePeriodNetOfTaxContinuingOperations
+  other_comprehensive_income_for_the_period_net_of_tax_disc_etc:
+    display_label: Other Comprehensive Income, Net of Tax (Discontinued Operations)
+    xbrl_tags:
+    - essi:OtherComprehensiveIncomeForThePeriodNetOfTaxDiscontinuingOperations
+  revaluation_effect_upon_acquisition_of_non-controlling_in_etc:
+    display_label: Revaluation Effect on Acquisition of Non-controlling Interests
+    xbrl_tags:
+    - essi:RevaluationEffectUponAcquisitionOfNon-controllingInterests
+  total_items_that_have_been_or_may_be_reclassified_subsequ_etc:
+    display_label: OCI Items Reclassifiable to P&L (Continuing Operations)
+    xbrl_tags:
+    - essi:TotalItemsThatHaveBeenOrMayBeReclassifiedSubsequentlyToTheIncomeStatementContinuingOperations
+  total_items_that_have_been_or_may_be_reclassified_subsequ_etc_v2:
+    display_label: OCI Items Reclassifiable to P&L (Discontinued Operations)
+    xbrl_tags:
+    - essi:TotalItemsThatHaveBeenOrMayBeReclassifiedSubsequentlyToTheIncomeStatementDiscontinuingOperations
+  total_items_that_will_not_be_reclassified_to_the_income_s_etc:
+    display_label: OCI Items Not Reclassifiable to P&L (Continuing Operations)
+    xbrl_tags:
+    - essi:TotalItemsThatWillNotBeReclassifiedToTheIncomeStatementContinuingOperations
+  total_items_that_will_not_be_reclassified_to_the_income_s_etc_v2:
+    display_label: OCI Items Not Reclassifiable to P&L (Discontinued Operations)
+    xbrl_tags:
+    - essi:TotalItemsThatWillNotBeReclassifiedToTheIncomeStatementDiscontinuedOperations
+  translation_differences_in_foreign_operations_continuing__etc:
+    display_label: Translation Differences in Foreign Operations (OCI)
+    xbrl_tags:
+    - essi:TranslationDifferencesInForeignOperationsContinuingOperations
+  amount_removed_from_reserve_of_cash_flow_hedges_and_inclu_etc:
+    display_label: Cash Flow Hedge Reserve Reclassified to Asset/Liability Cost
+    xbrl_tags:
+    - ifrs-full:AmountRemovedFromReserveOfCashFlowHedgesAndIncludedInInitialCostOrOtherCarryingAmountOfNonfinancialAssetLiabilityOrFirmCommitmentForWhichFairValueHedgeAccountingIsApplied
+  cancellation_of_treasury_shares:
+    display_label: Cancellation of Treasury Shares (Equity Movement)
+    xbrl_tags:
+    - ifrs-full:CancellationOfTreasuryShares
+  dividends_proposed_or_declared_before_financial_statement_etc:
+    display_label: Dividends Proposed, Not Yet Recognized
+    xbrl_tags:
+    - ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwners
+  dividends_recognised_as_distributions_to_owners_of_parent:
+    display_label: Dividends Recognized as Distributions to Owners
+    xbrl_tags:
+    - ifrs-full:DividendsRecognisedAsDistributionsToOwnersOfParent
+  dividends_recognised_as_distributions_to_owners_per_share:
+    display_label: Dividends per Share
+    xbrl_tags:
+    - ifrs-full:DividendsRecognisedAsDistributionsToOwnersPerShare
+  gains_losses_on_cash_flow_hedges_before_tax:
+    display_label: OCI before Tax - Cash Flow Hedges (Gains/Losses)
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnCashFlowHedgesBeforeTax
+  gains_losses_on_cash_flow_hedges_net_of_tax:
+    display_label: OCI Net of Tax - Cash Flow Hedges (Gains/Losses)
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnCashFlowHedgesNetOfTax
+  income_tax_relating_to_changes_in_revaluation_surplus_of__etc:
+    display_label: Income Tax on Revaluation Surplus (OCI)
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToChangesInRevaluationSurplusOfOtherComprehensiveIncome
+  income_tax_relating_to_components_of_other_comprehensive__etc_v2:
+    display_label: Income Tax on OCI Items Reclassifiable to P&L
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLoss
+  income_tax_relating_to_exchange_differences_on_translatio_etc:
+    display_label: Income Tax on Translation & Net Investment Hedges (OCI)
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToExchangeDifferencesOnTranslationOfForeignOperationsAndHedgesOfNetInvestmentsInForeignOperationsIncludedInOtherComprehensiveIncome
+  increase_decrease_through_acquisition_of_subsidiary:
+    display_label: Change in Equity from Acquisition of Subsidiary
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughAcquisitionOfSubsidiary
+  increase_decrease_through_change_in_equity_of_subsidiaries:
+    display_label: Change in Equity of Subsidiaries
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughChangeInEquityOfSubsidiaries
+  increase_decrease_through_changes_in_ownership_interests__etc:
+    display_label: Change in Equity from Ownership Changes in Subsidiaries (No Loss
+      of Control)
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughChangesInOwnershipInterestsInSubsidiariesThatDoNotResultInLossOfControl
+  increase_decrease_through_sharebased_payment_transactions:
+    display_label: Change in Equity from Share-based Payments
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughSharebasedPaymentTransactions
+  increase_decrease_through_transfers_and_other_changes_equity:
+    display_label: Other Transfers/Changes in Equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughTransfersAndOtherChangesEquity
+  increase_decrease_through_treasury_share_transactions:
+    display_label: Change in Equity from Treasury Share Transactions
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughTreasuryShareTransactions
+  issue_of_equity:
+    display_label: Issue of Equity
+    xbrl_tags:
+    - ifrs-full:IssueOfEquity
+  number_of_shares_outstanding:
+    display_label: Number of Shares Outstanding
+    xbrl_tags:
+    - ifrs-full:NumberOfSharesOutstanding
+  other_comprehensive_income_before_tax_hedges_of_net_inves_etc:
+    display_label: OCI before Tax - Hedges of Net Investments in Foreign Operations
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxHedgesOfNetInvestmentsInForeignOperations
+  other_comprehensive_income_net_of_tax_cash_flow_hedges:
+    display_label: OCI Net of Tax - Cash Flow Hedges
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxCashFlowHedges
+  other_comprehensive_income_net_of_tax_change_in_value_of__etc_v2:
+    display_label: OCI Net of Tax - Foreign Currency Basis Spreads
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxChangeInValueOfForeignCurrencyBasisSpreads
+  other_comprehensive_income_net_of_tax_exchange_difference_etc:
+    display_label: OCI Net of Tax - Currency Translation Differences
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxExchangeDifferencesOnTranslation
+  other_comprehensive_income_net_of_tax_exchange_difference_etc_v2:
+    display_label: OCI Net of Tax - Translation & Net Investment Hedges
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxExchangeDifferencesOnTranslationOfForeignOperationsAndHedgesOfNetInvestmentsInForeignOperations
+  other_comprehensive_income_net_of_tax_financial_assets_me_etc:
+    display_label: OCI Net of Tax - FVOCI Financial Assets
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome
+  other_comprehensive_income_net_of_tax_gains_losses_from_i_etc:
+    display_label: OCI Net of Tax - Gains/Losses on Equity Instruments
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxGainsLossesFromInvestmentsInEquityInstruments
+  other_comprehensive_income_net_of_tax_gains_losses_on_rem_etc:
+    display_label: OCI Net of Tax - Remeasurements of Defined Benefit Plans
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxGainsLossesOnRemeasurementsOfDefinedBenefitPlans
+  other_comprehensive_income_net_of_tax_hedges_of_net_inves_etc:
+    display_label: OCI Net of Tax - Hedges of Net Investments in Foreign Operations
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxHedgesOfNetInvestmentsInForeignOperations
+  other_comprehensive_income_that_will_be_reclassified_to_p_etc:
+    display_label: OCI That Will Be Reclassified to P&L, Net of Tax
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax
+  other_comprehensive_income_that_will_not_be_reclassified__etc:
+    display_label: OCI That Will Not Be Reclassified to P&L, Net of Tax
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTax
+  reclassification_adjustments_on_cash_flow_hedges_before_tax:
+    display_label: OCI Reclassification - Cash Flow Hedges
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnCashFlowHedgesBeforeTax
+  share_of_other_comprehensive_income_of_associates_and_joi_etc:
+    display_label: Share of OCI of Associates/JVs, Reclassifiable to P&L
+    xbrl_tags:
+    - ifrs-full:ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLossNetOfTax
+  share_of_other_comprehensive_income_of_associates_and_joi_etc_v2:
+    display_label: Share of OCI of Associates/JVs, Not Reclassifiable to P&L
+    xbrl_tags:
+    - ifrs-full:ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillNotBeReclassifiedToProfitOrLossNetOfTax
+  amounts_transferred_from_other_comprehensive_income_to_pr_etc:
+    display_label: OCI Reclassification to Profit/Loss
+    xbrl_tags:
+    - shel:AmountsTransferredFromOtherComprehensiveIncomeToProfit
+  change_in_non_controlling_interest:
+    display_label: Change in Non-controlling Interest
+    xbrl_tags:
+    - shel:ChangeInNonControllingInterest

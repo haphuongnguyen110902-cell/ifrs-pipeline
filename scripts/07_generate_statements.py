@@ -1,4 +1,4 @@
-﻿"""
+"""
 Week 5 script: generate the final clean statements.
 
 Goal: query the database (not the CSV - the database is now the source
@@ -113,7 +113,8 @@ def fetch_facts(engine, company_name: str) -> pd.DataFrame:
             p.period_type,
             p.start_date,
             p.end_date,
-            fv.value
+            fv.value,
+            fv.currency
         FROM fact_value fv
         JOIN ifrs_concept ic ON fv.concept_id = ic.concept_id
         JOIN period p ON fv.period_id = p.period_id
@@ -177,7 +178,16 @@ if __name__ == "__main__":
         print(f"No data found for company '{args.company}'. Check the name matches what's in the database.")
         sys.exit(1)
 
-    print(f"Loaded {len(df)} facts for {args.company}\n")
+    # report the currency explicitly - values from different companies are
+    # NOT comparable unless they share one, and silently printing bare
+    # numbers is how that mistake gets made
+    currencies = sorted(set(c for c in df["currency"].dropna() if c))
+    cur_label = "/".join(currencies) if currencies else "unknown currency"
+    print(f"Loaded {len(df)} facts for {args.company}")
+    print(f"Reporting currency: {cur_label}")
+    if len(currencies) > 1:
+        print("*** WARNING: multiple currencies in one company's filing - check the data.")
+    print()
 
     statements = {
         "income_statement": "INCOME STATEMENT",
@@ -190,7 +200,7 @@ if __name__ == "__main__":
         table = build_statement_table(df, key)
         tables[key] = table
         print(f"\n{'=' * 70}")
-        print(title)
+        print(f"{title}  (in {cur_label})")
         print("=" * 70)
         if table.empty:
             print("(no data)")

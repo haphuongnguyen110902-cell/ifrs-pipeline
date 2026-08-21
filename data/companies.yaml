@@ -1,0 +1,53 @@
+# Maps each downloaded filing to a proper company name and its expected
+# reporting currency. The zip filename is the key (without .zip).
+#
+# expected_currency is a SANITY CHECK, not a conversion instruction - the
+# loader reads the real currency from the filing itself. If they disagree,
+# something is wrong (wrong entity downloaded, or the filing genuinely
+# reports in a currency you didn't expect - worth knowing either way).
+
+companies:
+  loreal_2025:
+    name: "L'Oreal"
+    expected_currency: EUR
+    sector: Consumer / Beauty
+  LVMH_2024:
+    name: "LVMH"
+    expected_currency: EUR
+    sector: Luxury Goods
+  Kering_2023:
+    name: "Kering"
+    expected_currency: EUR
+    sector: Luxury Goods
+  essilorluxottica_new:
+    name: "EssilorLuxottica"
+    expected_currency: EUR
+    sector: Consumer / Eyewear
+  puig:
+    name: "Puig Brands"
+    expected_currency: EUR
+    sector: Consumer / Beauty
+  danone:
+    name: "Danone"
+    expected_currency: EUR
+    sector: Consumer Staples
+  pernod_ricard:
+    name: "Pernod Ricard"
+    expected_currency: EUR
+    sector: Consumer / Beverages
+  essity:
+    name: "Essity"
+    expected_currency: SEK
+    sector: Consumer / Hygiene
+  Moncler_2025:
+    name: "Moncler"
+    expected_currency: EUR
+    sector: Luxury Apparel
+  Shell_2025:
+    name: "Shell"
+    expected_currency: USD
+    sector: Energy
+  Amplifon_2025:
+    name: "Amplifon"
+    expected_currency: EUR
+    sector: Consumer Health Retail

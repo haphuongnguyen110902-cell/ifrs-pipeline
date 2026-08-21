@@ -1,852 +1,1037 @@
 unmapped_concepts_to_review:
-- xbrl_tag: LVM:AdjustmentsForDepreciationRightOfUseAssets
-  suggested_key: adjustments_for_depreciation_right_of_use_assets
+- xbrl_tag: AMP:AdjustmentsForAmortisationAndImpairmentLossRecognisedInProfitOrLossGoodwill
+  suggested_key: adjustments_for_amortisation_and_impairment_loss_recognised_in_profit_or_loss_goodwill
   used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:AdjustmentsForProvisionsAndAdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
-  suggested_key: adjustments_for_provisions_and_adjustments_for_depreciation_and_amortisation_expense_and_impairment_loss_reversal_of_impairment_loss_recognised_in_profit_or_loss
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:CommitmentsToPurchaseNonControllingInterestsEquity
-  suggested_key: commitments_to_purchase_non_controlling_interests_equity
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:CostOfNetDebt
-  suggested_key: cost_of_net_debt
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:CurrentProvisionsAndOtherCurrentLiabilities
-  suggested_key: current_provisions_and_other_current_liabilities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:GainsLossesOnChangeInValueOfTimeValueOfOptionsBeforeTaxGainsLossesOnChangeInValueOfForwardElementsOfForwardContractsBeforeTaxAndGainsLossesOnChangeInValueOfForeignCurrencyBasisSpreadsBeforeTax
-  suggested_key: gains_losses_on_change_in_value_of_time_value_of_options_before_tax_gains_losses_on_change_in_value_of_forward_elements_of_forward_contracts_before_tax_and_gains_losses_on_change_in_value_of_foreign_currency_basis_spreads_before_tax
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:GainsLossesOnExchangeDifferencesOnTranslationBeforeTaxAndGainsLossesOnHedgesOfNetInvestmentsInForeignOperationsBeforeTax
-  suggested_key: gains_losses_on_exchange_differences_on_translation_before_tax_and_gains_losses_on_hedges_of_net_investments_in_foreign_operations_before_tax
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:IncomeTaxRelatingToChangeInValueOfTimeValueOfOptionsOfOtherComprehensiveIncomeIncomeTaxRelatingToChangeInValueOfForwardElementsOfForwardContractsOfOtherComprehensiveIncomeAndIncomeTaxRelatingToChangeInValueOfForeignCurrencyBasisSpreadsOfOtherComprehensiveIncome
-  suggested_key: income_tax_relating_to_change_in_value_of_time_value_of_options_of_other_comprehensive_income_income_tax_relating_to_change_in_value_of_forward_elements_of_forward_contracts_of_other_comprehensive_income_and_income_tax_relating_to_change_in_value_of_foreign_currency_basis_spreads_of_other_comprehensive_income
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:IncreaseDecreaseInCurrentFinancialAssetsAvailableForSaleClassifiedAsFinancingActivities
-  suggested_key: increase_decrease_in_current_financial_assets_available_for_sale_classified_as_financing_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:IncreaseDecreaseInEquityClassifiedAsFinancingActivities
-  suggested_key: increase_decrease_in_equity_classified_as_financing_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:IncreaseDecreaseInNumberOfSharesIssuedThroughCancellationOfTreasuryShares
-  suggested_key: increase_decrease_in_number_of_shares_issued_through_cancellation_of_treasury_shares
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:IncreaseDecreaseThroughAcquisitionOfSubsidiaryAndIncreaseDecreaseThroughDisposalOfSubsidiary
-  suggested_key: increase_decrease_through_acquisition_of_subsidiary_and_increase_decrease_through_disposal_of_subsidiary
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:InterestPaidOnLeaseLiabilitiesClassifiedAsOperatingActivities
-  suggested_key: interest_paid_on_lease_liabilities_classified_as_operating_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:InterestPaidOtherThanLeaseLiabilitiesClassifiedAsOperatingActivities
-  suggested_key: interest_paid_other_than_lease_liabilities_classified_as_operating_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:NonCurrentCommitmentsToPurchaseNonControllingInterests
-  suggested_key: non_current_commitments_to_purchase_non_controlling_interests
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:NonCurrentProvisionsAndOtherNonCurrentLiabilities
-  suggested_key: non_current_provisions_and_other_non_current_liabilities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:OperatingFreeCashFlow
-  suggested_key: operating_free_cash_flow
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:OtherComprehensiveIncomeBeforeTaxGainsLossesOnRevaluationVineyardLand
-  suggested_key: other_comprehensive_income_before_tax_gains_losses_on_revaluation_vineyard_land
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:OtherComprehensiveIncomeNetOfTaxChangeInValueOfTimeValueOfOptionsOtherComprehensiveIncomeNetOfTaxChangeInValueOfForwardElementsOfForwardContractsAndOtherComprehensiveIncomeNetOfTaxChangeInValueOfForeignCurrencyBasisSpreads
-  suggested_key: other_comprehensive_income_net_of_tax_change_in_value_of_time_value_of_options_other_comprehensive_income_net_of_tax_change_in_value_of_forward_elements_of_forward_contracts_and_other_comprehensive_income_net_of_tax_change_in_value_of_foreign_currency_basis_spreads
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:OtherComprehensiveIncomeNetOfTaxGainsLossesOnRevaluationVineyardLand
-  suggested_key: other_comprehensive_income_net_of_tax_gains_losses_on_revaluation_vineyard_land
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:ProceedsFromChangesInOwnershipInterestsInSubsidiariesAndPaymentsFromChangesInOwnershipInterestsInSubsidiaries
-  suggested_key: proceeds_from_changes_in_ownership_interests_in_subsidiaries_and_payments_from_changes_in_ownership_interests_in_subsidiaries
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:ProfitLossFromOperatingActivitiesAfterShareOfProfitLossOfAssociatesAndJointVentures
-  suggested_key: profit_loss_from_operating_activities_after_share_of_profit_loss_of_associates_and_joint_ventures
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:ProfitLossFromOperatingActivitiesAfterShareOfProfitLossOfAssociatesAndJointVenturesInOperatingActivity
-  suggested_key: profit_loss_from_operating_activities_after_share_of_profit_loss_of_associates_and_joint_ventures_in_operating_activity
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:ProfitLossFromOperatingActivitiesRecurringIncludingShareOfProfitOfEquityAccountedInvestees
-  suggested_key: profit_loss_from_operating_activities_recurring_including_share_of_profit_of_equity_accounted_investees
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:PurchaseAndProceedsFromSaleOfConsolidatedInvestmentsClassifiedAsInvestingActivities
-  suggested_key: purchase_and_proceeds_from_sale_of_consolidated_investments_classified_as_investing_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:PurchaseAndProceedsFromSaleOfNonCurrentAvailableForSaleFinancialAssetsClassifiedAsInvestingActivities
-  suggested_key: purchase_and_proceeds_from_sale_of_non_current_available_for_sale_financial_assets_classified_as_investing_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:ReclassificationAdjustmentsOnChangeInValueOfTimeValueOfOptionsBeforeTaxReclassificationAdjustmentsOnChangeInValueOfForwardElementsOfForwardContractsBeforeTaxAndReclassificationAdjustmentsOnChangeInValueOfForeignCurrencyBasisSpreadsBeforeTax
-  suggested_key: reclassification_adjustments_on_change_in_value_of_time_value_of_options_before_tax_reclassification_adjustments_on_change_in_value_of_forward_elements_of_forward_contracts_before_tax_and_reclassification_adjustments_on_change_in_value_of_foreign_currency_basis_spreads_before_tax
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:ReclassificationAdjustmentsOnExchangeDifferencesOnTranslationBeforeTaxAndReclassificationAdjustmentsOnHedgesOfNetInvestmentsInForeignOperationsBeforeTax
-  suggested_key: reclassification_adjustments_on_exchange_differences_on_translation_before_tax_and_reclassification_adjustments_on_hedges_of_net_investments_in_foreign_operations_before_tax
-  used_by:
-  - LVMH_2024
-- xbrl_tag: LVM:ReclassificationAdjustmentsOnGainsLossesOnRevaluationToRetainedEarningsBeforeTaxVineyardLand
-  suggested_key: reclassification_adjustments_on_gains_losses_on_revaluation_to_retained_earnings_before_tax_vineyard_land
-  used_by:
-  - LVMH_2024
-- xbrl_tag: essi:ActuarialGainsLossesOnDefinedBenefitPensionPlansContinuingOperations
-  suggested_key: actuarial_gains_losses_on_defined_benefit_pension_plans_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:AmortizationOfAcquisitionRelatedIntangibleAssetsExcludingItemsAffectingComparability
-  suggested_key: amortization_of_acquisition_related_intangible_assets_excluding_items_affecting_comparability
-  used_by:
-  - essity
-- xbrl_tag: essi:CapitalizedExpenditureToFulfillContractsWithCustomers
-  suggested_key: capitalized_expenditure_to_fulfill_contracts_with_customers
-  used_by:
-  - essity
-- xbrl_tag: essi:CashFlowForThePeriodContinuingOperations
-  suggested_key: cash_flow_for_the_period_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:ChangeInLiabilitiesRelatingToRestructuringProgramsEtc
-  suggested_key: change_in_liabilities_relating_to_restructuring_programs_etc
-  used_by:
-  - essity
-- xbrl_tag: essi:CostOfGoodsSoldExcludingItemsAffectingComparability
-  suggested_key: cost_of_goods_sold_excluding_items_affecting_comparability
-  used_by:
-  - essity
-- xbrl_tag: essi:GainsLossesFromHedgesOfNetInvestmentsInForeignOperationsContinuingOperations
-  suggested_key: gains_losses_from_hedges_of_net_investments_in_foreign_operations_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:GrossProfitExclIAC
-  suggested_key: gross_profit_excl_i_a_c
-  used_by:
-  - essity
-- xbrl_tag: essi:IncomeTaxAttributableToComponentsInOtherComprehensiveContinuingOperations
-  suggested_key: income_tax_attributable_to_components_in_other_comprehensive_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:ItemsAffectingComparabilityAmortizationOfAcquisitionRelatedIntangibleAssets
-  suggested_key: items_affecting_comparability_amortization_of_acquisition_related_intangible_assets
-  used_by:
-  - essity
-- xbrl_tag: essi:ItemsAffectingComparabilityCostOfGoodsSold
-  suggested_key: items_affecting_comparability_cost_of_goods_sold
-  used_by:
-  - essity
-- xbrl_tag: essi:ItemsAffectingComparabilitySalesGeneralAndAdministration
-  suggested_key: items_affecting_comparability_sales_general_and_administration
-  used_by:
-  - essity
-- xbrl_tag: essi:OperatingProfitBeforeAmortizationOfAcquisitionRelatedIntangibleAssetEBITAExclIAC
-  suggested_key: operating_profit_before_amortization_of_acquisition_related_intangible_asset_e_b_i_t_a_excl_i_a_c
-  used_by:
-  - essity
-- xbrl_tag: essi:OperatingProfitBeforeAmortizationOfAcquisitionRelatedIntangibleAssetsEBITA
-  suggested_key: operating_profit_before_amortization_of_acquisition_related_intangible_assets_e_b_i_t_a
-  used_by:
-  - essity
-- xbrl_tag: essi:OperatingProfitExclIAC
-  suggested_key: operating_profit_excl_i_a_c
-  used_by:
-  - essity
-- xbrl_tag: essi:OperatingProfitExcludingNonCashItems
-  suggested_key: operating_profit_excluding_non_cash_items
-  used_by:
-  - essity
-- xbrl_tag: essi:OtherComprehensiveIncomeForThePeriodNetOfTaxContinuingOperations
-  suggested_key: other_comprehensive_income_for_the_period_net_of_tax_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:OtherComprehensiveIncomeForThePeriodNetOfTaxDiscontinuingOperations
-  suggested_key: other_comprehensive_income_for_the_period_net_of_tax_discontinuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:OtherFinancialItems
-  suggested_key: other_financial_items
-  used_by:
-  - essity
-- xbrl_tag: essi:ProfitBeforeTaxExclIAC
-  suggested_key: profit_before_tax_excl_i_a_c
-  used_by:
-  - essity
-- xbrl_tag: essi:ProfitForThePeriodExclIACContinuingOperations
-  suggested_key: profit_for_the_period_excl_i_a_c_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:RevaluationEffectUponAcquisitionOfNon-controllingInterests
-  suggested_key: revaluation_effect_upon_acquisition_of_non-controlling_interests
-  used_by:
-  - essity
-- xbrl_tag: essi:SalesGeneralAndAdministrationExcludingItemsAffectingComparability
-  suggested_key: sales_general_and_administration_excluding_items_affecting_comparability
-  used_by:
-  - essity
-- xbrl_tag: essi:TotalAssetsContinuingOperations
-  suggested_key: total_assets_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:TotalItemsThatHaveBeenOrMayBeReclassifiedSubsequentlyToTheIncomeStatementContinuingOperations
-  suggested_key: total_items_that_have_been_or_may_be_reclassified_subsequently_to_the_income_statement_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:TotalItemsThatHaveBeenOrMayBeReclassifiedSubsequentlyToTheIncomeStatementDiscontinuingOperations
-  suggested_key: total_items_that_have_been_or_may_be_reclassified_subsequently_to_the_income_statement_discontinuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:TotalItemsThatWillNotBeReclassifiedToTheIncomeStatementContinuingOperations
-  suggested_key: total_items_that_will_not_be_reclassified_to_the_income_statement_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:TotalItemsThatWillNotBeReclassifiedToTheIncomeStatementDiscontinuedOperations
-  suggested_key: total_items_that_will_not_be_reclassified_to_the_income_statement_discontinued_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:TotalLiabilitiesContinuingOperations
-  suggested_key: total_liabilities_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: essi:TranslationDifferencesInForeignOperationsContinuingOperations
-  suggested_key: translation_differences_in_foreign_operations_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:AdjustedWeightedAverageShares
-  suggested_key: adjusted_weighted_average_shares
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:AdjustmentsForDecreaseIncreaseInInventories
-  suggested_key: adjustments_for_decrease_increase_in_inventories
-  used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:AdjustmentsForDecreaseIncreaseInTradeAndOtherReceivables
-  suggested_key: adjustments_for_decrease_increase_in_trade_and_other_receivables
-  used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
-  suggested_key: adjustments_for_depreciation_and_amortisation_expense_and_impairment_loss_reversal_of_impairment_loss_recognised_in_profit_or_loss
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:AdjustmentsForIncreaseDecreaseInEmployeeBenefitLiabilities
-  suggested_key: adjustments_for_increase_decrease_in_employee_benefit_liabilities
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:AdjustmentsForIncreaseDecreaseInTradeAndOtherPayables
-  suggested_key: adjustments_for_increase_decrease_in_trade_and_other_payables
-  used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:AdjustmentsForInterestExpense
-  suggested_key: adjustments_for_interest_expense
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:AdjustmentsForProvisions
-  suggested_key: adjustments_for_provisions
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:AdjustmentsToReconcileProfitLossOtherThanChangesInWorkingCapital
-  suggested_key: adjustments_to_reconcile_profit_loss_other_than_changes_in_working_capital
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:AdministrativeExpense
-  suggested_key: administrative_expense
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:AmountRemovedFromReserveOfCashFlowHedgesAndIncludedInInitialCostOrOtherCarryingAmountOfNonfinancialAssetLiabilityOrFirmCommitmentForWhichFairValueHedgeAccountingIsApplied
-  suggested_key: amount_removed_from_reserve_of_cash_flow_hedges_and_included_in_initial_cost_or_other_carrying_amount_of_nonfinancial_asset_liability_or_firm_commitment_for_which_fair_value_hedge_accounting_is_applied
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:BasicEarningsLossPerShareFromContinuingOperations
-  suggested_key: basic_earnings_loss_per_share_from_continuing_operations
-  used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:BasicEarningsLossPerShareFromDiscontinuedOperations
-  suggested_key: basic_earnings_loss_per_share_from_discontinued_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:CancellationOfTreasuryShares
-  suggested_key: cancellation_of_treasury_shares
-  used_by:
-  - LVMH_2024
-  - loreal_2025
-- xbrl_tag: ifrs-full:CashAndCashEquivalents
-  suggested_key: cash_and_cash_equivalents
-  used_by:
-  - LVMH_2024
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsFromLosingControlOfSubsidiariesOrOtherBusinessesClassifiedAsInvestingActivities
-  suggested_key: cash_flows_from_losing_control_of_subsidiaries_or_other_businesses_classified_as_investing_activities
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsFromUsedInDecreaseIncreaseInShorttermDepositsAndInvestments
-  suggested_key: cash_flows_from_used_in_decrease_increase_in_shortterm_deposits_and_investments
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsFromUsedInFinancingActivitiesContinuingOperations
-  suggested_key: cash_flows_from_used_in_financing_activities_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsFromUsedInFinancingActivitiesDiscontinuedOperations
-  suggested_key: cash_flows_from_used_in_financing_activities_discontinued_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsFromUsedInInvestingActivitiesContinuingOperations
-  suggested_key: cash_flows_from_used_in_investing_activities_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsFromUsedInInvestingActivitiesDiscontinuedOperations
-  suggested_key: cash_flows_from_used_in_investing_activities_discontinued_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsFromUsedInOperatingActivitiesContinuingOperations
-  suggested_key: cash_flows_from_used_in_operating_activities_continuing_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsFromUsedInOperatingActivitiesDiscontinuedOperations
-  suggested_key: cash_flows_from_used_in_operating_activities_discontinued_operations
+  - Amplifon_2025
+- xbrl_tag: AMP:AdjustmentsForAmortisationAndImpairmentLossRecognisedInProfitOrLossIntangibleAssetsOtherThanGoodwill
+  suggested_key: adjustments_for_amortisation_and_impairment_loss_recognised_in_profit_or_loss_intangible_assets_other_than_goodwill
   used_by:
-  - essity
-- xbrl_tag: ifrs-full:CashFlowsUsedInObtainingControlOfSubsidiariesOrOtherBusinessesClassifiedAsInvestingActivities
-  suggested_key: cash_flows_used_in_obtaining_control_of_subsidiaries_or_other_businesses_classified_as_investing_activities
+  - Amplifon_2025
+- xbrl_tag: AMP:AdjustmentsForDecreaseInProvisions
+  suggested_key: adjustments_for_decrease_in_provisions
   used_by:
-  - essity
-- xbrl_tag: ifrs-full:ComprehensiveIncome
-  suggested_key: comprehensive_income
+  - Amplifon_2025
+- xbrl_tag: AMP:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivablesAndAdjustmentsForIncreaseDecreaseInOtherOperatingPayables
+  suggested_key: adjustments_for_decrease_increase_in_other_operating_receivables_and_adjustments_for_increase_decrease_in_other_operating_payables
   used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:ComprehensiveIncomeFromContinuingOperations
-  suggested_key: comprehensive_income_from_continuing_operations
+  - Amplifon_2025
+- xbrl_tag: AMP:AdjustmentsForDepreciationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossPropertyPlantAndEquipment
+  suggested_key: adjustments_for_depreciation_and_impairment_loss_reversal_of_impairment_loss_recognised_in_profit_or_loss_property_plant_and_equipment
   used_by:
-  - essity
-- xbrl_tag: ifrs-full:ComprehensiveIncomeFromDiscontinuedOperations
-  suggested_key: comprehensive_income_from_discontinued_operations
+  - Amplifon_2025
+- xbrl_tag: AMP:AdjustmentsForDepreciationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossRightOfUseAssets
+  suggested_key: adjustments_for_depreciation_and_impairment_loss_reversal_of_impairment_loss_recognised_in_profit_or_loss_right_of_use_assets
   used_by:
-  - essity
-- xbrl_tag: ifrs-full:CurrentAssetsOtherThanAssetsOrDisposalGroupsClassifiedAsHeldForSaleOrAsHeldForDistributionToOwners
-  suggested_key: current_assets_other_than_assets_or_disposal_groups_classified_as_held_for_sale_or_as_held_for_distribution_to_owners
+  - Amplifon_2025
+- xbrl_tag: AMP:AdjustmentsForIncreaseInProvisionsOtherAdjustmentsForNonCashItemsAndAdjustmentsForLossesGainsOnDisposalOfNonCurrentAssets
+  suggested_key: adjustments_for_increase_in_provisions_other_adjustments_for_non_cash_items_and_adjustments_for_losses_gains_on_disposal_of_non_current_assets
   used_by:
-  - essity
-- xbrl_tag: ifrs-full:CurrentLiabilitiesOtherThanLiabilitiesIncludedInDisposalGroupsClassifiedAsHeldForSale
-  suggested_key: current_liabilities_other_than_liabilities_included_in_disposal_groups_classified_as_held_for_sale
+  - Amplifon_2025
+- xbrl_tag: AMP:CapitalIncreasesContributionsByNonControllingInterestsAndDividendsPaidToNonControllingInterestsBySubsidiariesClassifiedAsFinancingActivities
+  suggested_key: capital_increases_contributions_by_non_controlling_interests_and_dividends_paid_to_non_controlling_interests_by_subsidiaries_classified_as_financing_activities
   used_by:
-  - essity
-- xbrl_tag: ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
-  suggested_key: depreciation_amortisation_and_impairment_loss_reversal_of_impairment_loss_recognised_in_profit_or_loss
+  - Amplifon_2025
+- xbrl_tag: AMP:CashFlowsFromUsedInInvestingActivitiesAcquisitions
+  suggested_key: cash_flows_from_used_in_investing_activities_acquisitions
   used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:DilutedEarningsLossPerShareFromContinuingOperations
-  suggested_key: diluted_earnings_loss_per_share_from_continuing_operations
+  - Amplifon_2025
+- xbrl_tag: AMP:CashFlowsFromUsedInInvestingActivitiesOperational
+  suggested_key: cash_flows_from_used_in_investing_activities_operational
   used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:DilutedEarningsLossPerShareFromDiscontinuedOperations
-  suggested_key: diluted_earnings_loss_per_share_from_discontinued_operations
+  - Amplifon_2025
+- xbrl_tag: AMP:IncreaseDecreaseInLiabilitiesRecognisedAsOfAcquisitionDateClassifiedAsInvestingActivities
+  suggested_key: increase_decrease_in_liabilities_recognised_as_of_acquisition_date_classified_as_investing_activities
   used_by:
-  - essity
-- xbrl_tag: ifrs-full:DistributionCosts
-  suggested_key: distribution_costs
+  - Amplifon_2025
+- xbrl_tag: AMP:IncreaseDecreaseThroughInflationAccounting
+  suggested_key: increase_decrease_through_inflation_accounting
   used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:DividendsPaid
-  suggested_key: dividends_paid
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-  - essilorluxottica_new
-  - essity
-  - loreal_2025
-- xbrl_tag: ifrs-full:DividendsPaidToEquityHoldersOfParentClassifiedAsFinancingActivities
-  suggested_key: dividends_paid_to_equity_holders_of_parent_classified_as_financing_activities
-  used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:DividendsPaidToNoncontrollingInterestsClassifiedAsFinancingActivities
-  suggested_key: dividends_paid_to_noncontrolling_interests_classified_as_financing_activities
-  used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwners
-  suggested_key: dividends_proposed_or_declared_before_financial_statements_authorised_for_issue_but_not_recognised_as_distribution_to_owners
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:DividendsReceivedClassifiedAsInvestingActivities
-  suggested_key: dividends_received_classified_as_investing_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:DividendsRecognisedAsDistributionsToOwnersOfParent
-  suggested_key: dividends_recognised_as_distributions_to_owners_of_parent
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:DividendsRecognisedAsDistributionsToOwnersPerShare
-  suggested_key: dividends_recognised_as_distributions_to_owners_per_share
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:ExpenseArisingFromExplorationForAndEvaluationOfMineralResources
-  suggested_key: expense_arising_from_exploration_for_and_evaluation_of_mineral_resources
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:FinanceCosts
-  suggested_key: finance_costs
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:FinanceIncome
-  suggested_key: finance_income
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:FinanceIncomeCost
-  suggested_key: finance_income_cost
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:GainsLossesOnCashFlowHedgesBeforeTax
-  suggested_key: gains_losses_on_cash_flow_hedges_before_tax
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:GainsLossesOnCashFlowHedgesNetOfTax
-  suggested_key: gains_losses_on_cash_flow_hedges_net_of_tax
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:IncomeFromContinuingOperationsAttributableToOwnersOfParent
-  suggested_key: income_from_continuing_operations_attributable_to_owners_of_parent
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:IncomeFromDiscontinuedOperationsAttributableToOwnersOfParent
-  suggested_key: income_from_discontinued_operations_attributable_to_owners_of_parent
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:IncomeTaxRelatingToChangesInRevaluationSurplusOfOtherComprehensiveIncome
-  suggested_key: income_tax_relating_to_changes_in_revaluation_surplus_of_other_comprehensive_income
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLoss
-  suggested_key: income_tax_relating_to_components_of_other_comprehensive_income_that_will_be_reclassified_to_profit_or_loss
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:IncomeTaxRelatingToExchangeDifferencesOnTranslationOfForeignOperationsAndHedgesOfNetInvestmentsInForeignOperationsIncludedInOtherComprehensiveIncome
-  suggested_key: income_tax_relating_to_exchange_differences_on_translation_of_foreign_operations_and_hedges_of_net_investments_in_foreign_operations_included_in_other_comprehensive_income
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities
-  suggested_key: income_taxes_paid_classified_as_operating_activities
-  used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:IncomeTaxesPaidRefundClassifiedAsInvestingActivities
-  suggested_key: income_taxes_paid_refund_classified_as_investing_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:IncomeTaxesPaidRefundClassifiedAsOperatingActivities
-  suggested_key: income_taxes_paid_refund_classified_as_operating_activities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:IncreaseDecreaseInCashAndCashEquivalentsBeforeEffectOfExchangeRateChanges
-  suggested_key: increase_decrease_in_cash_and_cash_equivalents_before_effect_of_exchange_rate_changes
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:IncreaseDecreaseInCashAndCashEquivalentsDiscontinuedOperations
-  suggested_key: increase_decrease_in_cash_and_cash_equivalents_discontinued_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:IncreaseDecreaseThroughAcquisitionOfSubsidiary
-  suggested_key: increase_decrease_through_acquisition_of_subsidiary
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:IncreaseDecreaseThroughChangeInEquityOfSubsidiaries
-  suggested_key: increase_decrease_through_change_in_equity_of_subsidiaries
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:IncreaseDecreaseThroughChangesInOwnershipInterestsInSubsidiariesThatDoNotResultInLossOfControl
-  suggested_key: increase_decrease_through_changes_in_ownership_interests_in_subsidiaries_that_do_not_result_in_loss_of_control
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:IncreaseDecreaseThroughSharebasedPaymentTransactions
-  suggested_key: increase_decrease_through_sharebased_payment_transactions
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-  - essilorluxottica_new
-  - loreal_2025
-- xbrl_tag: ifrs-full:IncreaseDecreaseThroughTransfersAndOtherChangesEquity
-  suggested_key: increase_decrease_through_transfers_and_other_changes_equity
-  used_by:
-  - Shell_2025
-  - loreal_2025
-- xbrl_tag: ifrs-full:IncreaseDecreaseThroughTreasuryShareTransactions
-  suggested_key: increase_decrease_through_treasury_share_transactions
-  used_by:
-  - LVMH_2024
-  - essilorluxottica_new
-  - loreal_2025
-- xbrl_tag: ifrs-full:InterestExpense
-  suggested_key: interest_expense
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:InterestExpenseOnLeaseLiabilities
-  suggested_key: interest_expense_on_lease_liabilities
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:InterestPaidClassifiedAsFinancingActivities
-  suggested_key: interest_paid_classified_as_financing_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:InterestPaidClassifiedAsInvestingActivities
-  suggested_key: interest_paid_classified_as_investing_activities
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:InterestReceivedClassifiedAsInvestingActivities
-  suggested_key: interest_received_classified_as_investing_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:InterestReceivedClassifiedAsOperatingActivities
-  suggested_key: interest_received_classified_as_operating_activities
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:IssueOfEquity
-  suggested_key: issue_of_equity
-  used_by:
-  - loreal_2025
-- xbrl_tag: ifrs-full:LiabilitiesIncludedInDisposalGroupsClassifiedAsHeldForSale
-  suggested_key: liabilities_included_in_disposal_groups_classified_as_held_for_sale
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:NoncurrentAssetsOrDisposalGroupsClassifiedAsHeldForSale
-  suggested_key: noncurrent_assets_or_disposal_groups_classified_as_held_for_sale
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:NoncurrentFinancialAssetsAvailableforsale
-  suggested_key: noncurrent_financial_assets_availableforsale
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:NoncurrentInvestmentsOtherThanInvestmentsAccountedForUsingEquityMethod
-  suggested_key: noncurrent_investments_other_than_investments_accounted_for_using_equity_method
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:NoncurrentRecognisedAssetsDefinedBenefitPlan
-  suggested_key: noncurrent_recognised_assets_defined_benefit_plan
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:NoncurrentRecognisedLiabilitiesDefinedBenefitPlan
-  suggested_key: noncurrent_recognised_liabilities_defined_benefit_plan
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:NumberOfSharesOutstanding
-  suggested_key: number_of_shares_outstanding
+  - Amplifon_2025
+- xbrl_tag: AMP:IncreaseDecreaseThroughMiscellaneousOtherChanges
+  suggested_key: increase_decrease_through_miscellaneous_other_changes
   used_by:
-  - Kering_2023
-- xbrl_tag: ifrs-full:OperatingExpense
-  suggested_key: operating_expense
+  - Amplifon_2025
+- xbrl_tag: AMP:IncreaseDecreaseThroughShareBasedPaymentTransfers
+  suggested_key: increase_decrease_through_share_based_payment_transfers
   used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:OtherAdjustmentsToReconcileProfitLoss
-  suggested_key: other_adjustments_to_reconcile_profit_loss
+  - Amplifon_2025
+- xbrl_tag: AMP:InterestPaidAndInterestReceivedClassifiedAsOperatingActivities
+  suggested_key: interest_paid_and_interest_received_classified_as_operating_activities
   used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeBeforeTaxHedgesOfNetInvestmentsInForeignOperations
-  suggested_key: other_comprehensive_income_before_tax_hedges_of_net_investments_in_foreign_operations
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxCashFlowHedges
-  suggested_key: other_comprehensive_income_net_of_tax_cash_flow_hedges
-  used_by:
-  - LVMH_2024
-  - loreal_2025
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxChangeInValueOfForeignCurrencyBasisSpreads
-  suggested_key: other_comprehensive_income_net_of_tax_change_in_value_of_foreign_currency_basis_spreads
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxExchangeDifferencesOnTranslation
-  suggested_key: other_comprehensive_income_net_of_tax_exchange_differences_on_translation
-  used_by:
-  - Shell_2025
-  - loreal_2025
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxExchangeDifferencesOnTranslationOfForeignOperationsAndHedgesOfNetInvestmentsInForeignOperations
-  suggested_key: other_comprehensive_income_net_of_tax_exchange_differences_on_translation_of_foreign_operations_and_hedges_of_net_investments_in_foreign_operations
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome
-  suggested_key: other_comprehensive_income_net_of_tax_financial_assets_measured_at_fair_value_through_other_comprehensive_income
-  used_by:
-  - Shell_2025
-  - loreal_2025
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxGainsLossesFromInvestmentsInEquityInstruments
-  suggested_key: other_comprehensive_income_net_of_tax_gains_losses_from_investments_in_equity_instruments
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxGainsLossesOnRemeasurementsOfDefinedBenefitPlans
-  suggested_key: other_comprehensive_income_net_of_tax_gains_losses_on_remeasurements_of_defined_benefit_plans
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-  - loreal_2025
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxHedgesOfNetInvestmentsInForeignOperations
-  suggested_key: other_comprehensive_income_net_of_tax_hedges_of_net_investments_in_foreign_operations
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax
-  suggested_key: other_comprehensive_income_that_will_be_reclassified_to_profit_or_loss_net_of_tax
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-- xbrl_tag: ifrs-full:OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTax
-  suggested_key: other_comprehensive_income_that_will_not_be_reclassified_to_profit_or_loss_net_of_tax
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-- xbrl_tag: ifrs-full:OtherCurrentAssets
-  suggested_key: other_current_assets
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:OtherCurrentFinancialAssets
-  suggested_key: other_current_financial_assets
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherCurrentFinancialLiabilities
-  suggested_key: other_current_financial_liabilities
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherCurrentPayables
-  suggested_key: other_current_payables
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherCurrentReceivables
-  suggested_key: other_current_receivables
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherExpenseByNature
-  suggested_key: other_expense_by_nature
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:OtherInflowsOutflowsOfCashClassifiedAsOperatingActivities
-  suggested_key: other_inflows_outflows_of_cash_classified_as_operating_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:OtherNoncurrentAssets
-  suggested_key: other_noncurrent_assets
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:OtherNoncurrentFinancialLiabilities
-  suggested_key: other_noncurrent_financial_liabilities
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherNoncurrentLiabilities
-  suggested_key: other_noncurrent_liabilities
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherNoncurrentNonfinancialAssets
-  suggested_key: other_noncurrent_nonfinancial_assets
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherOperatingIncomeExpense
-  suggested_key: other_operating_income_expense
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:OtherReserves
-  suggested_key: other_reserves
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:OtherShorttermProvisions
-  suggested_key: other_shortterm_provisions
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:PaymentsToAcquireOrRedeemEntitysShares
-  suggested_key: payments_to_acquire_or_redeem_entitys_shares
-  used_by:
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:ProceedsFromBorrowingsClassifiedAsFinancingActivities
-  suggested_key: proceeds_from_borrowings_classified_as_financing_activities
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-  - essity
-  - pernod_ricard
-- xbrl_tag: ifrs-full:ProceedsFromDisposalsOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets
-  suggested_key: proceeds_from_disposals_of_property_plant_and_equipment_intangible_assets_other_than_goodwill_investment_property_and_other_noncurrent_assets
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities
-  suggested_key: proceeds_from_sales_of_property_plant_and_equipment_classified_as_investing_activities
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:ProceedsFromSalesOrMaturityOfFinancialInstrumentsClassifiedAsInvestingActivities
-  suggested_key: proceeds_from_sales_or_maturity_of_financial_instruments_classified_as_investing_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:ProfitLossAttributableToNoncontrollingInterests
-  suggested_key: profit_loss_attributable_to_noncontrolling_interests
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:ProfitLossAttributableToOwnersOfParent
-  suggested_key: profit_loss_attributable_to_owners_of_parent
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-  - essity
-- xbrl_tag: ifrs-full:ProfitLossBeforeTax
-  suggested_key: profit_loss_before_tax
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:ProfitLossFromContinuingOperationsAttributableToNoncontrollingInterests
-  suggested_key: profit_loss_from_continuing_operations_attributable_to_noncontrolling_interests
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:ProfitLossFromDiscontinuedOperationsAttributableToNoncontrollingInterests
-  suggested_key: profit_loss_from_discontinued_operations_attributable_to_noncontrolling_interests
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:PurchaseOfFinancialInstrumentsClassifiedAsInvestingActivities
-  suggested_key: purchase_of_financial_instruments_classified_as_investing_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:PurchaseOfInterestsInInvestmentsAccountedForUsingEquityMethod
-  suggested_key: purchase_of_interests_in_investments_accounted_for_using_equity_method
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:PurchaseOfOtherLongtermAssetsClassifiedAsInvestingActivities
-  suggested_key: purchase_of_other_longterm_assets_classified_as_investing_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:PurchaseOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets
-  suggested_key: purchase_of_property_plant_and_equipment_intangible_assets_other_than_goodwill_investment_property_and_other_noncurrent_assets
-  used_by:
-  - essity
-- xbrl_tag: ifrs-full:PurchaseOfTreasuryShares
-  suggested_key: purchase_of_treasury_shares
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:RawMaterialsAndConsumablesUsed
-  suggested_key: raw_materials_and_consumables_used
-  used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:ReclassificationAdjustmentsOnCashFlowHedgesBeforeTax
-  suggested_key: reclassification_adjustments_on_cash_flow_hedges_before_tax
-  used_by:
-  - LVMH_2024
-- xbrl_tag: ifrs-full:RepaymentsOfBorrowingsClassifiedAsFinancingActivities
-  suggested_key: repayments_of_borrowings_classified_as_financing_activities
-  used_by:
-  - LVMH_2024
-  - Shell_2025
-  - essity
-  - pernod_ricard
-- xbrl_tag: ifrs-full:RetainedEarnings
-  suggested_key: retained_earnings
+  - Amplifon_2025
+- xbrl_tag: AMP:InterestRevenueExpenseOtherThanLeaseLiabilities
+  suggested_key: interest_revenue_expense_other_than_lease_liabilities
   used_by:
-  - essity
-- xbrl_tag: ifrs-full:ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLossNetOfTax
-  suggested_key: share_of_other_comprehensive_income_of_associates_and_joint_ventures_accounted_for_using_equity_method_that_will_be_reclassified_to_profit_or_loss_net_of_tax
+  - Amplifon_2025
+- xbrl_tag: AMP:ProceedsFromSalesOfPropertyPlantAndEquipmentAndProceedsFromSalesOfIntangibleAssetsClassifiedAsInvestingActivities
+  suggested_key: proceeds_from_sales_of_property_plant_and_equipment_and_proceeds_from_sales_of_intangible_assets_classified_as_investing_activities
   used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillNotBeReclassifiedToProfitOrLossNetOfTax
-  suggested_key: share_of_other_comprehensive_income_of_associates_and_joint_ventures_accounted_for_using_equity_method_that_will_not_be_reclassified_to_profit_or_loss_net_of_tax
+  - Amplifon_2025
+- xbrl_tag: AMP:ProfitLossFromOperatingActivitiesBeforeInterestTaxesDepreciationAndAmortisationExpense
+  suggested_key: profit_loss_from_operating_activities_before_interest_taxes_depreciation_and_amortisation_expense
   used_by:
-  - Shell_2025
-- xbrl_tag: ifrs-full:TradeAndOtherCurrentPayables
-  suggested_key: trade_and_other_current_payables
+  - Amplifon_2025
+- xbrl_tag: LVM:IncreaseDecreaseInNumberOfSharesIssueOfEquity
+  suggested_key: increase_decrease_in_number_of_shares_issue_of_equity
   used_by:
   - LVMH_2024
-- xbrl_tag: ifrs-full:TradeAndOtherCurrentReceivables
-  suggested_key: trade_and_other_current_receivables
+- xbrl_tag: LVM:OperatingInvestmentsClassifiedAsInvestingActivities
+  suggested_key: operating_investments_classified_as_investing_activities
   used_by:
   - LVMH_2024
-- xbrl_tag: ifrs-full:UndatedSubordinatedLiabilities
-  suggested_key: undated_subordinated_liabilities
+- xbrl_tag: dan:AccumulatedOtherComprehensiveIncomeExtension
+  suggested_key: accumulated_other_comprehensive_income_extension
   used_by:
   - danone
-- xbrl_tag: ifrs-full:WeightedAverageShares
-  suggested_key: weighted_average_shares
+- xbrl_tag: dan:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivablesAndAdjustmentsForIncreaseDecreaseInOtherOperatingPayables
+  suggested_key: adjustments_for_decrease_increase_in_other_operating_receivables_and_adjustments_for_increase_decrease_in_other_operating_payables
   used_by:
+  - danone
+- xbrl_tag: dan:AdjustmentsForInterestExpenseAndAdjustmentsForInterestIncome
+  suggested_key: adjustments_for_interest_expense_and_adjustments_for_interest_income
+  used_by:
+  - danone
+- xbrl_tag: dan:CurrentBorrowingsAndCurrentPortionOfNonCurrentBorrowingsAndCurrentLeaseLiabilities
+  suggested_key: current_borrowings_and_current_portion_of_non_current_borrowings_and_current_lease_liabilities
+  used_by:
+  - danone
+- xbrl_tag: dan:CurrentLoans
+  suggested_key: current_loans
+  used_by:
+  - danone
+- xbrl_tag: dan:CurrentPutOptionsGrantedToNonControllingInterests
+  suggested_key: current_put_options_granted_to_non_controlling_interests
+  used_by:
+  - danone
+- xbrl_tag: dan:ImmobilisationsCorporelles
+  suggested_key: immobilisations_corporelles
+  used_by:
+  - danone
+- xbrl_tag: dan:InterestExpenseAndRepurchasePremiumOnUndatedSubordinatedNotesClassifiedAsFinancingActivities
+  suggested_key: interest_expense_and_repurchase_premium_on_undated_subordinated_notes_classified_as_financing_activities
+  used_by:
+  - danone
+- xbrl_tag: dan:InterestPaidAndInterestReceivedClassifiedAsOperatingActivities
+  suggested_key: interest_paid_and_interest_received_classified_as_operating_activities
+  used_by:
+  - danone
+- xbrl_tag: dan:LongTermBorrowingsAndNonCurrentLeaseLiabilities
+  suggested_key: long_term_borrowings_and_non_current_lease_liabilities
+  used_by:
+  - danone
+- xbrl_tag: dan:MiscellaneousOtherNonCurrentFinancialAssetsAndNonCurrentLoansAndReceivables
+  suggested_key: miscellaneous_other_non_current_financial_assets_and_non_current_loans_and_receivables
+  used_by:
+  - danone
+- xbrl_tag: dan:NetChangeInterestIncomeExpenseClassifiedAsOperatingActivities
+  suggested_key: net_change_interest_income_expense_classified_as_operating_activities
+  used_by:
+  - danone
+- xbrl_tag: dan:NonCurrentFinancialAssetsAtFairValueThroughProfitOrLossDesignatedUponInitialRecognitionAndNonCurrentInvestmentsInEquityInstrumentsDesignatedAtFairValueThroughOtherComprehen
+  suggested_key: non_current_financial_assets_at_fair_value_through_profit_or_loss_designated_upon_initial_recognition_and_non_current_investments_in_equity_instruments_designated_at_fair_value_through_other_comprehen
+  used_by:
+  - danone
+- xbrl_tag: dan:NonCurrentPutOptionsGrantedToNonControllingInterests
+  suggested_key: non_current_put_options_granted_to_non_controlling_interests
+  used_by:
+  - danone
+- xbrl_tag: dan:OtherIndividuallyImmaterialComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax
+  suggested_key: other_individually_immaterial_components_of_other_comprehensive_income_that_will_be_reclassified_to_profit_or_loss_net_of_tax
+  used_by:
+  - danone
+- xbrl_tag: dan:OtherLongTermProvisionsAndOtherNonCurrentNonFinancialLiabilities
+  suggested_key: other_long_term_provisions_and_other_non_current_non_financial_liabilities
+  used_by:
+  - danone
+- xbrl_tag: dan:OtherOperatingIncomeExpenseRecurring
+  suggested_key: other_operating_income_expense_recurring
+  used_by:
+  - danone
+- xbrl_tag: dan:ProceedsFromBorrowingsAndRepaymentsOfBorrowingsClassifiedAsFinancingActivities
+  suggested_key: proceeds_from_borrowings_and_repayments_of_borrowings_classified_as_financing_activities
+  used_by:
+  - danone
+- xbrl_tag: dan:ProfitLossBeforeShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod
+  suggested_key: profit_loss_before_share_of_profit_loss_of_associates_and_joint_ventures_accounted_for_using_equity_method
+  used_by:
+  - danone
+- xbrl_tag: dan:ProfitLossBeforeTaxBeforeShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod
+  suggested_key: profit_loss_before_tax_before_share_of_profit_loss_of_associates_accounted_for_using_equity_method
+  used_by:
+  - danone
+- xbrl_tag: dan:ProfitLossFromOperatingActivitiesRecurring
+  suggested_key: profit_loss_from_operating_activities_recurring
+  used_by:
+  - danone
+- xbrl_tag: dan:RetainedEarningsAndOtherReserves
+  suggested_key: retained_earnings_and_other_reserves
+  used_by:
+  - danone
+- xbrl_tag: dan:TransactionsOnUndatedSubordinatedNotesIncludingInterestExpenseAndRepurchasePremiumNetOfTax
+  suggested_key: transactions_on_undated_subordinated_notes_including_interest_expense_and_repurchase_premium_net_of_tax
+  used_by:
+  - danone
+- xbrl_tag: dan:TransactionsWithNonControllingInterestsClassifiedAsFinancingActivities
+  suggested_key: transactions_with_non_controlling_interests_classified_as_financing_activities
+  used_by:
+  - danone
+- xbrl_tag: dan:TresorerieNette
+  suggested_key: tresorerie_nette
+  used_by:
+  - danone
+- xbrl_tag: el:AcquisitionsDimmobilisationsCorporellesEtIncorporelles
+  suggested_key: acquisitions_dimmobilisations_corporelles_et_incorporelles
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:ActionsEmisesLivréesAuxSalariésEtExerciceDoptionsDeSouscription
+  suggested_key: actions_emises_livrées_aux_salariés_et_exercice_doptions_de_souscription
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:AmortissementsDépréciationsEtPertesDeValeur
+  suggested_key: amortissements_dépréciations_et_pertes_de_valeur
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:AutresProduitsChargesOpérationnels
+  suggested_key: autres_produits_charges_opérationnels
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:AutresRéserves
+  suggested_key: autres_réserves
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:CessionDimmobilisationsCorporellesEtIncorporelles
+  suggested_key: cession_dimmobilisations_corporelles_et_incorporelles
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:CoûtDelendettementFinancierNet
+  suggested_key: coût_delendettement_financier_net
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:HyperinflationAccounting
+  suggested_key: hyperinflation_accounting
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:VariationDesAutresActifsFinanciers
+  suggested_key: variation_des_autres_actifs_financiers
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:VariationDesAutresActifsNonFinanciers
+  suggested_key: variation_des_autres_actifs_non_financiers
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:VariationDesAutresCréancesEtDettesOpérationnelles
+  suggested_key: variation_des_autres_créances_et_dettes_opérationnelles
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:VariationDuBesoinEnFondsDeRoulementCommercial
+  suggested_key: variation_du_besoin_en_fonds_de_roulement_commercial
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: el:VariationsDuPérimètreDeConsolidationEtDesParticipationsNeDonnantPasLeContrôle
+  suggested_key: variations_du_périmètre_de_consolidation_et_des_participations_ne_donnant_pas_le_contrôle
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:AdjustmentsForDecreaseIncreaseInTradeAccountReceivable
+  suggested_key: adjustments_for_decrease_increase_in_trade_account_receivable
+  used_by:
+  - Amplifon_2025
+  - Moncler_2025
+  - danone
+- xbrl_tag: ifrs-full:AdjustmentsForDepreciationAndAmortisationExpense
+  suggested_key: adjustments_for_depreciation_and_amortisation_expense
+  used_by:
+  - Moncler_2025
+  - pernod_ricard
+  - puig
+- xbrl_tag: ifrs-full:AdjustmentsForDividendIncome
+  suggested_key: adjustments_for_dividend_income
+  used_by:
+  - Kering_2023
+- xbrl_tag: ifrs-full:AdjustmentsForFinanceCosts
+  suggested_key: adjustments_for_finance_costs
+  used_by:
+  - Moncler_2025
+  - puig
+- xbrl_tag: ifrs-full:AdjustmentsForFinanceIncomeCost
+  suggested_key: adjustments_for_finance_income_cost
+  used_by:
+  - Amplifon_2025
+  - Kering_2023
+  - essilorluxottica_new
+  - pernod_ricard
+- xbrl_tag: ifrs-full:AdjustmentsForGainsLossesOnChangeInFairValueLessCostsToSellBiologicalAssets
+  suggested_key: adjustments_for_gains_losses_on_change_in_fair_value_less_costs_to_sell_biological_assets
+  used_by:
+  - pernod_ricard
+- xbrl_tag: ifrs-full:AdjustmentsForGainsLossesOnChangeInFairValueOfDerivatives
+  suggested_key: adjustments_for_gains_losses_on_change_in_fair_value_of_derivatives
+  used_by:
+  - pernod_ricard
+- xbrl_tag: ifrs-full:AdjustmentsForImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
+  suggested_key: adjustments_for_impairment_loss_reversal_of_impairment_loss_recognised_in_profit_or_loss
+  used_by:
+  - pernod_ricard
+- xbrl_tag: ifrs-full:AdjustmentsForIncomeTaxExpense
+  suggested_key: adjustments_for_income_tax_expense
+  used_by:
+  - Amplifon_2025
+  - Kering_2023
+  - Moncler_2025
+  - essilorluxottica_new
+  - pernod_ricard
+- xbrl_tag: ifrs-full:AdjustmentsForIncreaseDecreaseInTradeAccountPayable
+  suggested_key: adjustments_for_increase_decrease_in_trade_account_payable
+  used_by:
+  - Amplifon_2025
+  - Moncler_2025
+  - danone
+- xbrl_tag: ifrs-full:AdjustmentsForUndistributedProfitsOfAssociates
+  suggested_key: adjustments_for_undistributed_profits_of_associates
+  used_by:
+  - Amplifon_2025
+  - danone
+- xbrl_tag: ifrs-full:AmortisationIntangibleAssetsOtherThanGoodwill
+  suggested_key: amortisation_intangible_assets_other_than_goodwill
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:AmountsPayableRelatedPartyTransactions
+  suggested_key: amounts_payable_related_party_transactions
+  used_by:
+  - Moncler_2025
+- xbrl_tag: ifrs-full:AmountsReceivableRelatedPartyTransactions
+  suggested_key: amounts_receivable_related_party_transactions
+  used_by:
+  - Moncler_2025
+- xbrl_tag: ifrs-full:BrandNames
+  suggested_key: brand_names
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:CashAndCashEquivalentsClassifiedAsPartOfDisposalGroupHeldForSale
+  suggested_key: cash_and_cash_equivalents_classified_as_part_of_disposal_group_held_for_sale
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:CashAndCashEquivalentsIfDifferentFromStatementOfFinancialPosition
+  suggested_key: cash_and_cash_equivalents_if_different_from_statement_of_financial_position
+  used_by:
+  - Kering_2023
   - LVMH_2024
   - essity
-- xbrl_tag: loreal:VariationsDePerimetre
-  suggested_key: variations_de_perimetre
+- xbrl_tag: ifrs-full:CashFlowsFromUsedInOperations
+  suggested_key: cash_flows_from_used_in_operations
+  used_by:
+  - Moncler_2025
+- xbrl_tag: ifrs-full:CurrentBondsIssuedAndCurrentPortionOfNoncurrentBondsIssued
+  suggested_key: current_bonds_issued_and_current_portion_of_noncurrent_bonds_issued
+  used_by:
+  - pernod_ricard
+- xbrl_tag: ifrs-full:CurrentContractAssets
+  suggested_key: current_contract_assets
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:CurrentContractLiabilities
+  suggested_key: current_contract_liabilities
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:CurrentDerivativeFinancialAssets
+  suggested_key: current_derivative_financial_assets
+  used_by:
+  - Amplifon_2025
+  - Shell_2025
+  - danone
+  - pernod_ricard
+- xbrl_tag: ifrs-full:CurrentDerivativeFinancialLiabilities
+  suggested_key: current_derivative_financial_liabilities
+  used_by:
+  - Amplifon_2025
+  - Shell_2025
+  - danone
+  - pernod_ricard
+- xbrl_tag: ifrs-full:CurrentFinancialLiabilities
+  suggested_key: current_financial_liabilities
+  used_by:
+  - Kering_2023
+- xbrl_tag: ifrs-full:CurrentInvestments
+  suggested_key: current_investments
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:CurrentLiabilitiesRecognisedAsOfAcquisitionDate
+  suggested_key: current_liabilities_recognised_as_of_acquisition_date
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:CurrentProvisionsForEmployeeBenefits
+  suggested_key: current_provisions_for_employee_benefits
+  used_by:
+  - Amplifon_2025
+  - Kering_2023
+- xbrl_tag: ifrs-full:CurrentTaxExpenseIncome
+  suggested_key: current_tax_expense_income
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:DeferredTaxExpenseIncome
+  suggested_key: deferred_tax_expense_income
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:DepreciationPropertyPlantAndEquipment
+  suggested_key: depreciation_property_plant_and_equipment
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:DepreciationRightofuseAssets
+  suggested_key: depreciation_rightofuse_assets
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersPerShare
+  suggested_key: dividends_proposed_or_declared_before_financial_statements_authorised_for_issue_but_not_recognised_as_distribution_to_owners_per_share
+  used_by:
+  - Amplifon_2025
+  - Kering_2023
+  - LVMH_2024
+  - Shell_2025
+  - danone
+  - essilorluxottica_new
+  - essity
+  - loreal_2025
+  - pernod_ricard
+- xbrl_tag: ifrs-full:DividendsRecognisedAsDistributionsToNoncontrollingInterests
+  suggested_key: dividends_recognised_as_distributions_to_noncontrolling_interests
+  used_by:
+  - puig
+- xbrl_tag: ifrs-full:EmployeeBenefitsExpense
+  suggested_key: employee_benefits_expense
+  used_by:
+  - Kering_2023
+- xbrl_tag: ifrs-full:Equity
+  suggested_key: equity
+  used_by:
+  - Amplifon_2025
+  - Kering_2023
+  - LVMH_2024
+  - Moncler_2025
+  - Shell_2025
+  - danone
+  - essilorluxottica_new
+  - essity
+  - loreal_2025
+  - pernod_ricard
+  - puig
+- xbrl_tag: ifrs-full:GainsLossesOnExchangeDifferencesOnTranslationNetOfTax
+  suggested_key: gains_losses_on_exchange_differences_on_translation_net_of_tax
+  used_by:
+  - Kering_2023
+  - Moncler_2025
+- xbrl_tag: ifrs-full:GainsLossesOnExchangeDifferencesOnTranslationRecognisedInProfitOrLoss
+  suggested_key: gains_losses_on_exchange_differences_on_translation_recognised_in_profit_or_loss
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:GainsLossesOnFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue
+  suggested_key: gains_losses_on_financial_assets_at_fair_value_through_profit_or_loss_mandatorily_measured_at_fair_value
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:GeneralAndAdministrativeExpense
+  suggested_key: general_and_administrative_expense
+  used_by:
+  - danone
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:ImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
+  suggested_key: impairment_loss_reversal_of_impairment_loss_recognised_in_profit_or_loss
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLoss
+  suggested_key: income_tax_relating_to_components_of_other_comprehensive_income_that_will_not_be_reclassified_to_profit_or_loss
+  used_by:
+  - Amplifon_2025
+  - essilorluxottica_new
+  - essity
+  - loreal_2025
+  - puig
+- xbrl_tag: ifrs-full:IncomeTaxRelatingToHedgesOfNetInvestmentsInForeignOperationsOfOtherComprehensiveIncome
+  suggested_key: income_tax_relating_to_hedges_of_net_investments_in_foreign_operations_of_other_comprehensive_income
+  used_by:
+  - pernod_ricard
+- xbrl_tag: ifrs-full:IncomeTaxRelatingToInvestmentsInEquityInstrumentsOfOtherComprehensiveIncome
+  suggested_key: income_tax_relating_to_investments_in_equity_instruments_of_other_comprehensive_income
+  used_by:
+  - Kering_2023
+  - danone
+  - pernod_ricard
+- xbrl_tag: ifrs-full:IncreaseDecreaseThroughAppropriationOfRetainedEarnings
+  suggested_key: increase_decrease_through_appropriation_of_retained_earnings
+  used_by:
+  - Amplifon_2025
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:IncreaseDecreaseThroughChangesInOwnershipInterestsInSubsidiariesThatDoNotResultInLossOfControlEquityAttributableToOwnersOfParent
+  suggested_key: increase_decrease_through_changes_in_ownership_interests_in_subsidiaries_that_do_not_result_in_loss_of_control_equity_attributable_to_owners_of_parent
+  used_by:
+  - essity
+- xbrl_tag: ifrs-full:IncreaseDecreaseThroughDisposalOfSubsidiary
+  suggested_key: increase_decrease_through_disposal_of_subsidiary
+  used_by:
+  - essity
+- xbrl_tag: ifrs-full:IncreaseDecreaseThroughOtherContributionsByOwners
+  suggested_key: increase_decrease_through_other_contributions_by_owners
+  used_by:
+  - puig
+- xbrl_tag: ifrs-full:IntangibleAssetsAndGoodwill
+  suggested_key: intangible_assets_and_goodwill
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:InterestRevenueExpense
+  suggested_key: interest_revenue_expense
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:InventoriesTotal
+  suggested_key: inventories_total
+  used_by:
+  - Kering_2023
+  - puig
+- xbrl_tag: ifrs-full:InvestmentsInAssociatesAccountedForUsingEquityMethod
+  suggested_key: investments_in_associates_accounted_for_using_equity_method
+  used_by:
+  - Moncler_2025
+- xbrl_tag: ifrs-full:InvestmentsInSubsidiariesJointVenturesAndAssociates
+  suggested_key: investments_in_subsidiaries_joint_ventures_and_associates
+  used_by:
+  - puig
+- xbrl_tag: ifrs-full:Liabilities
+  suggested_key: liabilities
+  used_by:
+  - Shell_2025
+- xbrl_tag: ifrs-full:NoncurrentAssetsOrDisposalGroupsClassifiedAsHeldForSaleOrAsHeldForDistributionToOwners
+  suggested_key: noncurrent_assets_or_disposal_groups_classified_as_held_for_sale_or_as_held_for_distribution_to_owners
+  used_by:
+  - Shell_2025
+- xbrl_tag: ifrs-full:NoncurrentContractAssets
+  suggested_key: noncurrent_contract_assets
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:NoncurrentContractLiabilities
+  suggested_key: noncurrent_contract_liabilities
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:NoncurrentDerivativeFinancialAssets
+  suggested_key: noncurrent_derivative_financial_assets
+  used_by:
+  - Amplifon_2025
+  - Shell_2025
+  - danone
+  - pernod_ricard
+- xbrl_tag: ifrs-full:NoncurrentDerivativeFinancialLiabilities
+  suggested_key: noncurrent_derivative_financial_liabilities
+  used_by:
+  - Amplifon_2025
+  - Shell_2025
+  - danone
+  - pernod_ricard
+- xbrl_tag: ifrs-full:NoncurrentFinancialLiabilities
+  suggested_key: noncurrent_financial_liabilities
+  used_by:
+  - Amplifon_2025
+  - Kering_2023
+  - danone
+- xbrl_tag: ifrs-full:NoncurrentLiabilitiesRecognisedAsOfAcquisitionDate
+  suggested_key: noncurrent_liabilities_recognised_as_of_acquisition_date
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:NoncurrentPayables
+  suggested_key: noncurrent_payables
+  used_by:
+  - Shell_2025
+- xbrl_tag: ifrs-full:NoncurrentPortionOfNoncurrentBondsIssued
+  suggested_key: noncurrent_portion_of_noncurrent_bonds_issued
+  used_by:
+  - pernod_ricard
+- xbrl_tag: ifrs-full:NoncurrentPortionOfOtherNoncurrentBorrowings
+  suggested_key: noncurrent_portion_of_other_noncurrent_borrowings
+  used_by:
+  - pernod_ricard
+- xbrl_tag: ifrs-full:NoncurrentProvisions
+  suggested_key: noncurrent_provisions
+  used_by:
+  - Moncler_2025
+- xbrl_tag: ifrs-full:NoncurrentReceivables
+  suggested_key: noncurrent_receivables
+  used_by:
+  - Shell_2025
+- xbrl_tag: ifrs-full:NumberOfSharesIssued
+  suggested_key: number_of_shares_issued
+  used_by:
+  - LVMH_2024
+- xbrl_tag: ifrs-full:OperatingExpenseExcludingCostOfSales
+  suggested_key: operating_expense_excluding_cost_of_sales
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:OtherCashReceiptsFromSalesOfEquityOrDebtInstrumentsOfOtherEntitiesClassifiedAsInvestingActivities
+  suggested_key: other_cash_receipts_from_sales_of_equity_or_debt_instruments_of_other_entities_classified_as_investing_activities
+  used_by:
+  - Moncler_2025
+- xbrl_tag: ifrs-full:OtherComprehensiveIncomeBeforeTaxGainsLossesFromInvestmentsInEquityInstruments
+  suggested_key: other_comprehensive_income_before_tax_gains_losses_from_investments_in_equity_instruments
+  used_by:
+  - Kering_2023
+  - danone
+  - essilorluxottica_new
+  - essity
+  - pernod_ricard
+- xbrl_tag: ifrs-full:OtherComprehensiveIncomeNetOfTaxExchangeDifferencesOnTranslationOtherThanTranslationOfForeignOperations
+  suggested_key: other_comprehensive_income_net_of_tax_exchange_differences_on_translation_other_than_translation_of_foreign_operations
+  used_by:
+  - puig
+- xbrl_tag: ifrs-full:OtherCurrentBorrowingsAndCurrentPortionOfOtherNoncurrentBorrowings
+  suggested_key: other_current_borrowings_and_current_portion_of_other_noncurrent_borrowings
+  used_by:
+  - pernod_ricard
+- xbrl_tag: ifrs-full:OtherCurrentLiabilities
+  suggested_key: other_current_liabilities
+  used_by:
+  - Amplifon_2025
+  - essilorluxottica_new
+  - pernod_ricard
+- xbrl_tag: ifrs-full:OtherCurrentNonfinancialAssets
+  suggested_key: other_current_nonfinancial_assets
+  used_by:
+  - Kering_2023
+  - Moncler_2025
+  - puig
+- xbrl_tag: ifrs-full:OtherCurrentNonfinancialLiabilities
+  suggested_key: other_current_nonfinancial_liabilities
+  used_by:
+  - Kering_2023
+  - Moncler_2025
+  - danone
+- xbrl_tag: ifrs-full:OtherFinanceCost
+  suggested_key: other_finance_cost
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:OtherFinanceIncome
+  suggested_key: other_finance_income
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:OtherGainsLosses
+  suggested_key: other_gains_losses
+  used_by:
+  - puig
+- xbrl_tag: ifrs-full:OtherInflowsOutflowsOfCashClassifiedAsFinancingActivities
+  suggested_key: other_inflows_outflows_of_cash_classified_as_financing_activities
+  used_by:
+  - Amplifon_2025
+  - Moncler_2025
+  - danone
+  - essilorluxottica_new
+  - pernod_ricard
+- xbrl_tag: ifrs-full:OtherInflowsOutflowsOfCashClassifiedAsInvestingActivities
+  suggested_key: other_inflows_outflows_of_cash_classified_as_investing_activities
+  used_by:
+  - danone
+  - puig
+- xbrl_tag: ifrs-full:OtherIntangibleAssets
+  suggested_key: other_intangible_assets
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:OtherNoncurrentFinancialAssets
+  suggested_key: other_noncurrent_financial_assets
+  used_by:
+  - Moncler_2025
+  - danone
+  - puig
+- xbrl_tag: ifrs-full:OtherNoncurrentNonfinancialLiabilities
+  suggested_key: other_noncurrent_nonfinancial_liabilities
+  used_by:
+  - Kering_2023
+  - Moncler_2025
+- xbrl_tag: ifrs-full:ProceedsFromContributionsOfNoncontrollingInterests
+  suggested_key: proceeds_from_contributions_of_noncontrolling_interests
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:ProceedsFromIssueOfBondsNotesAndDebentures
+  suggested_key: proceeds_from_issue_of_bonds_notes_and_debentures
+  used_by:
+  - danone
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:ProceedsFromOtherLongtermAssetsClassifiedAsInvestingActivities
+  suggested_key: proceeds_from_other_longterm_assets_classified_as_investing_activities
+  used_by:
+  - puig
+- xbrl_tag: ifrs-full:ProfitLoss
+  suggested_key: profit_loss
+  used_by:
+  - Amplifon_2025
+  - Kering_2023
+  - LVMH_2024
+  - Moncler_2025
+  - Shell_2025
+  - danone
+  - essilorluxottica_new
+  - essity
+  - loreal_2025
+  - pernod_ricard
+  - puig
+- xbrl_tag: ifrs-full:ProfitLossFromContinuingOperations
+  suggested_key: profit_loss_from_continuing_operations
+  used_by:
+  - Kering_2023
+  - essilorluxottica_new
+  - essity
+- xbrl_tag: ifrs-full:ProfitLossFromContinuingOperationsAttributableToOrdinaryEquityHoldersOfParentEntity
+  suggested_key: profit_loss_from_continuing_operations_attributable_to_ordinary_equity_holders_of_parent_entity
+  used_by:
+  - Kering_2023
+- xbrl_tag: ifrs-full:ProfitLossFromDiscontinuedOperations
+  suggested_key: profit_loss_from_discontinued_operations
+  used_by:
+  - Kering_2023
+  - essity
+  - pernod_ricard
+- xbrl_tag: ifrs-full:ProfitLossFromDiscontinuedOperationsAttributableToOrdinaryEquityHoldersOfParentEntity
+  suggested_key: profit_loss_from_discontinued_operations_attributable_to_ordinary_equity_holders_of_parent_entity
+  used_by:
+  - Kering_2023
+- xbrl_tag: ifrs-full:PropertyPlantAndEquipmentIncludingRightofuseAssets
+  suggested_key: property_plant_and_equipment_including_rightofuse_assets
+  used_by:
+  - Shell_2025
+  - pernod_ricard
+- xbrl_tag: ifrs-full:PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities
+  suggested_key: purchase_of_intangible_assets_classified_as_investing_activities
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities
+  suggested_key: purchase_of_property_plant_and_equipment_classified_as_investing_activities
+  used_by:
+  - Amplifon_2025
+  - Moncler_2025
+  - danone
+- xbrl_tag: ifrs-full:ReclassificationAdjustmentsOnExchangeDifferencesOnTranslationNetOfTax
+  suggested_key: reclassification_adjustments_on_exchange_differences_on_translation_net_of_tax
+  used_by:
+  - Kering_2023
+- xbrl_tag: ifrs-full:RepaymentsOfBondsNotesAndDebentures
+  suggested_key: repayments_of_bonds_notes_and_debentures
+  used_by:
+  - danone
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:RepaymentsOfSubordinatedLiabilities
+  suggested_key: repayments_of_subordinated_liabilities
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:ReserveOfExchangeDifferencesOnTranslation
+  suggested_key: reserve_of_exchange_differences_on_translation
+  used_by:
+  - danone
+  - puig
+- xbrl_tag: ifrs-full:RevenueFromContractsWithCustomers
+  suggested_key: revenue_from_contracts_with_customers
+  used_by:
+  - Amplifon_2025
+  - Kering_2023
+  - pernod_ricard
+- xbrl_tag: ifrs-full:RevenueFromInterest
+  suggested_key: revenue_from_interest
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:RevenueFromSaleOfGoodsRelatedPartyTransactions
+  suggested_key: revenue_from_sale_of_goods_related_party_transactions
+  used_by:
+  - Moncler_2025
+- xbrl_tag: ifrs-full:RightofuseAssetsThatDoNotMeetDefinitionOfInvestmentProperty
+  suggested_key: rightofuse_assets_that_do_not_meet_definition_of_investment_property
+  used_by:
+  - Kering_2023
+- xbrl_tag: ifrs-full:RoyaltyExpense
+  suggested_key: royalty_expense
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:SalesAndMarketingExpense
+  suggested_key: sales_and_marketing_expense
+  used_by:
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:SellingExpense
+  suggested_key: selling_expense
+  used_by:
+  - danone
+  - essilorluxottica_new
+- xbrl_tag: ifrs-full:ShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod
+  suggested_key: share_of_profit_loss_of_associates_accounted_for_using_equity_method
+  used_by:
+  - Amplifon_2025
+- xbrl_tag: ifrs-full:SharePremium
+  suggested_key: share_premium
+  used_by:
+  - Amplifon_2025
+  - Moncler_2025
+  - danone
+  - essilorluxottica_new
+  - pernod_ricard
+- xbrl_tag: ifrs-full:ShorttermBorrowings
+  suggested_key: shortterm_borrowings
+  used_by:
+  - danone
+- xbrl_tag: ifrs-full:TreasuryShares
+  suggested_key: treasury_shares
+  used_by:
+  - Amplifon_2025
+  - danone
+  - essilorluxottica_new
+  - puig
+- xbrl_tag: kering:AdjustmentsForDepreciationAndAmortisationAndProvisionExpense
+  suggested_key: adjustments_for_depreciation_and_amortisation_and_provision_expense
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:BasicEarningsLossPerShareFromContinuingOperationsExcludingNonRecurringItems
+  suggested_key: basic_earnings_loss_per_share_from_continuing_operations_excluding_non_recurring_items
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:CashFlowsFromUsedInOperationsAfterCostOfNetDebtAndIncomeTaxExpense
+  suggested_key: cash_flows_from_used_in_operations_after_cost_of_net_debt_and_income_tax_expense
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:DilutedEarningsLossPerShareFromContinuingOperationsExcludingNonRecurringItems
+  suggested_key: diluted_earnings_loss_per_share_from_continuing_operations_excluding_non_recurring_items
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:IncreaseDecreaseInNumberOfSharesThroughSharebasedPaymentTransactions
+  suggested_key: increase_decrease_in_number_of_shares_through_sharebased_payment_transactions
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:IncreaseDecreaseInNumberOfTreasuryShares
+  suggested_key: increase_decrease_in_number_of_treasury_shares
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:IncreaseDecreaseOfIssuedCapital
+  suggested_key: increase_decrease_of_issued_capital
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:InterestAndDividendsReceivedClassifiedAsInvestingActivities
+  suggested_key: interest_and_dividends_received_classified_as_investing_activities
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:IssuanceRedemptionOfOtherBorrowings
+  suggested_key: issuance_redemption_of_other_borrowings
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:NetIncomeFromContinuingOperationsExcludingNonrecurringItemsAttributableToTheGroup
+  suggested_key: net_income_from_continuing_operations_excluding_nonrecurring_items_attributable_to_the_group
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:OtherNonRecurringOperatingIncomeAndExpenses
+  suggested_key: other_non_recurring_operating_income_and_expenses
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:OtherRecurringOperatingIncomeAndExpenses
+  suggested_key: other_recurring_operating_income_and_expenses
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:ProceedsOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
+  suggested_key: proceeds_of_property_plant_equipment_and_intangible_assets_other_than_goodwill
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:ProfitLossOnShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLoss
+  suggested_key: profit_loss_on_share_of_other_comprehensive_income_of_associates_and_joint_ventures_accounted_for_using_equity_method_that_will_be_reclassified_to_profit_or_loss
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:PurchaseOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
+  suggested_key: purchase_of_property_plant_equipment_and_intangible_assets_other_than_goodwill
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:ReclassificationAdjustmentsOnShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLoss
+  suggested_key: reclassification_adjustments_on_share_of_other_comprehensive_income_of_associates_and_joint_ventures_accounted_for_using_equity_method_that_will_be_reclassified_to_profit_or_loss
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:ReclassificationToAssetsHeldForSaleOfCashAndCashEquivalentsAtClosingOfSowindAndUlysseNardin
+  suggested_key: reclassification_to_assets_held_for_sale_of_cash_and_cash_equivalents_at_closing_of_sowind_and_ulysse_nardin
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:RecurringOperatingIncome
+  suggested_key: recurring_operating_income
+  used_by:
+  - Kering_2023
+- xbrl_tag: kering:TransactionsWithMinorityInterests
+  suggested_key: transactions_with_minority_interests
+  used_by:
+  - Kering_2023
+- xbrl_tag: loreal:MinorityShareBuyoutCommitmentMedik8
+  suggested_key: minority_share_buyout_commitment_medik8
   used_by:
   - loreal_2025
-- xbrl_tag: shel:AdjustmentsForIncreaseDecreaseInDerivativeFinancialInstruments
-  suggested_key: adjustments_for_increase_decrease_in_derivative_financial_instruments
+- xbrl_tag: moncler:AdjustmentsForDecreaseIncreaseInTradeAccountReceivableRelatedParty
+  suggested_key: adjustments_for_decrease_increase_in_trade_account_receivable_related_party
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:AdjustmentsForIncreaseDecreaseInOtherCurrentPayablesReceivables
+  suggested_key: adjustments_for_increase_decrease_in_other_current_payables_receivables
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:AdjustmentsForIncreaseDecreaseInOtherCurrentPayablesReceivablesRelatedParty
+  suggested_key: adjustments_for_increase_decrease_in_other_current_payables_receivables_related_party
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:AdjustmentsForIncreaseDecreaseInOtherNonCurrentPayablesReceivablesRelatedParty
+  suggested_key: adjustments_for_increase_decrease_in_other_non_current_payables_receivables_related_party
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:AdjustmentsForIncreaseDecreaseInTradeAccountPayableRelatedParty
+  suggested_key: adjustments_for_increase_decrease_in_trade_account_payable_related_party
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:AdministrativeExpenseRelatedParty
+  suggested_key: administrative_expense_related_party
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:CashAndCashAndOthers
+  suggested_key: cash_and_cash_and_others
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:CostOfSalesRelatedParty
+  suggested_key: cost_of_sales_related_party
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:DistributionCostsRelatedParty
+  suggested_key: distribution_costs_related_party
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:IncreaseDecreaseThroughConsolidationAreaChanges
+  suggested_key: increase_decrease_through_consolidation_area_changes
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:IncreaseDecreaseThroughDistributionProfitPreviousAccountingPeriod
+  suggested_key: increase_decrease_through_distribution_profit_previous_accounting_period
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:InvestmentsInGovernmentBonds
+  suggested_key: investments_in_government_bonds
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:MarketingExpense
+  suggested_key: marketing_expense
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:OtherCurrentNonfinancialLiabilitiesRelatedParty
+  suggested_key: other_current_nonfinancial_liabilities_related_party
+  used_by:
+  - Moncler_2025
+- xbrl_tag: moncler:ProceedsFromSalesOfTangibleAndIntangibleAssetsClassifiedAsInvestingActivities
+  suggested_key: proceeds_from_sales_of_tangible_and_intangible_assets_classified_as_investing_activities
+  used_by:
+  - Moncler_2025
+- xbrl_tag: pernod:AchatsDactifsFinanciersEtActivites
+  suggested_key: achats_dactifs_financiers_et_activites
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:AcquisitionCessionDActionsPropres
+  suggested_key: acquisition_cession_d_actions_propres
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
+  suggested_key: acquisition_dimmobilisations_corporelles_et_incorporelles_autres_que_le_goodwill
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:BeneficesNonDistribuesALExceptionDeLaPerteOuProfitDeLExerciceEtAutresElementsDuResultatGlobalCumules
+  suggested_key: benefices_non_distribues_a_l_exception_de_la_perte_ou_profit_de_l_exercice_et_autres_elements_du_resultat_global_cumules
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:CessionsDactifsFinanciersEtDactivites
+  suggested_key: cessions_dactifs_financiers_et_dactivites
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:ContributionApresFraisPubliPromotionnels
+  suggested_key: contribution_apres_frais_publi_promotionnels
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:InstrumentsDeCapitauxPropresEtAutresActifsFinanciersNonCourants
+  suggested_key: instruments_de_capitaux_propres_et_autres_actifs_financiers_non_courants
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:ProduitsDesImmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
+  suggested_key: produits_des_immobilisations_corporelles_et_incorporelles_autres_que_le_goodwill
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:QuotePartDuResultatNetPerteDeLinvestissementComptabiliseSelonLaMethodeDeLaMiseEnEquivalenceNetteDesDividendesRecus
+  suggested_key: quote_part_du_resultat_net_perte_de_linvestissement_comptabilise_selon_la_methode_de_la_mise_en_equivalence_nette_des_dividendes_recus
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:ResultatOperationnelCourant
+  suggested_key: resultat_operationnel_courant
+  used_by:
+  - pernod_ricard
+- xbrl_tag: pernod:VariationDeCapital
+  suggested_key: variation_de_capital
+  used_by:
+  - pernod_ricard
+- xbrl_tag: puig:AcquisitionOfNonControllingInterests
+  suggested_key: acquisition_of_non_controlling_interests
+  used_by:
+  - puig
+- xbrl_tag: puig:AcquisitionOfNonControllingInterestsPresentedInEquity
+  suggested_key: acquisition_of_non_controlling_interests_presented_in_equity
+  used_by:
+  - puig
+- xbrl_tag: puig:AdvertisingAndPromotionExpenses
+  suggested_key: advertising_and_promotion_expenses
+  used_by:
+  - puig
+- xbrl_tag: puig:BusinessCombination
+  suggested_key: business_combination
+  used_by:
+  - puig
+- xbrl_tag: puig:DividendsPaid
+  suggested_key: dividends_paid
+  used_by:
+  - puig
+- xbrl_tag: puig:NonCurrentProvisionsAndOtherLiabilities
+  suggested_key: non_current_provisions_and_other_liabilities
+  used_by:
+  - puig
+- xbrl_tag: puig:OtherAdjustmentsToFinancialIncomeAndExpenses
+  suggested_key: other_adjustments_to_financial_income_and_expenses
+  used_by:
+  - puig
+- xbrl_tag: puig:ProfitAttributableToOwnersOfParent
+  suggested_key: profit_attributable_to_owners_of_parent
+  used_by:
+  - puig
+- xbrl_tag: puig:ProfitLossFromOperatingActivitiesWithOtherGainsLosses
+  suggested_key: profit_loss_from_operating_activities_with_other_gains_losses
+  used_by:
+  - puig
+- xbrl_tag: puig:ProfitLossInAssociatesAndJointVenturesAndImpairmentsOfFinancialAssets
+  suggested_key: profit_loss_in_associates_and_joint_ventures_and_impairments_of_financial_assets
+  used_by:
+  - puig
+- xbrl_tag: puig:PurchaseOfPropertyPlantAndEquipmentAndIntangibleAssetsClassifiedAsInvestingActivities
+  suggested_key: purchase_of_property_plant_and_equipment_and_intangible_assets_classified_as_investing_activities
+  used_by:
+  - puig
+- xbrl_tag: puig:PutAndCallOptions
+  suggested_key: put_and_call_options
+  used_by:
+  - puig
+- xbrl_tag: puig:ReclassificationOfNonControllingInterests
+  suggested_key: reclassification_of_non_controlling_interests
+  used_by:
+  - puig
+- xbrl_tag: puig:RepaymentOfLeaseLiabilities
+  suggested_key: repayment_of_lease_liabilities
+  used_by:
+  - puig
+- xbrl_tag: puig:RepaymentOfLoansToRelatedParties
+  suggested_key: repayment_of_loans_to_related_parties
+  used_by:
+  - puig
+- xbrl_tag: puig:ReservesForValuationAssetAndLiabilitiesNotNade
+  suggested_key: reserves_for_valuation_asset_and_liabilities_not_nade
+  used_by:
+  - puig
+- xbrl_tag: shel:OtherMiscellaneousReserves
+  suggested_key: other_miscellaneous_reserves
   used_by:
   - Shell_2025
-- xbrl_tag: shel:AmountsTransferredFromOtherComprehensiveIncomeToProfit
-  suggested_key: amounts_transferred_from_other_comprehensive_income_to_profit
+- xbrl_tag: shel:PercentageDecreaseInNonControllingInterestDueToSwapInMiningInterest
+  suggested_key: percentage_decrease_in_non_controlling_interest_due_to_swap_in_mining_interest
   used_by:
   - Shell_2025
-- xbrl_tag: shel:CashFlowsFromUsedInIncreaseDecreaseInDerivativeFinancialInstruments
-  suggested_key: cash_flows_from_used_in_increase_decrease_in_derivative_financial_instruments
+- xbrl_tag: shel:PercentageIncreaseInInterestInTheScotfordUpgraderAndQuestCarbonCaptureCCSFacility
+  suggested_key: percentage_increase_in_interest_in_the_scotford_upgrader_and_quest_carbon_capture_c_c_s_facility
   used_by:
   - Shell_2025
-- xbrl_tag: shel:CashOutflowForTotalCashCapitalExpenditure
-  suggested_key: cash_outflow_for_total_cash_capital_expenditure
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:ChangeInNonControllingInterest
-  suggested_key: change_in_non_controlling_interest
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:ComprehensiveIncomeIncludingRemeasurementOfInterestInJointVenture
-  suggested_key: comprehensive_income_including_remeasurement_of_interest_in_joint_venture
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:InterestAndOtherIncome
-  suggested_key: interest_and_other_income
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:NetGainsOnSaleAndRevaluationOfNonCurrentAssetsAndBusinesses
-  suggested_key: net_gains_on_sale_and_revaluation_of_non_current_assets_and_businesses
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:NetIncreaseDecreaseInDebtWithMaturityPeriodWithinThreeMonths
-  suggested_key: net_increase_decrease_in_debt_with_maturity_period_within_three_months
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:NetPurchasesAndDividendsReceivedSharesHeldInTrustClassifiedAsFinancingActivities
-  suggested_key: net_purchases_and_dividends_received_shares_held_in_trust_classified_as_financing_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:OtherInflowsOfCashClassifiedAsInvestingActivities
-  suggested_key: other_inflows_of_cash_classified_as_investing_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:OtherOutflowsOfCashClassifiedAsInvestingActivities
-  suggested_key: other_outflows_of_cash_classified_as_investing_activities
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:ProceedsFromJointVenturesAndAssociatesFromSaleCapitalReductionAndRepaymentOfLongTermLoans
-  suggested_key: proceeds_from_joint_ventures_and_associates_from_sale_capital_reduction_and_repayment_of_long_term_loans
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:RevenueAndOtherIncome
-  suggested_key: revenue_and_other_income
-  used_by:
-  - Shell_2025
-- xbrl_tag: shel:TangibleExplorationAndEvaluationAssetsAmountChargedToExpense
-  suggested_key: tangible_exploration_and_evaluation_assets_amount_charged_to_expense
+- xbrl_tag: shel:SharesHeldInTrust
+  suggested_key: shares_held_in_trust
   used_by:
   - Shell_2025
