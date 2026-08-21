@@ -19,6 +19,7 @@ companies:
     name: "Kering"
     expected_currency: EUR
     sector: Luxury Goods
+    note: "FY2021-2023 only - download Kering_2025.zip for more recent data"
   essilorluxottica_new:
     name: "EssilorLuxottica"
     expected_currency: EUR
@@ -35,6 +36,8 @@ companies:
     name: "Pernod Ricard"
     expected_currency: EUR
     sector: Consumer / Beverages
+    fiscal_year_end: "June 30"
+    note: "FYE June 30 - comparisons with Dec 31 filers mix different economic periods"
   essity:
     name: "Essity"
     expected_currency: SEK

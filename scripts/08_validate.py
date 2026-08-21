@@ -195,3 +195,64 @@ if __name__ == "__main__":
             print(f"\n*** {len(failures)} FAILURES - investigate these mappings:")
             for company, year, label, ok, detail in failures:
                 print(f"      {company} {year}: {label} ({detail})")
+
+    print("\n" + "=" * 70)
+    print("REGRESSION TESTS - known-good values that must never silently change")
+    print("=" * 70)
+    print("These are verified against L'Oreal's published 2024 annual report.")
+    print("A failure means a mapping change broke something that was correct.\n")
+
+    # Each tuple: (company, year, normalized_name, expected_value, tolerance_pct)
+    # Values are in the filing's native units (full EUR, not millions)
+    # Verified against L'Oreal Document d'Enregistrement Universel 2024
+    REGRESSION_CASES = [
+        ("L'Oreal", 2024, "revenue",        43486800000, 0.5),
+        ("L'Oreal", 2024, "gross_profit",   32264600000, 0.5),
+        ("L'Oreal", 2024, "profit_loss_from_operating_activities", 8263100000, 0.5),
+        ("L'Oreal", 2024, "assets",         56353400000, 0.5),
+        ("L'Oreal", 2024, "cash_flows_from_used_in_operating_activities", 8294600000, 1.0),
+        # Add more as you manually verify other companies
+    ]
+
+    def get_fact(df, company, year, concept):
+        mask = (
+            (df["company"] == company) &
+            (df["normalized_name"] == concept)
+        )
+        subset = df[mask].copy()
+        if subset.empty:
+            return None
+        subset["year"] = subset.apply(
+            lambda r: (r["end_date"] - timedelta(days=1)).year
+            if r["period_type"] == "instant"
+            else r["start_date"].year,
+            axis=1,
+        )
+        year_subset = subset[subset["year"] == year]
+        if year_subset.empty:
+            return None
+        vals = pd.to_numeric(year_subset["value"], errors="coerce").dropna()
+        return vals.iloc[0] if not vals.empty else None
+
+    reg_pass = reg_fail = reg_skip = 0
+    for company, year, concept, expected, tol_pct in REGRESSION_CASES:
+        actual = get_fact(df, company, year, concept)
+        if actual is None:
+            print(f"[SKIP] {company} {year} {concept}: not in current data")
+            reg_skip += 1
+            continue
+        diff_pct = abs(float(actual) - expected) / abs(expected) * 100
+        ok = diff_pct <= tol_pct
+        status = "PASS" if ok else "FAIL"
+        if ok:
+            reg_pass += 1
+        else:
+            reg_fail += 1
+        print(f"[{status}] {company} {year} {concept}")
+        if not ok:
+            print(f"       expected={expected:,.0f}  actual={float(actual):,.0f}  diff={diff_pct:.2f}%")
+
+    print(f"\n{reg_pass} passed, {reg_fail} failed, {reg_skip} skipped")
+    if reg_fail > 0:
+        print("*** REGRESSION FAILURES - a mapping change broke known-good values.")
+        print("*** Check git diff data/mappings/ifrs_concepts_v0.yaml for recent changes.")

@@ -187,6 +187,21 @@ if __name__ == "__main__":
     print(f"Reporting currency: {cur_label}")
     if len(currencies) > 1:
         print("*** WARNING: multiple currencies in one company's filing - check the data.")
+
+    # warn if this company has a non-standard fiscal year end
+    try:
+        import yaml as _yaml
+        with open("data/companies.yaml") as _f:
+            _cfg = _yaml.safe_load(_f)
+        for _stem, _info in _cfg.get("companies", {}).items():
+            if _info.get("name") == args.company:
+                _fye = _info.get("fiscal_year_end")
+                if _fye and _fye != "December 31":
+                    print(f"*** NOTE: {args.company} fiscal year ends {_fye}, not Dec 31.")
+                    print("*** Year labels reflect the start of each fiscal year.")
+                    print("*** Direct comparison with Dec 31 filers mixes different economic periods.")
+    except Exception:
+        pass
     print()
 
     statements = {
