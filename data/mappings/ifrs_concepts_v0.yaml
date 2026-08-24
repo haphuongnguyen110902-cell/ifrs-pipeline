@@ -351,6 +351,165 @@ income_statement:
     display_label: Interest revenue (expense) other than lease liabilities
     xbrl_tags:
     - AMP:InterestRevenueExpenseOtherThanLeaseLiabilities
+  revenue_from_sale_of_goods_related_party_transactions:
+    display_label: Revenue from sale of goods, related party transactions
+    xbrl_tags:
+    - ifrs-full:RevenueFromSaleOfGoodsRelatedPartyTransactions
+  cost_of_sales_related_party:
+    display_label: Costo del venduto di cui parti correlate
+    xbrl_tags:
+    - moncler:CostOfSalesRelatedParty
+  distribution_costs_related_party:
+    display_label: Costi di distribuzione di cui parti correlate
+    xbrl_tags:
+    - moncler:DistributionCostsRelatedParty
+  administrative_expense_related_party:
+    display_label: Costi amministrativi di cui parti correlate
+    xbrl_tags:
+    - moncler:AdministrativeExpenseRelatedParty
+  marketing_expense:
+    display_label: Spese di marketing
+    xbrl_tags:
+    - moncler:MarketingExpense
+  advertising_and_promotion_expenses:
+    display_label: Advertising and promotion expenses
+    xbrl_tags:
+    - puig:AdvertisingAndPromotionExpenses
+  other_gains_losses:
+    display_label: Other gains (losses)
+    xbrl_tags:
+    - ifrs-full:OtherGainsLosses
+  profit_loss_from_operating_activities_with_other_gains_losse_etc:
+    display_label: Profit (loss) from operating activities with other gains (losses)
+    xbrl_tags:
+    - puig:ProfitLossFromOperatingActivitiesWithOtherGainsLosses
+  profit_attributable_to_owners_of_parent:
+    display_label: Profit attributable to owners of parent
+    xbrl_tags:
+    - puig:ProfitAttributableToOwnersOfParent
+  other_adjustments_to_financial_income_and_expenses:
+    display_label: Other adjustments to financial income and expenses
+    xbrl_tags:
+    - puig:OtherAdjustmentsToFinancialIncomeAndExpenses
+  profit_loss_in_associates_and_joint_ventures_and_impairments_etc:
+    display_label: Profit/(Loss) in associates and joint ventures and impairments
+      of financial assets
+    xbrl_tags:
+    - puig:ProfitLossInAssociatesAndJointVenturesAndImpairmentsOfFinancialAssets
+  other_operating_income_expense_recurring:
+    display_label: Other operating income expense recurring
+    xbrl_tags:
+    - dan:OtherOperatingIncomeExpenseRecurring
+  profit_loss_from_operating_activities_recurring:
+    display_label: Profit loss from operating activities recurring
+    xbrl_tags:
+    - dan:ProfitLossFromOperatingActivitiesRecurring
+  profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc:
+    display_label: Profit loss before tax before share of profit loss of associates
+    xbrl_tags:
+    - dan:ProfitLossBeforeTaxBeforeShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod
+  profit_loss_before_share_of_profit_loss_of_associates_and_jo_etc:
+    display_label: Profit loss before share of profit loss of associates and joint
+      ventures
+    xbrl_tags:
+    - dan:ProfitLossBeforeShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod
+  other_recurring_operating_income_and_expenses:
+    display_label: Other Recurring Operating Income and Expenses
+    xbrl_tags:
+    - kering:OtherRecurringOperatingIncomeAndExpenses
+  recurring_operating_income:
+    display_label: Recurring Operating Income
+    xbrl_tags:
+    - kering:RecurringOperatingIncome
+  other_non_recurring_operating_income_and_expenses:
+    display_label: Other Non-recurring Operating Income and Expenses
+    xbrl_tags:
+    - kering:OtherNonRecurringOperatingIncomeAndExpenses
+  net_income_from_continuing_operations_excluding_nonrecurring_etc:
+    display_label: Net Income excl. Non-recurring Items (Group Share)
+    xbrl_tags:
+    - kering:NetIncomeFromContinuingOperationsExcludingNonrecurringItemsAttributableToTheGroup
+  basic_earnings_loss_per_share_from_continuing_operations_exc_etc:
+    display_label: Basic EPS excl. Non-recurring Items
+    xbrl_tags:
+    - kering:BasicEarningsLossPerShareFromContinuingOperationsExcludingNonRecurringItems
+  diluted_earnings_loss_per_share_from_continuing_operations_e_etc:
+    display_label: Diluted EPS excl. Non-recurring Items
+    xbrl_tags:
+    - kering:DilutedEarningsLossPerShareFromContinuingOperationsExcludingNonRecurringItems
+  autres_produits_charges_operationnels:
+    display_label: Other Operating Income and Expenses (EssilorLuxottica)
+    xbrl_tags:
+    - el:AutresProduitsChargesOpérationnels
+  cout_delendettement_financier_net:
+    display_label: Net Financial Debt Cost (EssilorLuxottica)
+    xbrl_tags:
+    - el:CoûtDelendettementFinancierNet
+  contribution_apres_frais_publi_promotionnels:
+    display_label: Gross Profit After Logistics and Advertising Expenses
+    xbrl_tags:
+    - pernod:ContributionApresFraisPubliPromotionnels
+  resultat_operationnel_courant:
+    display_label: Recurring Operating Profit (Pernod Ricard)
+    xbrl_tags:
+    - pernod:ResultatOperationnelCourant
+  other_operating_income_expense_recurring_x:
+    display_label: Other operating income expense recurring
+    xbrl_tags:
+    - dan:OtherOperatingIncomeExpenseRecurring
+  profit_loss_from_operating_activities_recurring_x:
+    display_label: Profit loss from operating activities recurring
+    xbrl_tags:
+    - dan:ProfitLossFromOperatingActivitiesRecurring
+  profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc_x:
+    display_label: Profit loss before tax before share of profit loss of associates
+    xbrl_tags:
+    - dan:ProfitLossBeforeTaxBeforeShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod
+  profit_loss_before_share_of_profit_loss_of_associates_and_jo_etc_x:
+    display_label: Profit loss before share of profit loss of associates and joint
+      ventures
+    xbrl_tags:
+    - dan:ProfitLossBeforeShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod
+  other_recurring_operating_income_and_expenses_x:
+    display_label: Other Recurring Operating Income and Expenses
+    xbrl_tags:
+    - kering:OtherRecurringOperatingIncomeAndExpenses
+  recurring_operating_income_x:
+    display_label: Recurring Operating Income
+    xbrl_tags:
+    - kering:RecurringOperatingIncome
+  other_non_recurring_operating_income_and_expenses_x:
+    display_label: Other Non-recurring Operating Income and Expenses
+    xbrl_tags:
+    - kering:OtherNonRecurringOperatingIncomeAndExpenses
+  net_income_from_continuing_operations_excluding_nonrecurring_etc_x:
+    display_label: Net Income excl. Non-recurring Items (Group Share)
+    xbrl_tags:
+    - kering:NetIncomeFromContinuingOperationsExcludingNonrecurringItemsAttributableToTheGroup
+  basic_earnings_loss_per_share_from_continuing_operations_exc_etc_x:
+    display_label: Basic EPS excl. Non-recurring Items
+    xbrl_tags:
+    - kering:BasicEarningsLossPerShareFromContinuingOperationsExcludingNonRecurringItems
+  diluted_earnings_loss_per_share_from_continuing_operations_e_etc_x:
+    display_label: Diluted EPS excl. Non-recurring Items
+    xbrl_tags:
+    - kering:DilutedEarningsLossPerShareFromContinuingOperationsExcludingNonRecurringItems
+  autres_produits_charges_operationnels_x:
+    display_label: Other Operating Income and Expenses (EssilorLuxottica)
+    xbrl_tags:
+    - el:AutresProduitsChargesOpérationnels
+  cout_delendettement_financier_net_x:
+    display_label: Net Financial Debt Cost (EssilorLuxottica)
+    xbrl_tags:
+    - el:CoûtDelendettementFinancierNet
+  contribution_apres_frais_publi_promotionnels_x:
+    display_label: Gross Profit After Logistics and Advertising Expenses
+    xbrl_tags:
+    - pernod:ContributionApresFraisPubliPromotionnels
+  resultat_operationnel_courant_x:
+    display_label: Recurring Operating Profit (Pernod Ricard)
+    xbrl_tags:
+    - pernod:ResultatOperationnelCourant
 balance_sheet:
   accumulated_other_comprehensive_income:
     display_label: Accumulated Other Comprehensive Income
@@ -672,6 +831,257 @@ balance_sheet:
     display_label: Current provisions for employee benefits
     xbrl_tags:
     - ifrs-full:CurrentProvisionsForEmployeeBenefits
+  investments_in_associates_accounted_for_using_equity_method:
+    display_label: Investments in associates accounted for using equity method
+    xbrl_tags:
+    - ifrs-full:InvestmentsInAssociatesAccountedForUsingEquityMethod
+  other_noncurrent_financial_assets:
+    display_label: Other non-current financial assets
+    xbrl_tags:
+    - ifrs-full:OtherNoncurrentFinancialAssets
+  amounts_receivable_related_party_transactions:
+    display_label: Amounts receivable, related party transactions
+    xbrl_tags:
+    - ifrs-full:AmountsReceivableRelatedPartyTransactions
+  other_current_nonfinancial_assets:
+    display_label: Other current non-financial assets
+    xbrl_tags:
+    - ifrs-full:OtherCurrentNonfinancialAssets
+  noncurrent_provisions:
+    display_label: Non-current provisions
+    xbrl_tags:
+    - ifrs-full:NoncurrentProvisions
+  other_noncurrent_nonfinancial_liabilities:
+    display_label: Other non-current non-financial liabilities
+    xbrl_tags:
+    - ifrs-full:OtherNoncurrentNonfinancialLiabilities
+  amounts_payable_related_party_transactions:
+    display_label: Amounts payable, related party transactions
+    xbrl_tags:
+    - ifrs-full:AmountsPayableRelatedPartyTransactions
+  other_current_nonfinancial_liabilities:
+    display_label: Other current non-financial liabilities
+    xbrl_tags:
+    - ifrs-full:OtherCurrentNonfinancialLiabilities
+  other_current_nonfinancial_liabilities_related_party:
+    display_label: Altre passività non finanziarie correnti di cui parti correlate
+    xbrl_tags:
+    - moncler:OtherCurrentNonfinancialLiabilitiesRelatedParty
+  investments_in_subsidiaries_joint_ventures_and_associates:
+    display_label: Investments in subsidiaries, joint ventures and associates reported
+      in separate financial statements
+    xbrl_tags:
+    - ifrs-full:InvestmentsInSubsidiariesJointVenturesAndAssociates
+  inventories_total:
+    display_label: Inventories
+    xbrl_tags:
+    - ifrs-full:InventoriesTotal
+  reserve_of_exchange_differences_on_translation:
+    display_label: Reserve of exchange differences on translation
+    xbrl_tags:
+    - ifrs-full:ReserveOfExchangeDifferencesOnTranslation
+  reserves_for_valuation_asset_and_liabilities_not_nade:
+    display_label: Reserves for valuation asset and liabilities not nade
+    xbrl_tags:
+    - puig:ReservesForValuationAssetAndLiabilitiesNotNade
+  non_current_provisions_and_other_liabilities:
+    display_label: Non current provisions and other liabilities
+    xbrl_tags:
+    - puig:NonCurrentProvisionsAndOtherLiabilities
+  brand_names:
+    display_label: Brand names
+    xbrl_tags:
+    - ifrs-full:BrandNames
+  other_intangible_assets:
+    display_label: Other intangible assets
+    xbrl_tags:
+    - ifrs-full:OtherIntangibleAssets
+  intangible_assets_and_goodwill:
+    display_label: Intangible assets and goodwill
+    xbrl_tags:
+    - ifrs-full:IntangibleAssetsAndGoodwill
+  current_investments:
+    display_label: Current investments
+    xbrl_tags:
+    - ifrs-full:CurrentInvestments
+  shortterm_borrowings:
+    display_label: Current borrowings
+    xbrl_tags:
+    - ifrs-full:ShorttermBorrowings
+  rightofuse_assets_that_do_not_meet_definition_of_investment__etc:
+    display_label: Right-of-use assets that do not meet definition of investment property
+    xbrl_tags:
+    - ifrs-full:RightofuseAssetsThatDoNotMeetDefinitionOfInvestmentProperty
+  current_financial_liabilities:
+    display_label: Current financial liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialLiabilities
+  property_plant_and_equipment_including_rightofuse_assets:
+    display_label: Property, plant and equipment including right-of-use assets
+    xbrl_tags:
+    - ifrs-full:PropertyPlantAndEquipmentIncludingRightofuseAssets
+  noncurrent_portion_of_noncurrent_bonds_issued:
+    display_label: Non-current portion of non-current bonds issued
+    xbrl_tags:
+    - ifrs-full:NoncurrentPortionOfNoncurrentBondsIssued
+  noncurrent_portion_of_other_noncurrent_borrowings:
+    display_label: Non-current portion of other non-current borrowings
+    xbrl_tags:
+    - ifrs-full:NoncurrentPortionOfOtherNoncurrentBorrowings
+  current_bonds_issued_and_current_portion_of_noncurrent_bonds_etc:
+    display_label: Current bonds issued and current portion of non-current bonds issued
+    xbrl_tags:
+    - ifrs-full:CurrentBondsIssuedAndCurrentPortionOfNoncurrentBondsIssued
+  other_current_borrowings_and_current_portion_of_other_noncur_etc:
+    display_label: Other current borrowings and current portion of other non-current
+      borrowings
+    xbrl_tags:
+    - ifrs-full:OtherCurrentBorrowingsAndCurrentPortionOfOtherNoncurrentBorrowings
+  noncurrent_receivables:
+    display_label: Trade and other non-current receivables
+    xbrl_tags:
+    - ifrs-full:NoncurrentReceivables
+  noncurrent_assets_or_disposal_groups_classified_as_held_for__etc:
+    display_label: Non-current assets or disposal groups classified as held for sale
+      or as held for distribution to owners
+    xbrl_tags:
+    - ifrs-full:NoncurrentAssetsOrDisposalGroupsClassifiedAsHeldForSaleOrAsHeldForDistributionToOwners
+  noncurrent_payables:
+    display_label: Trade and other non-current payables
+    xbrl_tags:
+    - ifrs-full:NoncurrentPayables
+  liabilities:
+    display_label: Liabilities
+    xbrl_tags:
+    - ifrs-full:Liabilities
+  immobilisations_corporelles:
+    display_label: Property, Plant and Equipment (Danone)
+    xbrl_tags:
+    - dan:ImmobilisationsCorporelles
+  non_current_financial_assets_at_fair_value_through_profit_or_etc:
+    display_label: Non-current Financial Assets at Fair Value (FVTPL and FVOCI)
+    xbrl_tags:
+    - dan:NonCurrentFinancialAssetsAtFairValueThroughProfitOrLossDesignatedUponInitialRecognitionAndNonCurrentInvestmentsInEquityInstrumentsDesignatedAtFairValueThroughOtherComprehen
+  miscellaneous_other_non_current_financial_assets_and_non_cur_etc:
+    display_label: Other Non-current Financial Assets and Loans and Receivables
+    xbrl_tags:
+    - dan:MiscellaneousOtherNonCurrentFinancialAssetsAndNonCurrentLoansAndReceivables
+  current_loans:
+    display_label: Current Loans
+    xbrl_tags:
+    - dan:CurrentLoans
+  retained_earnings_and_other_reserves:
+    display_label: Retained Earnings and Other Reserves
+    xbrl_tags:
+    - dan:RetainedEarningsAndOtherReserves
+  accumulated_other_comprehensive_income_extension:
+    display_label: Accumulated Other Comprehensive Income (Danone)
+    xbrl_tags:
+    - dan:AccumulatedOtherComprehensiveIncomeExtension
+  long_term_borrowings_and_non_current_lease_liabilities:
+    display_label: Long-term Borrowings and Non-current Lease Liabilities
+    xbrl_tags:
+    - dan:LongTermBorrowingsAndNonCurrentLeaseLiabilities
+  non_current_put_options_granted_to_non_controlling_interests:
+    display_label: Non-current Put Options Granted to Non-controlling Interests
+    xbrl_tags:
+    - dan:NonCurrentPutOptionsGrantedToNonControllingInterests
+  other_long_term_provisions_and_other_non_current_non_financi_etc:
+    display_label: Other Long-term Provisions and Non-current Non-financial Liabilities
+    xbrl_tags:
+    - dan:OtherLongTermProvisionsAndOtherNonCurrentNonFinancialLiabilities
+  current_borrowings_and_current_portion_of_non_current_borrow_etc:
+    display_label: Current Borrowings and Current Lease Liabilities
+    xbrl_tags:
+    - dan:CurrentBorrowingsAndCurrentPortionOfNonCurrentBorrowingsAndCurrentLeaseLiabilities
+  current_put_options_granted_to_non_controlling_interests:
+    display_label: Current Put Options Granted to Non-controlling Interests
+    xbrl_tags:
+    - dan:CurrentPutOptionsGrantedToNonControllingInterests
+  autres_reserves:
+    display_label: Other Reserves (EssilorLuxottica)
+    xbrl_tags:
+    - el:AutresRéserves
+  instruments_de_capitaux_propres_et_autres_actifs_financiers__etc:
+    display_label: Non-current Financial Assets at Fair Value (Pernod Ricard)
+    xbrl_tags:
+    - pernod:InstrumentsDeCapitauxPropresEtAutresActifsFinanciersNonCourants
+  benefices_non_distribues_a_l_exception_etc:
+    display_label: Retained Earnings excl. Current Period Profit and Accumulated OCI
+    xbrl_tags:
+    - pernod:BeneficesNonDistribuesALExceptionDeLaPerteOuProfitDeLExerciceEtAutresElementsDuResultatGlobalCumules
+  shares_held_in_trust:
+    display_label: Shares Held in Trust
+    xbrl_tags:
+    - shel:SharesHeldInTrust
+  other_miscellaneous_reserves:
+    display_label: Other Miscellaneous Reserves
+    xbrl_tags:
+    - shel:OtherMiscellaneousReserves
+  immobilisations_corporelles_x:
+    display_label: Property, Plant and Equipment (Danone)
+    xbrl_tags:
+    - dan:ImmobilisationsCorporelles
+  non_current_financial_assets_at_fair_value_through_profit_or_etc_x:
+    display_label: Non-current Financial Assets at Fair Value (FVTPL and FVOCI)
+    xbrl_tags:
+    - dan:NonCurrentFinancialAssetsAtFairValueThroughProfitOrLossDesignatedUponInitialRecognitionAndNonCurrentInvestmentsInEquityInstrumentsDesignatedAtFairValueThroughOtherComprehen
+  miscellaneous_other_non_current_financial_assets_and_non_cur_etc_x:
+    display_label: Other Non-current Financial Assets and Loans and Receivables
+    xbrl_tags:
+    - dan:MiscellaneousOtherNonCurrentFinancialAssetsAndNonCurrentLoansAndReceivables
+  current_loans_x:
+    display_label: Current Loans
+    xbrl_tags:
+    - dan:CurrentLoans
+  retained_earnings_and_other_reserves_x:
+    display_label: Retained Earnings and Other Reserves
+    xbrl_tags:
+    - dan:RetainedEarningsAndOtherReserves
+  accumulated_other_comprehensive_income_extension_x:
+    display_label: Accumulated Other Comprehensive Income (Danone)
+    xbrl_tags:
+    - dan:AccumulatedOtherComprehensiveIncomeExtension
+  long_term_borrowings_and_non_current_lease_liabilities_x:
+    display_label: Long-term Borrowings and Non-current Lease Liabilities
+    xbrl_tags:
+    - dan:LongTermBorrowingsAndNonCurrentLeaseLiabilities
+  non_current_put_options_granted_to_non_controlling_interests_x:
+    display_label: Non-current Put Options Granted to Non-controlling Interests
+    xbrl_tags:
+    - dan:NonCurrentPutOptionsGrantedToNonControllingInterests
+  other_long_term_provisions_and_other_non_current_non_financi_etc_x:
+    display_label: Other Long-term Provisions and Non-current Non-financial Liabilities
+    xbrl_tags:
+    - dan:OtherLongTermProvisionsAndOtherNonCurrentNonFinancialLiabilities
+  current_borrowings_and_current_portion_of_non_current_borrow_etc_x:
+    display_label: Current Borrowings and Current Lease Liabilities
+    xbrl_tags:
+    - dan:CurrentBorrowingsAndCurrentPortionOfNonCurrentBorrowingsAndCurrentLeaseLiabilities
+  current_put_options_granted_to_non_controlling_interests_x:
+    display_label: Current Put Options Granted to Non-controlling Interests
+    xbrl_tags:
+    - dan:CurrentPutOptionsGrantedToNonControllingInterests
+  autres_reserves_x:
+    display_label: Other Reserves (EssilorLuxottica)
+    xbrl_tags:
+    - el:AutresRéserves
+  instruments_de_capitaux_propres_et_autres_actifs_financiers__etc_x:
+    display_label: Non-current Financial Assets at Fair Value (Pernod Ricard)
+    xbrl_tags:
+    - pernod:InstrumentsDeCapitauxPropresEtAutresActifsFinanciersNonCourants
+  benefices_non_distribues_a_l_exception_etc_x:
+    display_label: Retained Earnings excl. Current Period Profit and Accumulated OCI
+    xbrl_tags:
+    - pernod:BeneficesNonDistribuesALExceptionDeLaPerteOuProfitDeLExerciceEtAutresElementsDuResultatGlobalCumules
+  shares_held_in_trust_x:
+    display_label: Shares Held in Trust
+    xbrl_tags:
+    - shel:SharesHeldInTrust
+  other_miscellaneous_reserves_x:
+    display_label: Other Miscellaneous Reserves
+    xbrl_tags:
+    - shel:OtherMiscellaneousReserves
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense
@@ -1176,6 +1586,361 @@ cash_flow:
       activities
     xbrl_tags:
     - AMP:CapitalIncreasesContributionsByNonControllingInterestsAndDividendsPaidToNonControllingInterestsBySubsidiariesClassifiedAsFinancingActivities
+  adjustments_for_depreciation_and_amortisation_expense:
+    display_label: Adjustments for depreciation and amortisation expense
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDepreciationAndAmortisationExpense
+  adjustments_for_finance_costs:
+    display_label: Adjustments for finance costs
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForFinanceCosts
+  cash_flows_from_used_in_operations:
+    display_label: Cash flows from (used in) operations
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInOperations
+  other_cash_receipts_from_sales_of_equity_or_debt_instruments_etc:
+    display_label: Other cash receipts from sales of equity or debt instruments of
+      other entities, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:OtherCashReceiptsFromSalesOfEquityOrDebtInstrumentsOfOtherEntitiesClassifiedAsInvestingActivities
+  adjustments_for_decrease_increase_in_trade_account_receivabl_etc_x:
+    display_label: Rettifiche per la diminuzione (aumento) dei crediti verso clienti
+      di cui parti correlate
+    xbrl_tags:
+    - moncler:AdjustmentsForDecreaseIncreaseInTradeAccountReceivableRelatedParty
+  adjustments_for_increase_decrease_in_trade_account_payable_r_etc:
+    display_label: Rettifiche per l'aumento (diminuzione) dei debiti verso fornitori
+      di cui parti correlate
+    xbrl_tags:
+    - moncler:AdjustmentsForIncreaseDecreaseInTradeAccountPayableRelatedParty
+  adjustments_for_increase_decrease_in_other_current_payables__etc:
+    display_label: Rettifiche per l'aumento (diminuzione) in altri debiti correnti
+    xbrl_tags:
+    - moncler:AdjustmentsForIncreaseDecreaseInOtherCurrentPayablesReceivables
+  adjustments_for_increase_decrease_in_other_current_payables__etc_x:
+    display_label: Rettifiche per l'aumento (diminuzione) in altri debiti correnti,
+      parti correlate
+    xbrl_tags:
+    - moncler:AdjustmentsForIncreaseDecreaseInOtherCurrentPayablesReceivablesRelatedParty
+  adjustments_for_increase_decrease_in_other_non_current_payab_etc:
+    display_label: Variazione degli altri debiti/crediti non correnti
+    xbrl_tags:
+    - moncler:AdjustmentsForIncreaseDecreaseInOtherNonCurrentPayablesReceivablesRelatedParty
+  proceeds_from_sales_of_tangible_and_intangible_assets_classi_etc:
+    display_label: Vendita di immobilizzazioni materiali e immateriali
+    xbrl_tags:
+    - moncler:ProceedsFromSalesOfTangibleAndIntangibleAssetsClassifiedAsInvestingActivities
+  investments_in_government_bonds:
+    display_label: Investimenti in titoli di stato
+    xbrl_tags:
+    - moncler:InvestmentsInGovernmentBonds
+  cash_and_cash_and_others:
+    display_label: Cassa e altre disponibilità finanziarie
+    xbrl_tags:
+    - moncler:CashAndCashAndOthers
+  proceeds_from_other_longterm_assets_classified_as_investing__etc:
+    display_label: Proceeds from sales of other long-term assets, classified as investing
+      activities
+    xbrl_tags:
+    - ifrs-full:ProceedsFromOtherLongtermAssetsClassifiedAsInvestingActivities
+  purchase_of_property_plant_and_equipment_and_intangible_asse_etc:
+    display_label: Purchase of property plant and equipment and intangible assets
+    xbrl_tags:
+    - puig:PurchaseOfPropertyPlantAndEquipmentAndIntangibleAssetsClassifiedAsInvestingActivities
+  other_inflows_outflows_of_cash_classified_as_investing_activ_etc:
+    display_label: Other inflows (outflows) of cash, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:OtherInflowsOutflowsOfCashClassifiedAsInvestingActivities
+  business_combination:
+    display_label: Business combination
+    xbrl_tags:
+    - puig:BusinessCombination
+  acquisition_of_non_controlling_interests:
+    display_label: Acquisition of non controlling interests
+    xbrl_tags:
+    - puig:AcquisitionOfNonControllingInterests
+  repayment_of_loans_to_related_parties:
+    display_label: Repayment of loans to related parties
+    xbrl_tags:
+    - puig:RepaymentOfLoansToRelatedParties
+  repayment_of_lease_liabilities:
+    display_label: Repayment of lease liabilities
+    xbrl_tags:
+    - puig:RepaymentOfLeaseLiabilities
+  repayments_of_subordinated_liabilities:
+    display_label: Repayments of subordinated liabilities
+    xbrl_tags:
+    - ifrs-full:RepaymentsOfSubordinatedLiabilities
+  proceeds_from_contributions_of_noncontrolling_interests:
+    display_label: Proceeds from contributions of non-controlling interests
+    xbrl_tags:
+    - ifrs-full:ProceedsFromContributionsOfNoncontrollingInterests
+  proceeds_from_issue_of_bonds_notes_and_debentures:
+    display_label: Proceeds from issue of bonds, notes and debentures
+    xbrl_tags:
+    - ifrs-full:ProceedsFromIssueOfBondsNotesAndDebentures
+  repayments_of_bonds_notes_and_debentures:
+    display_label: Repayments of bonds, notes and debentures
+    xbrl_tags:
+    - ifrs-full:RepaymentsOfBondsNotesAndDebentures
+  profit_loss_from_continuing_operations:
+    display_label: Profit (loss) from continuing operations
+    xbrl_tags:
+    - ifrs-full:ProfitLossFromContinuingOperations
+  adjustments_for_dividend_income:
+    display_label: Adjustments for dividend income
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDividendIncome
+  adjustments_for_impairment_loss_reversal_of_impairment_loss__etc:
+    display_label: Adjustments for impairment loss (reversal of impairment loss) recognised
+      in profit or loss
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
+  adjustments_for_gains_losses_on_change_in_fair_value_of_deri_etc:
+    display_label: Adjustments for gains (losses) on change in fair value of derivatives
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForGainsLossesOnChangeInFairValueOfDerivatives
+  adjustments_for_gains_losses_on_change_in_fair_value_less_co_etc:
+    display_label: Adjustments for gains (losses) on change in fair value less costs
+      to sell, biological assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForGainsLossesOnChangeInFairValueLessCostsToSellBiologicalAssets
+  unused_provision_reversed_other_provisions:
+    display_label: Provisions reprises non utilisées, autres provisions
+    xbrl_tags:
+    - ifrs-full:UnusedProvisionReversedOtherProvisions
+  adjustments_for_interest_expense_and_adjustments_for_interes_etc:
+    display_label: Adjustments for Interest Expense and Interest Income
+    xbrl_tags:
+    - dan:AdjustmentsForInterestExpenseAndAdjustmentsForInterestIncome
+  interest_paid_and_interest_received_classified_as_operating__etc_x:
+    display_label: Interest Paid and Interest Received (Operating)
+    xbrl_tags:
+    - dan:InterestPaidAndInterestReceivedClassifiedAsOperatingActivities
+  net_change_interest_income_expense_classified_as_operating_a_etc:
+    display_label: Net Change in Interest Income/Expense (Operating)
+    xbrl_tags:
+    - dan:NetChangeInterestIncomeExpenseClassifiedAsOperatingActivities
+  adjustments_for_decrease_increase_in_other_operating_receiva_etc_x:
+    display_label: Adjustments for Changes in Other Operating Receivables and Payables
+    xbrl_tags:
+    - dan:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivablesAndAdjustmentsForIncreaseDecreaseInOtherOperatingPayables
+  interest_expense_and_repurchase_premium_on_undated_subordina_etc:
+    display_label: Interest Expense and Repurchase Premium on Subordinated Notes (Financing)
+    xbrl_tags:
+    - dan:InterestExpenseAndRepurchasePremiumOnUndatedSubordinatedNotesClassifiedAsFinancingActivities
+  transactions_with_non_controlling_interests_classified_as_fi_etc:
+    display_label: Transactions with Non-controlling Interests (Financing)
+    xbrl_tags:
+    - dan:TransactionsWithNonControllingInterestsClassifiedAsFinancingActivities
+  proceeds_from_borrowings_and_repayments_of_borrowings_classi_etc:
+    display_label: Net Proceeds/(Repayments) of Borrowings (Financing)
+    xbrl_tags:
+    - dan:ProceedsFromBorrowingsAndRepaymentsOfBorrowingsClassifiedAsFinancingActivities
+  tresorerie_nette:
+    display_label: Net Cash Position
+    xbrl_tags:
+    - dan:TresorerieNette
+  adjustments_for_depreciation_and_amortisation_and_provision__etc:
+    display_label: Adjustments for D&A and Provision Expense
+    xbrl_tags:
+    - kering:AdjustmentsForDepreciationAndAmortisationAndProvisionExpense
+  cash_flows_from_used_in_operations_after_cost_of_net_debt_an_etc:
+    display_label: Cash Flows from Operations after Net Debt Cost and Tax
+    xbrl_tags:
+    - kering:CashFlowsFromUsedInOperationsAfterCostOfNetDebtAndIncomeTaxExpense
+  purchase_of_property_plant_equipment_and_intangible_assets_o_etc:
+    display_label: Purchase of PP&E and Intangibles (excl. Goodwill)
+    xbrl_tags:
+    - kering:PurchaseOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
+  proceeds_of_property_plant_equipment_and_intangible_assets_o_etc:
+    display_label: Proceeds from Disposal of PP&E and Intangibles
+    xbrl_tags:
+    - kering:ProceedsOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
+  reclassification_to_assets_held_for_sale_of_cash_and_cash_eq_etc:
+    display_label: Reclassification to Assets Held for Sale (Sowind and Ulysse Nardin)
+    xbrl_tags:
+    - kering:ReclassificationToAssetsHeldForSaleOfCashAndCashEquivalentsAtClosingOfSowindAndUlysseNardin
+  interest_and_dividends_received_classified_as_investing_acti_etc:
+    display_label: Interest and Dividends Received (Investing)
+    xbrl_tags:
+    - kering:InterestAndDividendsReceivedClassifiedAsInvestingActivities
+  transactions_with_minority_interests:
+    display_label: Transactions with Minority Interests
+    xbrl_tags:
+    - kering:TransactionsWithMinorityInterests
+  issuance_redemption_of_other_borrowings:
+    display_label: Issuance/(Redemption) of Other Borrowings
+    xbrl_tags:
+    - kering:IssuanceRedemptionOfOtherBorrowings
+  amortissements_depreciations_et_pertes_de_valeur:
+    display_label: Depreciation, Amortization and Impairment (EssilorLuxottica)
+    xbrl_tags:
+    - el:AmortissementsDépréciationsEtPertesDeValeur
+  variation_du_besoin_en_fonds_de_roulement_commercial:
+    display_label: Change in Trade Working Capital
+    xbrl_tags:
+    - el:VariationDuBesoinEnFondsDeRoulementCommercial
+  variation_des_autres_creances_et_dettes_operationnelles:
+    display_label: Change in Other Operating Receivables and Payables
+    xbrl_tags:
+    - el:VariationDesAutresCréancesEtDettesOpérationnelles
+  acquisitions_dimmobilisations_corporelles_et_incorporelles_el:
+    display_label: Purchases of PP&E and Intangible Assets (EssilorLuxottica)
+    xbrl_tags:
+    - el:AcquisitionsDimmobilisationsCorporellesEtIncorporelles
+  cession_dimmobilisations_corporelles_et_incorporelles:
+    display_label: Proceeds from Disposal of PP&E and Intangibles (EssilorLuxottica)
+    xbrl_tags:
+    - el:CessionDimmobilisationsCorporellesEtIncorporelles
+  variation_des_autres_actifs_non_financiers:
+    display_label: Change in Other Non-financial Assets
+    xbrl_tags:
+    - el:VariationDesAutresActifsNonFinanciers
+  variation_des_autres_actifs_financiers:
+    display_label: Change in Other Financial Assets
+    xbrl_tags:
+    - el:VariationDesAutresActifsFinanciers
+  quote_part_du_resultat_net_perte_de_linvestissement_etc:
+    display_label: Share of Net Profit/Loss of Equity-method Investments (net of dividends)
+    xbrl_tags:
+    - pernod:QuotePartDuResultatNetPerteDeLinvestissementComptabiliseSelonLaMethodeDeLaMiseEnEquivalenceNetteDesDividendesRecus
+  acquisition_dimmobilisations_corporelles_et_incorporelles_au_etc:
+    display_label: Purchases of PP&E and Intangibles excl. Goodwill (Pernod Ricard)
+    xbrl_tags:
+    - pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
+  produits_des_immobilisations_corporelles_etc:
+    display_label: Proceeds from Disposal of PP&E and Intangibles excl. Goodwill
+    xbrl_tags:
+    - pernod:ProduitsDesImmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
+  achats_dactifs_financiers_et_activites:
+    display_label: Purchases of Financial Assets and Activities
+    xbrl_tags:
+    - pernod:AchatsDactifsFinanciersEtActivites
+  cessions_dactifs_financiers_et_dactivites:
+    display_label: Disposals of Financial Assets and Activities
+    xbrl_tags:
+    - pernod:CessionsDactifsFinanciersEtDactivites
+  acquisition_cession_d_actions_propres:
+    display_label: Acquisition/(Disposal) of Treasury Shares (Pernod Ricard)
+    xbrl_tags:
+    - pernod:AcquisitionCessionDActionsPropres
+  adjustments_for_interest_expense_and_adjustments_for_interes_etc_x:
+    display_label: Adjustments for Interest Expense and Interest Income
+    xbrl_tags:
+    - dan:AdjustmentsForInterestExpenseAndAdjustmentsForInterestIncome
+  interest_paid_and_interest_received_classified_as_operating__etc_x_x:
+    display_label: Interest Paid and Interest Received (Operating)
+    xbrl_tags:
+    - dan:InterestPaidAndInterestReceivedClassifiedAsOperatingActivities
+  net_change_interest_income_expense_classified_as_operating_a_etc_x:
+    display_label: Net Change in Interest Income/Expense (Operating)
+    xbrl_tags:
+    - dan:NetChangeInterestIncomeExpenseClassifiedAsOperatingActivities
+  adjustments_for_decrease_increase_in_other_operating_receiva_etc_x_x:
+    display_label: Adjustments for Changes in Other Operating Receivables and Payables
+    xbrl_tags:
+    - dan:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivablesAndAdjustmentsForIncreaseDecreaseInOtherOperatingPayables
+  interest_expense_and_repurchase_premium_on_undated_subordina_etc_x:
+    display_label: Interest Expense and Repurchase Premium on Subordinated Notes (Financing)
+    xbrl_tags:
+    - dan:InterestExpenseAndRepurchasePremiumOnUndatedSubordinatedNotesClassifiedAsFinancingActivities
+  transactions_with_non_controlling_interests_classified_as_fi_etc_x:
+    display_label: Transactions with Non-controlling Interests (Financing)
+    xbrl_tags:
+    - dan:TransactionsWithNonControllingInterestsClassifiedAsFinancingActivities
+  proceeds_from_borrowings_and_repayments_of_borrowings_classi_etc_x:
+    display_label: Net Proceeds/(Repayments) of Borrowings (Financing)
+    xbrl_tags:
+    - dan:ProceedsFromBorrowingsAndRepaymentsOfBorrowingsClassifiedAsFinancingActivities
+  tresorerie_nette_x:
+    display_label: Net Cash Position
+    xbrl_tags:
+    - dan:TresorerieNette
+  adjustments_for_depreciation_and_amortisation_and_provision__etc_x:
+    display_label: Adjustments for D&A and Provision Expense
+    xbrl_tags:
+    - kering:AdjustmentsForDepreciationAndAmortisationAndProvisionExpense
+  cash_flows_from_used_in_operations_after_cost_of_net_debt_an_etc_x:
+    display_label: Cash Flows from Operations after Net Debt Cost and Tax
+    xbrl_tags:
+    - kering:CashFlowsFromUsedInOperationsAfterCostOfNetDebtAndIncomeTaxExpense
+  purchase_of_property_plant_equipment_and_intangible_assets_o_etc_x:
+    display_label: Purchase of PP&E and Intangibles (excl. Goodwill)
+    xbrl_tags:
+    - kering:PurchaseOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
+  proceeds_of_property_plant_equipment_and_intangible_assets_o_etc_x:
+    display_label: Proceeds from Disposal of PP&E and Intangibles
+    xbrl_tags:
+    - kering:ProceedsOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
+  reclassification_to_assets_held_for_sale_of_cash_and_cash_eq_etc_x:
+    display_label: Reclassification to Assets Held for Sale (Sowind and Ulysse Nardin)
+    xbrl_tags:
+    - kering:ReclassificationToAssetsHeldForSaleOfCashAndCashEquivalentsAtClosingOfSowindAndUlysseNardin
+  interest_and_dividends_received_classified_as_investing_acti_etc_x:
+    display_label: Interest and Dividends Received (Investing)
+    xbrl_tags:
+    - kering:InterestAndDividendsReceivedClassifiedAsInvestingActivities
+  transactions_with_minority_interests_x:
+    display_label: Transactions with Minority Interests
+    xbrl_tags:
+    - kering:TransactionsWithMinorityInterests
+  issuance_redemption_of_other_borrowings_x:
+    display_label: Issuance/(Redemption) of Other Borrowings
+    xbrl_tags:
+    - kering:IssuanceRedemptionOfOtherBorrowings
+  amortissements_depreciations_et_pertes_de_valeur_x:
+    display_label: Depreciation, Amortization and Impairment (EssilorLuxottica)
+    xbrl_tags:
+    - el:AmortissementsDépréciationsEtPertesDeValeur
+  variation_du_besoin_en_fonds_de_roulement_commercial_x:
+    display_label: Change in Trade Working Capital
+    xbrl_tags:
+    - el:VariationDuBesoinEnFondsDeRoulementCommercial
+  variation_des_autres_creances_et_dettes_operationnelles_x:
+    display_label: Change in Other Operating Receivables and Payables
+    xbrl_tags:
+    - el:VariationDesAutresCréancesEtDettesOpérationnelles
+  acquisitions_dimmobilisations_corporelles_et_incorporelles_el_x:
+    display_label: Purchases of PP&E and Intangible Assets (EssilorLuxottica)
+    xbrl_tags:
+    - el:AcquisitionsDimmobilisationsCorporellesEtIncorporelles
+  cession_dimmobilisations_corporelles_et_incorporelles_x:
+    display_label: Proceeds from Disposal of PP&E and Intangibles (EssilorLuxottica)
+    xbrl_tags:
+    - el:CessionDimmobilisationsCorporellesEtIncorporelles
+  variation_des_autres_actifs_non_financiers_x:
+    display_label: Change in Other Non-financial Assets
+    xbrl_tags:
+    - el:VariationDesAutresActifsNonFinanciers
+  variation_des_autres_actifs_financiers_x:
+    display_label: Change in Other Financial Assets
+    xbrl_tags:
+    - el:VariationDesAutresActifsFinanciers
+  quote_part_du_resultat_net_perte_de_linvestissement_etc_x:
+    display_label: Share of Net Profit/Loss of Equity-method Investments (net of dividends)
+    xbrl_tags:
+    - pernod:QuotePartDuResultatNetPerteDeLinvestissementComptabiliseSelonLaMethodeDeLaMiseEnEquivalenceNetteDesDividendesRecus
+  acquisition_dimmobilisations_corporelles_et_incorporelles_au_etc_x:
+    display_label: Purchases of PP&E and Intangibles excl. Goodwill (Pernod Ricard)
+    xbrl_tags:
+    - pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
+  produits_des_immobilisations_corporelles_etc_x:
+    display_label: Proceeds from Disposal of PP&E and Intangibles excl. Goodwill
+    xbrl_tags:
+    - pernod:ProduitsDesImmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
+  achats_dactifs_financiers_et_activites_x:
+    display_label: Purchases of Financial Assets and Activities
+    xbrl_tags:
+    - pernod:AchatsDactifsFinanciersEtActivites
+  cessions_dactifs_financiers_et_dactivites_x:
+    display_label: Disposals of Financial Assets and Activities
+    xbrl_tags:
+    - pernod:CessionsDactifsFinanciersEtDactivites
+  acquisition_cession_d_actions_propres_x:
+    display_label: Acquisition/(Disposal) of Treasury Shares (Pernod Ricard)
+    xbrl_tags:
+    - pernod:AcquisitionCessionDActionsPropres
 other:
   income_tax_relating_to_cash_flow_hedges_of_other_comprehe_etc:
     display_label: Income Tax on Cash Flow Hedges (OCI)
@@ -1486,3 +2251,238 @@ other:
     display_label: Increase (decrease) through miscellaneous other changes
     xbrl_tags:
     - AMP:IncreaseDecreaseThroughMiscellaneousOtherChanges
+  gains_losses_on_exchange_differences_on_translation_net_of_t_etc:
+    display_label: Gains (losses) on exchange differences on translation of foreign
+      operations, net of tax
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnExchangeDifferencesOnTranslationNetOfTax
+  increase_decrease_through_distribution_profit_previous_accou_etc:
+    display_label: Destinazione utile esercizio precedente
+    xbrl_tags:
+    - moncler:IncreaseDecreaseThroughDistributionProfitPreviousAccountingPeriod
+  increase_decrease_through_consolidation_area_changes:
+    display_label: Variazione area di consolidamento
+    xbrl_tags:
+    - moncler:IncreaseDecreaseThroughConsolidationAreaChanges
+  other_comprehensive_income_net_of_tax_exchange_differences_o_etc:
+    display_label: Other comprehensive income, net of tax, exchange differences on
+      translation, other than translation of foreign operations
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxExchangeDifferencesOnTranslationOtherThanTranslationOfForeignOperations
+  increase_decrease_through_other_contributions_by_owners:
+    display_label: Increase through other contributions by owners, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughOtherContributionsByOwners
+  dividends_recognised_as_distributions_to_noncontrolling_inte_etc:
+    display_label: Dividends recognised as distributions to non-controlling interests
+    xbrl_tags:
+    - ifrs-full:DividendsRecognisedAsDistributionsToNoncontrollingInterests
+  acquisition_of_non_controlling_interests_presented_in_equity:
+    display_label: Acquisition of non controlling interests presented in equity
+    xbrl_tags:
+    - puig:AcquisitionOfNonControllingInterestsPresentedInEquity
+  put_and_call_options:
+    display_label: Put and call options
+    xbrl_tags:
+    - puig:PutAndCallOptions
+  reclassification_of_non_controlling_interests:
+    display_label: Reclassification of non controlling interests
+    xbrl_tags:
+    - puig:ReclassificationOfNonControllingInterests
+  selling_expense:
+    display_label: Selling expense
+    xbrl_tags:
+    - ifrs-full:SellingExpense
+  general_and_administrative_expense:
+    display_label: General and administrative expense
+    xbrl_tags:
+    - ifrs-full:GeneralAndAdministrativeExpense
+  revenue_from_interest:
+    display_label: Interest income
+    xbrl_tags:
+    - ifrs-full:RevenueFromInterest
+  interest_revenue_expense:
+    display_label: Interest income (expense)
+    xbrl_tags:
+    - ifrs-full:InterestRevenueExpense
+  other_finance_income:
+    display_label: Other finance income
+    xbrl_tags:
+    - ifrs-full:OtherFinanceIncome
+  other_finance_cost:
+    display_label: Other finance cost
+    xbrl_tags:
+    - ifrs-full:OtherFinanceCost
+  other_comprehensive_income_before_tax_gains_losses_from_inve_etc:
+    display_label: Other comprehensive income, before tax, gains (losses) from investments
+      in equity instruments
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxGainsLossesFromInvestmentsInEquityInstruments
+  income_tax_relating_to_investments_in_equity_instruments_of__etc:
+    display_label: Income tax relating to investments in equity instruments included
+      in other comprehensive income
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToInvestmentsInEquityInstrumentsOfOtherComprehensiveIncome
+  employee_benefits_expense:
+    display_label: Employee benefits expense
+    xbrl_tags:
+    - ifrs-full:EmployeeBenefitsExpense
+  profit_loss_from_continuing_operations_attributable_to_ordin_etc:
+    display_label: Profit (loss) from continuing operations attributable to ordinary
+      equity holders of parent entity, used in calculating basic earnings per share
+    xbrl_tags:
+    - ifrs-full:ProfitLossFromContinuingOperationsAttributableToOrdinaryEquityHoldersOfParentEntity
+  profit_loss_from_discontinued_operations:
+    display_label: Profit (loss) from discontinued operations
+    xbrl_tags:
+    - ifrs-full:ProfitLossFromDiscontinuedOperations
+  profit_loss_from_discontinued_operations_attributable_to_ord_etc:
+    display_label: Profit (loss) from discontinued operations attributable to ordinary
+      equity holders of parent entity, used in calculating basic earnings per share
+    xbrl_tags:
+    - ifrs-full:ProfitLossFromDiscontinuedOperationsAttributableToOrdinaryEquityHoldersOfParentEntity
+  reclassification_adjustments_on_exchange_differences_on_tran_etc:
+    display_label: Reclassification adjustments on exchange differences on translation
+      of foreign operations, net of tax
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnExchangeDifferencesOnTranslationNetOfTax
+  royalty_expense:
+    display_label: Royalty expense
+    xbrl_tags:
+    - ifrs-full:RoyaltyExpense
+  sales_and_marketing_expense:
+    display_label: Sales and marketing expense
+    xbrl_tags:
+    - ifrs-full:SalesAndMarketingExpense
+  operating_expense_excluding_cost_of_sales:
+    display_label: Operating expense excluding cost of sales
+    xbrl_tags:
+    - ifrs-full:OperatingExpenseExcludingCostOfSales
+  income_tax_relating_to_hedges_of_net_investments_in_foreign__etc:
+    display_label: Income tax relating to hedges of net investments in foreign operations
+      included in other comprehensive income
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToHedgesOfNetInvestmentsInForeignOperationsOfOtherComprehensiveIncome
+  increase_decrease_through_disposal_of_subsidiary:
+    display_label: Increase (decrease) through disposal of subsidiary, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughDisposalOfSubsidiary
+  increase_decrease_through_changes_in_ownership_interests_in__etc:
+    display_label: Increase (decrease) through changes in ownership interests in subsidiaries
+      that do not result in loss of control, equity attributable to owners of parent
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughChangesInOwnershipInterestsInSubsidiariesThatDoNotResultInLossOfControlEquityAttributableToOwnersOfParent
+  other_individually_immaterial_components_of_other_comprehens_etc:
+    display_label: Other individually immaterial components of OCI reclassifiable
+      to P&L
+    xbrl_tags:
+    - dan:OtherIndividuallyImmaterialComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax
+  transactions_on_undated_subordinated_notes_including_interes_etc:
+    display_label: Transactions on Undated Subordinated Notes (net of tax)
+    xbrl_tags:
+    - dan:TransactionsOnUndatedSubordinatedNotesIncludingInterestExpenseAndRepurchasePremiumNetOfTax
+  profit_loss_on_share_of_other_comprehensive_income_of_associ_etc:
+    display_label: Share of OCI of Associates/JVs Reclassifiable to P&L
+    xbrl_tags:
+    - kering:ProfitLossOnShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLoss
+  reclassification_adjustments_on_share_of_other_comprehensive_etc:
+    display_label: Reclassification of Share of OCI of Associates/JVs to P&L
+    xbrl_tags:
+    - kering:ReclassificationAdjustmentsOnShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLoss
+  increase_decrease_of_issued_capital:
+    display_label: Increase/(Decrease) of Issued Capital
+    xbrl_tags:
+    - kering:IncreaseDecreaseOfIssuedCapital
+  increase_decrease_in_number_of_treasury_shares:
+    display_label: Change in Number of Treasury Shares
+    xbrl_tags:
+    - kering:IncreaseDecreaseInNumberOfTreasuryShares
+  increase_decrease_in_number_of_shares_through_sharebased_pay_etc:
+    display_label: Change in Shares via Share-based Payment Transactions
+    xbrl_tags:
+    - kering:IncreaseDecreaseInNumberOfSharesThroughSharebasedPaymentTransactions
+  variations_du_perimetre_de_consolidation_etc:
+    display_label: Changes in Scope of Consolidation and Non-controlling Interests
+    xbrl_tags:
+    - el:VariationsDuPérimètreDeConsolidationEtDesParticipationsNeDonnantPasLeContrôle
+  actions_emises_livrees_aux_salaries_etc:
+    display_label: Shares Issued to Employees and Options Exercised
+    xbrl_tags:
+    - el:ActionsEmisesLivréesAuxSalariésEtExerciceDoptionsDeSouscription
+  hyperinflation_accounting:
+    display_label: Hyperinflation Accounting Adjustment
+    xbrl_tags:
+    - el:HyperinflationAccounting
+  variation_de_capital:
+    display_label: Change in Issued Capital (Pernod Ricard)
+    xbrl_tags:
+    - pernod:VariationDeCapital
+  percentage_decrease_in_non_controlling_interest_due_to_swap__etc:
+    display_label: Percentage Decrease in NCI from Mining Interest Swap
+    xbrl_tags:
+    - shel:PercentageDecreaseInNonControllingInterestDueToSwapInMiningInterest
+  percentage_increase_in_interest_in_the_scotford_upgrader_etc:
+    display_label: Percentage Increase in Scotford Upgrader and Quest CCS Interest
+    xbrl_tags:
+    - shel:PercentageIncreaseInInterestInTheScotfordUpgraderAndQuestCarbonCaptureCCSFacility
+  minority_share_buyout_commitment_medik8:
+    display_label: Minority Share Buyout Commitment - Medik8
+    xbrl_tags:
+    - loreal:MinorityShareBuyoutCommitmentMedik8
+  other_individually_immaterial_components_of_other_comprehens_etc_x:
+    display_label: Other individually immaterial components of OCI reclassifiable
+      to P&L
+    xbrl_tags:
+    - dan:OtherIndividuallyImmaterialComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax
+  transactions_on_undated_subordinated_notes_including_interes_etc_x:
+    display_label: Transactions on Undated Subordinated Notes (net of tax)
+    xbrl_tags:
+    - dan:TransactionsOnUndatedSubordinatedNotesIncludingInterestExpenseAndRepurchasePremiumNetOfTax
+  profit_loss_on_share_of_other_comprehensive_income_of_associ_etc_x:
+    display_label: Share of OCI of Associates/JVs Reclassifiable to P&L
+    xbrl_tags:
+    - kering:ProfitLossOnShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLoss
+  reclassification_adjustments_on_share_of_other_comprehensive_etc_x:
+    display_label: Reclassification of Share of OCI of Associates/JVs to P&L
+    xbrl_tags:
+    - kering:ReclassificationAdjustmentsOnShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLoss
+  increase_decrease_of_issued_capital_x:
+    display_label: Increase/(Decrease) of Issued Capital
+    xbrl_tags:
+    - kering:IncreaseDecreaseOfIssuedCapital
+  increase_decrease_in_number_of_treasury_shares_x:
+    display_label: Change in Number of Treasury Shares
+    xbrl_tags:
+    - kering:IncreaseDecreaseInNumberOfTreasuryShares
+  increase_decrease_in_number_of_shares_through_sharebased_pay_etc_x:
+    display_label: Change in Shares via Share-based Payment Transactions
+    xbrl_tags:
+    - kering:IncreaseDecreaseInNumberOfSharesThroughSharebasedPaymentTransactions
+  variations_du_perimetre_de_consolidation_etc_x:
+    display_label: Changes in Scope of Consolidation and Non-controlling Interests
+    xbrl_tags:
+    - el:VariationsDuPérimètreDeConsolidationEtDesParticipationsNeDonnantPasLeContrôle
+  actions_emises_livrees_aux_salaries_etc_x:
+    display_label: Shares Issued to Employees and Options Exercised
+    xbrl_tags:
+    - el:ActionsEmisesLivréesAuxSalariésEtExerciceDoptionsDeSouscription
+  hyperinflation_accounting_x:
+    display_label: Hyperinflation Accounting Adjustment
+    xbrl_tags:
+    - el:HyperinflationAccounting
+  variation_de_capital_x:
+    display_label: Change in Issued Capital (Pernod Ricard)
+    xbrl_tags:
+    - pernod:VariationDeCapital
+  percentage_decrease_in_non_controlling_interest_due_to_swap__etc_x:
+    display_label: Percentage Decrease in NCI from Mining Interest Swap
+    xbrl_tags:
+    - shel:PercentageDecreaseInNonControllingInterestDueToSwapInMiningInterest
+  percentage_increase_in_interest_in_the_scotford_upgrader_etc_x:
+    display_label: Percentage Increase in Scotford Upgrader and Quest CCS Interest
+    xbrl_tags:
+    - shel:PercentageIncreaseInInterestInTheScotfordUpgraderAndQuestCarbonCaptureCCSFacility
+  minority_share_buyout_commitment_medik8_x:
+    display_label: Minority Share Buyout Commitment - Medik8
+    xbrl_tags:
+    - loreal:MinorityShareBuyoutCommitmentMedik8
