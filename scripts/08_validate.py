@@ -119,8 +119,21 @@ def check_identities(df) -> list:
 
 
 def check_currency(df) -> pd.DataFrame:
-    """Which currency does each company report in?"""
-    cur = df.groupby("company")["currency"].agg(lambda s: sorted(set(x for x in s if x)))
+    """Which currency does each company report in?
+    Filters out non-currency units like 'shares', 'pure', 'EUR/shares'
+    which are units for EPS and ratio facts, not monetary currencies."""
+    # ISO 4217 currencies are 3 uppercase letters only
+    # anything else (shares, pure, EUR/shares, etc.) is a unit, not a currency
+    import re
+    iso_pattern = re.compile(r'^[A-Z]{3}$')
+
+    def real_currencies(s):
+        return sorted(set(
+            x for x in s
+            if x and iso_pattern.match(str(x))
+        ))
+
+    cur = df.groupby("company")["currency"].agg(real_currencies)
     return cur
 
 

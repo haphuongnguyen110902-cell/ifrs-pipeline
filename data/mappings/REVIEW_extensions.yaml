@@ -1,22 +1,122 @@
 _instructions: 'Fill in ''statement'' for each entry: income_statement / balance_sheet
   / cash_flow / other. Then run: python scripts/12_apply_review.py'
 needs_review:
-- xbrl_tag: LVM:IncreaseDecreaseInNumberOfSharesIssueOfEquity
-  suggested_key: increase_decrease_in_number_of_shares_issue_of_equity
-  display_label: Increase (decrease) in number of shares issued through issue of equity
+- xbrl_tag: AMP:ProfitLossFromOperatingActivitiesBeforeInterestTaxesDepreciationAndAmortisationExpense
+  suggested_key: profit_loss_from_operating_activities_before_interest_taxes__etc
+  display_label: Profit (loss) from operating activities before interest, taxes, depreciation
+    and amortisation expense
+  statement: income_statement
+  balance: credit
+  reason: role keyword 'income statement'
+- xbrl_tag: AMP:InterestRevenueExpenseOtherThanLeaseLiabilities
+  suggested_key: interest_revenue_expense_other_than_lease_liabilities
+  display_label: Interest revenue (expense) other than lease liabilities
+  statement: income_statement
+  balance: credit
+  reason: role keyword 'income statement'
+- xbrl_tag: AMP:IncreaseDecreaseThroughShareBasedPaymentTransfers
+  suggested_key: increase_decrease_through_share_based_payment_transfers
+  display_label: Increase (decrease) through share-based payment transfers
   statement: other
-  balance: n/a
+  balance: credit
   reason: role keyword 'changes in equity'
-- xbrl_tag: LVM:OperatingInvestmentsClassifiedAsInvestingActivities
-  suggested_key: operating_investments_classified_as_investing_activities
-  display_label: Operating investments, classified as investing activities
+- xbrl_tag: AMP:IncreaseDecreaseThroughInflationAccounting
+  suggested_key: increase_decrease_through_inflation_accounting
+  display_label: Increase (decrease) through inflation accounting
+  statement: other
+  balance: credit
+  reason: role keyword 'changes in equity'
+- xbrl_tag: AMP:IncreaseDecreaseThroughMiscellaneousOtherChanges
+  suggested_key: increase_decrease_through_miscellaneous_other_changes
+  display_label: Increase (decrease) through miscellaneous other changes
+  statement: other
+  balance: credit
+  reason: role keyword 'changes in equity'
+- xbrl_tag: AMP:AdjustmentsForAmortisationAndImpairmentLossRecognisedInProfitOrLossIntangibleAssetsOtherThanGoodwill
+  suggested_key: adjustments_for_amortisation_and_impairment_loss_recognised__etc
+  display_label: Adjustments for amortisation and impairment loss recognised in profit
+    or loss, intangible assets other than goodwill
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:AdjustmentsForDepreciationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossPropertyPlantAndEquipment
+  suggested_key: adjustments_for_depreciation_and_impairment_loss_reversal_of_etc
+  display_label: Adjustments for depreciation and impairment loss (reversal of impairment
+    loss) recognised in profit or loss, property, plant and equipment
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:AdjustmentsForDepreciationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossRightOfUseAssets
+  suggested_key: adjustments_for_depreciation_and_impairment_loss_reversal_of_etc
+  display_label: Adjustments for depreciation and impairment loss (reversal of impairment
+    loss) recognised in profit or loss, right-of-use assets
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:AdjustmentsForAmortisationAndImpairmentLossRecognisedInProfitOrLossGoodwill
+  suggested_key: adjustments_for_amortisation_and_impairment_loss_recognised__etc
+  display_label: Adjustments for amortisation and impairment loss recognised in profit
+    or loss, goodwill
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:AdjustmentsForIncreaseInProvisionsOtherAdjustmentsForNonCashItemsAndAdjustmentsForLossesGainsOnDisposalOfNonCurrentAssets
+  suggested_key: adjustments_for_increase_in_provisions_other_adjustments_for_etc
+  display_label: Adjustments for increase in provisions, other adjustments for non-cash
+    items and adjustments for losses (gains) on disposal of non-current assets
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:AdjustmentsForDecreaseInProvisions
+  suggested_key: adjustments_for_decrease_in_provisions
+  display_label: Adjustments for decrease in provisions
   statement: cash_flow
   balance: credit
   reason: role keyword 'cash flow'
-- xbrl_tag: ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersPerShare
-  suggested_key: dividends_proposed_or_declared_before_financial_statements_a_etc
-  display_label: Dividends proposed or declared before financial statements authorised
-    for issue but not recognised as distribution to owners per share
-  statement: other
-  balance: n/a
-  reason: ''
+- xbrl_tag: AMP:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivablesAndAdjustmentsForIncreaseDecreaseInOtherOperatingPayables
+  suggested_key: adjustments_for_decrease_increase_in_other_operating_receiva_etc
+  display_label: Adjustments for decrease (increase) in other operating receivables
+    and adjustments for increase (decrease) in other operating payables
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:InterestPaidAndInterestReceivedClassifiedAsOperatingActivities
+  suggested_key: interest_paid_and_interest_received_classified_as_operating__etc
+  display_label: Interest paid and (interest received), classified as operating activities
+  statement: cash_flow
+  balance: credit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:ProceedsFromSalesOfPropertyPlantAndEquipmentAndProceedsFromSalesOfIntangibleAssetsClassifiedAsInvestingActivities
+  suggested_key: proceeds_from_sales_of_property_plant_and_equipment_and_proc_etc
+  display_label: Proceeds from sales of property, plant and equipment and proceeds
+    from sales of intangible assets, classified as investing activities
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:CashFlowsFromUsedInInvestingActivitiesOperational
+  suggested_key: cash_flows_from_used_in_investing_activities_operational
+  display_label: Cash flows from (used in) investing activities, operational
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:IncreaseDecreaseInLiabilitiesRecognisedAsOfAcquisitionDateClassifiedAsInvestingActivities
+  suggested_key: increase_decrease_in_liabilities_recognised_as_of_acquisitio_etc
+  display_label: Increase (decrease) in liabilities recognised as of acquisition date,
+    classified as investing activities
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:CashFlowsFromUsedInInvestingActivitiesAcquisitions
+  suggested_key: cash_flows_from_used_in_investing_activities_acquisitions
+  display_label: Cash flows from (used in) investing activities, acquisitions
+  statement: cash_flow
+  balance: credit
+  reason: role keyword 'cash flow'
+- xbrl_tag: AMP:CapitalIncreasesContributionsByNonControllingInterestsAndDividendsPaidToNonControllingInterestsBySubsidiariesClassifiedAsFinancingActivities
+  suggested_key: capital_increases_contributions_by_non_controlling_interests_etc
+  display_label: Capital increases, contributions by non-controlling interests and
+    dividends paid to non-controlling interests by subsidiaries, classified as financing
+    activities
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'cash flow'

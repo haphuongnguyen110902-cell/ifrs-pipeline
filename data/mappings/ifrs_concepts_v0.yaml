@@ -299,6 +299,58 @@ income_statement:
     display_label: Profit (loss)
     xbrl_tags:
     - ifrs-full:ProfitLoss
+  revenue_from_contracts_with_customers:
+    display_label: Revenue from contracts with customers
+    xbrl_tags:
+    - ifrs-full:RevenueFromContractsWithCustomers
+  amortisation_intangible_assets_other_than_goodwill:
+    display_label: Amortisation, intangible assets other than goodwill
+    xbrl_tags:
+    - ifrs-full:AmortisationIntangibleAssetsOtherThanGoodwill
+  depreciation_property_plant_and_equipment:
+    display_label: Depreciation, property, plant and equipment
+    xbrl_tags:
+    - ifrs-full:DepreciationPropertyPlantAndEquipment
+  depreciation_rightofuse_assets:
+    display_label: Depreciation, right-of-use assets
+    xbrl_tags:
+    - ifrs-full:DepreciationRightofuseAssets
+  impairment_loss_reversal_of_impairment_loss_recognised_in_pr_etc:
+    display_label: Impairment loss (reversal of impairment loss) recognised in profit
+      or loss
+    xbrl_tags:
+    - ifrs-full:ImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
+  share_of_profit_loss_of_associates_accounted_for_using_equit_etc:
+    display_label: Share of profit (loss) of associates accounted for using equity
+      method
+    xbrl_tags:
+    - ifrs-full:ShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod
+  gains_losses_on_exchange_differences_on_translation_recognis_etc:
+    display_label: Foreign exchange gain (loss)
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnExchangeDifferencesOnTranslationRecognisedInProfitOrLoss
+  gains_losses_on_financial_assets_at_fair_value_through_profi_etc:
+    display_label: Gains (losses) on financial assets at fair value through profit
+      or loss, mandatorily measured at fair value
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue
+  current_tax_expense_income:
+    display_label: Current tax expense (income)
+    xbrl_tags:
+    - ifrs-full:CurrentTaxExpenseIncome
+  deferred_tax_expense_income:
+    display_label: Deferred tax expense (income)
+    xbrl_tags:
+    - ifrs-full:DeferredTaxExpenseIncome
+  profit_loss_from_operating_activities_before_interest_taxes__etc:
+    display_label: Profit (loss) from operating activities before interest, taxes,
+      depreciation and amortisation expense
+    xbrl_tags:
+    - AMP:ProfitLossFromOperatingActivitiesBeforeInterestTaxesDepreciationAndAmortisationExpense
+  interest_revenue_expense_other_than_lease_liabilities:
+    display_label: Interest revenue (expense) other than lease liabilities
+    xbrl_tags:
+    - AMP:InterestRevenueExpenseOtherThanLeaseLiabilities
 balance_sheet:
   accumulated_other_comprehensive_income:
     display_label: Accumulated Other Comprehensive Income
@@ -560,6 +612,66 @@ balance_sheet:
     display_label: Equity
     xbrl_tags:
     - ifrs-full:Equity
+  noncurrent_derivative_financial_assets:
+    display_label: Non-current derivative financial assets
+    xbrl_tags:
+    - ifrs-full:NoncurrentDerivativeFinancialAssets
+  noncurrent_contract_assets:
+    display_label: Non-current contract assets
+    xbrl_tags:
+    - ifrs-full:NoncurrentContractAssets
+  current_contract_assets:
+    display_label: Current contract assets
+    xbrl_tags:
+    - ifrs-full:CurrentContractAssets
+  current_derivative_financial_assets:
+    display_label: Current derivative financial assets
+    xbrl_tags:
+    - ifrs-full:CurrentDerivativeFinancialAssets
+  share_premium:
+    display_label: Share premium
+    xbrl_tags:
+    - ifrs-full:SharePremium
+  treasury_shares:
+    display_label: Treasury shares
+    xbrl_tags:
+    - ifrs-full:TreasuryShares
+  noncurrent_financial_liabilities:
+    display_label: Non-current financial liabilities
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinancialLiabilities
+  noncurrent_derivative_financial_liabilities:
+    display_label: Non-current derivative financial liabilities
+    xbrl_tags:
+    - ifrs-full:NoncurrentDerivativeFinancialLiabilities
+  noncurrent_liabilities_recognised_as_of_acquisition_date:
+    display_label: Non-current liabilities recognised as of acquisition date
+    xbrl_tags:
+    - ifrs-full:NoncurrentLiabilitiesRecognisedAsOfAcquisitionDate
+  noncurrent_contract_liabilities:
+    display_label: Non-current contract liabilities
+    xbrl_tags:
+    - ifrs-full:NoncurrentContractLiabilities
+  current_liabilities_recognised_as_of_acquisition_date:
+    display_label: Current liabilities recognised as of acquisition date
+    xbrl_tags:
+    - ifrs-full:CurrentLiabilitiesRecognisedAsOfAcquisitionDate
+  current_contract_liabilities:
+    display_label: Current contract liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentContractLiabilities
+  other_current_liabilities:
+    display_label: Other current liabilities
+    xbrl_tags:
+    - ifrs-full:OtherCurrentLiabilities
+  current_derivative_financial_liabilities:
+    display_label: Current derivative financial liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentDerivativeFinancialLiabilities
+  current_provisions_for_employee_benefits:
+    display_label: Current provisions for employee benefits
+    xbrl_tags:
+    - ifrs-full:CurrentProvisionsForEmployeeBenefits
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense
@@ -963,6 +1075,107 @@ cash_flow:
     display_label: Operating investments, classified as investing activities
     xbrl_tags:
     - LVM:OperatingInvestmentsClassifiedAsInvestingActivities
+  adjustments_for_undistributed_profits_of_associates:
+    display_label: Adjustments for undistributed profits of associates
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForUndistributedProfitsOfAssociates
+  adjustments_for_finance_income_cost:
+    display_label: Adjustments for finance income (cost)
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForFinanceIncomeCost
+  adjustments_for_income_tax_expense:
+    display_label: Adjustments for income tax expense
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncomeTaxExpense
+  adjustments_for_decrease_increase_in_trade_account_receivabl_etc:
+    display_label: Adjustments for decrease (increase) in trade accounts receivable
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInTradeAccountReceivable
+  adjustments_for_increase_decrease_in_trade_account_payable:
+    display_label: Adjustments for increase (decrease) in trade accounts payable
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInTradeAccountPayable
+  purchase_of_intangible_assets_classified_as_investing_activi_etc:
+    display_label: Purchase of intangible assets, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities
+  purchase_of_property_plant_and_equipment_classified_as_inves_etc:
+    display_label: Purchase of property, plant and equipment, classified as investing
+      activities
+    xbrl_tags:
+    - ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities
+  other_inflows_outflows_of_cash_classified_as_financing_activ_etc:
+    display_label: Other inflows (outflows) of cash, classified as financing activities
+    xbrl_tags:
+    - ifrs-full:OtherInflowsOutflowsOfCashClassifiedAsFinancingActivities
+  cash_and_cash_equivalents_classified_as_part_of_disposal_gro_etc:
+    display_label: Cash and cash equivalents classified as part of disposal group
+      held for sale
+    xbrl_tags:
+    - ifrs-full:CashAndCashEquivalentsClassifiedAsPartOfDisposalGroupHeldForSale
+  adjustments_for_amortisation_and_impairment_loss_recognised__etc:
+    display_label: Adjustments for amortisation and impairment loss recognised in
+      profit or loss, intangible assets other than goodwill
+    xbrl_tags:
+    - AMP:AdjustmentsForAmortisationAndImpairmentLossRecognisedInProfitOrLossIntangibleAssetsOtherThanGoodwill
+  adjustments_for_depreciation_and_impairment_loss_reversal_of_etc:
+    display_label: Adjustments for depreciation and impairment loss (reversal of impairment
+      loss) recognised in profit or loss, property, plant and equipment
+    xbrl_tags:
+    - AMP:AdjustmentsForDepreciationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossPropertyPlantAndEquipment
+  adjustments_for_depreciation_and_impairment_loss_reversal_of_etc_x:
+    display_label: Adjustments for depreciation and impairment loss (reversal of impairment
+      loss) recognised in profit or loss, right-of-use assets
+    xbrl_tags:
+    - AMP:AdjustmentsForDepreciationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossRightOfUseAssets
+  adjustments_for_amortisation_and_impairment_loss_recognised__etc_x:
+    display_label: Adjustments for amortisation and impairment loss recognised in
+      profit or loss, goodwill
+    xbrl_tags:
+    - AMP:AdjustmentsForAmortisationAndImpairmentLossRecognisedInProfitOrLossGoodwill
+  adjustments_for_increase_in_provisions_other_adjustments_for_etc:
+    display_label: Adjustments for increase in provisions, other adjustments for non-cash
+      items and adjustments for losses (gains) on disposal of non-current assets
+    xbrl_tags:
+    - AMP:AdjustmentsForIncreaseInProvisionsOtherAdjustmentsForNonCashItemsAndAdjustmentsForLossesGainsOnDisposalOfNonCurrentAssets
+  adjustments_for_decrease_in_provisions:
+    display_label: Adjustments for decrease in provisions
+    xbrl_tags:
+    - AMP:AdjustmentsForDecreaseInProvisions
+  adjustments_for_decrease_increase_in_other_operating_receiva_etc:
+    display_label: Adjustments for decrease (increase) in other operating receivables
+      and adjustments for increase (decrease) in other operating payables
+    xbrl_tags:
+    - AMP:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivablesAndAdjustmentsForIncreaseDecreaseInOtherOperatingPayables
+  interest_paid_and_interest_received_classified_as_operating__etc:
+    display_label: Interest paid and (interest received), classified as operating
+      activities
+    xbrl_tags:
+    - AMP:InterestPaidAndInterestReceivedClassifiedAsOperatingActivities
+  proceeds_from_sales_of_property_plant_and_equipment_and_proc_etc:
+    display_label: Proceeds from sales of property, plant and equipment and proceeds
+      from sales of intangible assets, classified as investing activities
+    xbrl_tags:
+    - AMP:ProceedsFromSalesOfPropertyPlantAndEquipmentAndProceedsFromSalesOfIntangibleAssetsClassifiedAsInvestingActivities
+  cash_flows_from_used_in_investing_activities_operational:
+    display_label: Cash flows from (used in) investing activities, operational
+    xbrl_tags:
+    - AMP:CashFlowsFromUsedInInvestingActivitiesOperational
+  increase_decrease_in_liabilities_recognised_as_of_acquisitio_etc:
+    display_label: Increase (decrease) in liabilities recognised as of acquisition
+      date, classified as investing activities
+    xbrl_tags:
+    - AMP:IncreaseDecreaseInLiabilitiesRecognisedAsOfAcquisitionDateClassifiedAsInvestingActivities
+  cash_flows_from_used_in_investing_activities_acquisitions:
+    display_label: Cash flows from (used in) investing activities, acquisitions
+    xbrl_tags:
+    - AMP:CashFlowsFromUsedInInvestingActivitiesAcquisitions
+  capital_increases_contributions_by_non_controlling_interests_etc:
+    display_label: Capital increases, contributions by non-controlling interests and
+      dividends paid to non-controlling interests by subsidiaries, classified as financing
+      activities
+    xbrl_tags:
+    - AMP:CapitalIncreasesContributionsByNonControllingInterestsAndDividendsPaidToNonControllingInterestsBySubsidiariesClassifiedAsFinancingActivities
 other:
   income_tax_relating_to_cash_flow_hedges_of_other_comprehe_etc:
     display_label: Income Tax on Cash Flow Hedges (OCI)
@@ -1251,3 +1464,25 @@ other:
       for issue but not recognised as distribution to owners per share
     xbrl_tags:
     - ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersPerShare
+  income_tax_relating_to_components_of_other_comprehensive_inc_etc:
+    display_label: Income tax relating to components of other comprehensive income
+      that will not be reclassified to profit or loss
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLoss
+  increase_decrease_through_appropriation_of_retained_earnings:
+    display_label: Increase (decrease) through appropriation of retained earnings,
+      equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughAppropriationOfRetainedEarnings
+  increase_decrease_through_share_based_payment_transfers:
+    display_label: Increase (decrease) through share-based payment transfers
+    xbrl_tags:
+    - AMP:IncreaseDecreaseThroughShareBasedPaymentTransfers
+  increase_decrease_through_inflation_accounting:
+    display_label: Increase (decrease) through inflation accounting
+    xbrl_tags:
+    - AMP:IncreaseDecreaseThroughInflationAccounting
+  increase_decrease_through_miscellaneous_other_changes:
+    display_label: Increase (decrease) through miscellaneous other changes
+    xbrl_tags:
+    - AMP:IncreaseDecreaseThroughMiscellaneousOtherChanges
