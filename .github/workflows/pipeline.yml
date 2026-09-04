@@ -1,0 +1,70 @@
+# IFRS Pipeline — scheduled automation (V4 foundation)
+#
+# Currently set to manual trigger only (workflow_dispatch).
+# To enable weekly scheduled runs, uncomment the schedule block.
+#
+# Requires GitHub secret: DATABASE_URL (your Neon connection string)
+# Add it at: Settings → Secrets and variables → Actions → New repository secret
+
+name: IFRS Pipeline
+
+on:
+  # Manual trigger - run from GitHub Actions tab anytime
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Pipeline mode'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - load
+          - validate
+          - ratios
+          - discover
+
+  # Uncomment to enable weekly scheduled runs (V4)
+  # schedule:
+  #   - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python run_pipeline.py --mode ${{ github.event.inputs.mode || 'full' }} --skip-statements
+
+      - name: Upload ratio outputs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ratio-outputs
+          path: data/raw/comps_ratios.xlsx
+          retention-days: 30
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Pipeline failed. Check the logs above."
+          echo "Common causes:"
+          echo "  - DATABASE_URL secret not set"
+          echo "  - New company has unmapped extension tags (human review required)"
+          echo "  - Validation checks failed (mapping error)"
+          exit 1
