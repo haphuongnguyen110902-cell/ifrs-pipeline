@@ -34,72 +34,89 @@ from dotenv import load_dotenv
 # grows to cover concepts this list doesn't yet know about.
 STATEMENT_ORDER = {
     "income_statement": [
-        "revenue", "revenue_from_dividends", "cost_of_sales", "gross_profit",
-        "research_and_development_expense", "advertising_expense",
+        "revenue", "revenue_and_other_income",
+        "cost_of_sales", "raw_materials_and_consumables_used", "operating_expense",
+        "gross_profit", "gross_profit_excl_i_a_c",
+        "distribution_costs", "administrative_expense",
         "selling_general_and_administrative_expense",
-        "autres_produits_et_charges_non_recurrent",
-        "resultat_dexploitation", "profit_loss_from_operating_activities",
-        "other_finance_income_cost", "cout_de_lendettement_financier_brut",
-        "cout_de_lendettement_financier_net",
-        "interest_income_on_cash_and_cash_equivalents",
+        "advertising_expense", "research_and_development_expense", "marketing_expense",
+        "other_operating_income_expense",
+        "profit_loss_from_operating_activities",
+        "operating_profit_excl_i_a_c", "resultat_dexploitation",
+        "recurring_operating_income",
+        "profit_loss_from_operating_activities_after_share_of_prof_etc",
+        "profit_loss_from_operating_activities_recurring_including__etc",
+        "finance_income", "finance_costs", "finance_income_cost",
+        "interest_expense", "interest_expense_on_lease_liabilities",
+        "other_finance_income_cost", "cost_of_net_debt",
         "share_of_profit_loss_of_associates_and_joint_ventures_acc_etc",
+        "profit_loss_before_tax",
         "resultat_avant_impot_et_societes_mises_en_equivalence",
         "income_tax_expense_continuing_operations",
+        "profit_loss",
+        "profit_loss_attributable_to_owners_of_parent",
+        "profit_loss_attributable_to_noncontrolling_interests",
+        "comprehensive_income",
         "comprehensive_income_attributable_to_owners_of_parent",
         "comprehensive_income_attributable_to_noncontrolling_inter_etc",
         "basic_earnings_loss_per_share", "diluted_earnings_loss_per_share",
-        "resultat_net_par_action_hors_elements_non_recurrents_part_etc",
-        "resultat_net_dilue_par_action_hors_elements_non_recurrent_etc",
+        "adjusted_weighted_average_shares", "weighted_average_shares",
     ],
     "balance_sheet": [
-        "property_plant_and_equipment", "rightofuse_assets", "goodwill",
-        "intangible_assets_other_than_goodwill",
+        "goodwill", "intangible_assets_other_than_goodwill",
+        "property_plant_and_equipment", "rightofuse_assets",
         "investment_accounted_for_using_equity_method",
-        "noncurrent_financial_assets", "deferred_tax_assets", "noncurrent_assets",
-        "inventories", "current_trade_receivables", "current_tax_assets_current",
-        "actifs_courants_autres", "current_assets", "assets",
-        "issued_capital", "additional_paidin_capital",
-        "retained_earnings_excluding_profit_loss_for_reporting_period",
-        "retained_earnings_profit_loss_for_reporting_period",
-        "accumulated_other_comprehensive_income",
-        "equity_attributable_to_owners_of_parent", "noncontrolling_interests",
+        "noncurrent_financial_assets_availableforsale",
+        "noncurrent_investments_other_than_investments_accounted_fo_etc",
+        "deferred_tax_assets",
+        "noncurrent_recognised_assets_defined_benefit_plan",
+        "other_noncurrent_assets", "noncurrent_assets",
+        "inventories", "trade_and_other_current_receivables",
+        "other_current_assets", "current_tax_assets_current",
+        "cash_and_cash_equivalents",
+        "noncurrent_assets_or_disposal_groups_classified_as_held_fo_etc",
+        "current_assets", "assets",
+        "equity_attributable_to_owners_of_parent",
+        "noncontrolling_interests", "equity", "equity_and_liabilities",
         "longterm_borrowings", "noncurrent_lease_liabilities",
-        "deferred_tax_liabilities", "current_tax_liabilities_noncurrent",
-        "noncurrent_provisions_for_employee_benefits", "other_longterm_provisions",
-        "noncurrent_liabilities",
+        "deferred_tax_liabilities",
+        "noncurrent_provisions_for_employee_benefits",
+        "noncurrent_recognised_liabilities_defined_benefit_plan",
+        "other_noncurrent_liabilities", "noncurrent_liabilities",
         "current_borrowings_and_current_portion_of_noncurrent_borr_etc",
-        "current_lease_liabilities", "trade_and_other_current_payables_to_trade_suppliers",
-        "current_tax_liabilities_current", "current_provisions",
-        "passifs_courants_autres", "current_liabilities", "equity_and_liabilities",
+        "current_lease_liabilities",
+        "trade_and_other_current_payables",
+        "current_tax_liabilities_current",
+        "other_current_liabilities", "current_liabilities",
     ],
     "cash_flow": [
-        "other_adjustments_for_noncash_items",
-        "elimination_de_produits_sans_incidence_sur_la_tresorerie__etc",
-        "adjustments_for_losses_gains_on_disposal_of_noncurrent_as_etc",
-        "adjustments_for_deferred_tax_expense", "adjustments_for_sharebased_payments",
-        "adjustments_for_undistributed_profits_of_investments_acco_etc",
         "cash_flows_from_used_in_operations_before_changes_in_work_etc",
         "increase_decrease_in_working_capital",
-        "dividends_received_classified_as_operating_activities",
-        "interest_paid_classified_as_operating_activities", "income_taxes_paid_refund",
+        "adjustments_for_depreciation_and_amortisation_expense_and_etc",
+        "adjustments_for_provisions",
+        "other_adjustments_to_reconcile_profit_loss",
+        "income_taxes_paid_refund",
+        "income_taxes_paid_refund_classified_as_operating_activities",
         "cash_flows_from_used_in_operating_activities",
-        "acquisitions_d_immobilisations_corporelles_et_incorporelles",
-        "cessions_d_immobilisations_corporelles_et_incorporelle",
-        "variation_des_autres_actifs_financiers_y_compris_les_titr_etc",
-        "incidence_des_variations_de_perimetre",
+        "purchase_of_property_plant_and_equipment_intangible_assets_etc",
+        "proceeds_from_sales_of_property_plant_and_equipment_classi_etc",
+        "cash_flows_used_in_obtaining_control_of_subsidiaries_or_ot_etc",
+        "cash_flows_from_losing_control_of_subsidiaries_or_other_bu_etc",
+        "dividends_received_classified_as_investing_activities",
+        "interest_received_classified_as_investing_activities",
+        "income_taxes_paid_refund_classified_as_investing_activities",
         "cash_flows_from_used_in_investing_activities",
-        "proceeds_from_issuing_shares",
-        "valeur_de_cession_acquisition_des_actions_propres",
-        "variations_nettes_des_titres_loreal_auto_detenus",
-        "proceeds_from_noncurrent_borrowings", "repayments_of_noncurrent_borrowings",
-        "cash_flows_from_used_in_increase_decrease_in_current_borr_etc",
-        "payments_from_changes_in_ownership_interests_in_subsidiaries",
-        "payments_of_lease_liabilities_classified_as_financing_act_etc",
-        "interets_payes_sur_dettes_de_location", "cash_outflow_for_leases",
+        "proceeds_from_borrowings_classified_as_financing_activities",
+        "repayments_of_borrowings_classified_as_financing_activities",
+        "payments_to_acquire_or_redeem_entitys_shares",
         "dividends_paid_classified_as_financing_activities",
+        "dividends_paid_to_equity_holders_of_parent_classified_as_f_etc",
+        "dividends_paid_to_noncontrolling_interests_classified_as_f_etc",
+        "interest_paid_classified_as_financing_activities",
         "cash_flows_from_used_in_financing_activities",
         "effect_of_exchange_rate_changes_on_cash_and_cash_equivalents",
         "increase_decrease_in_cash_and_cash_equivalents",
+        "cash_and_cash_equivalents",
     ],
 }
 
@@ -181,27 +198,17 @@ if __name__ == "__main__":
     # report the currency explicitly - values from different companies are
     # NOT comparable unless they share one, and silently printing bare
     # numbers is how that mistake gets made
-    currencies = sorted(set(c for c in df["currency"].dropna() if c))
-    cur_label = "/".join(currencies) if currencies else "unknown currency"
+    import re
+    iso_pattern = re.compile(r'^[A-Z]{3}$')
+    currencies = sorted(set(
+        c for c in df["currency"].dropna()
+        if c and iso_pattern.match(str(c))
+    ))
+    cur_label = currencies[0] if len(currencies) == 1 else "/".join(currencies) if currencies else "unknown"
     print(f"Loaded {len(df)} facts for {args.company}")
     print(f"Reporting currency: {cur_label}")
     if len(currencies) > 1:
-        print("*** WARNING: multiple currencies in one company's filing - check the data.")
-
-    # warn if this company has a non-standard fiscal year end
-    try:
-        import yaml as _yaml
-        with open("data/companies.yaml") as _f:
-            _cfg = _yaml.safe_load(_f)
-        for _stem, _info in _cfg.get("companies", {}).items():
-            if _info.get("name") == args.company:
-                _fye = _info.get("fiscal_year_end")
-                if _fye and _fye != "December 31":
-                    print(f"*** NOTE: {args.company} fiscal year ends {_fye}, not Dec 31.")
-                    print("*** Year labels reflect the start of each fiscal year.")
-                    print("*** Direct comparison with Dec 31 filers mixes different economic periods.")
-    except Exception:
-        pass
+        print(f"*** WARNING: multiple currencies {currencies} - check the data.")
     print()
 
     statements = {
