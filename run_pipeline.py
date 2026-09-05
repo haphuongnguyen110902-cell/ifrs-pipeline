@@ -8,18 +8,24 @@ Designed so that V4 automation (GitHub Actions cron) only needs to call:
     python run_pipeline.py --mode full
 
 Modes:
-    full        Run everything end to end
+    full        Run everything end to end (load -> historical -> validate ->
+                ratios -> forensics -> forecast -> backtest -> statements)
     discover    Scan for new companies in a country, report only
-    load        Parse + load all companies in companies.yaml
+    load        Parse + load all companies in companies.yaml (V1, latest filing only)
+    historical  Parse + load data/raw/historical/ (multi-year, V2)
     validate    Run all validation checks
     ratios      Recompute ratios only (fast, no re-parsing)
+    analyze     Forensics + forecast + backtest, no re-parsing (needs ratios already computed)
     report      Generate statements and Excel outputs only
 
 Usage:
     python run_pipeline.py --mode full
     python run_pipeline.py --mode full --country FR --country IT
+    python run_pipeline.py --mode full --skip-historical   # V1 only, skip the 37 historical filings
     python run_pipeline.py --mode load --only danone.zip essity.zip
+    python run_pipeline.py --mode historical --only loreal
     python run_pipeline.py --mode ratios
+    python run_pipeline.py --mode analyze
     python run_pipeline.py --mode validate
     python run_pipeline.py --mode discover --country FR
 
@@ -115,6 +121,21 @@ def step_load(only: list = None, reset: bool = True):
     run(cmd, "Load companies into database")
 
 
+def step_load_historical(only: str = None, reset: bool = False):
+    """Parse and load data/raw/historical/ (V2 multi-year filings).
+    Unlike step_load, reset defaults to False: load_historical.py is
+    idempotent on its own (matches on source_file per filing, and
+    fact_value upserts via ON CONFLICT), so a plain re-run doesn't
+    duplicate anything - --reset-historical is only needed after a
+    mapping change that should overwrite old values, not for routine runs."""
+    cmd = [sys.executable, "scripts/load_historical.py"]
+    if reset:
+        cmd.append("--reset-historical")
+    if only:
+        cmd.extend(["--only", only])
+    run(cmd, "Load historical filings (V2) into database", fatal=False)
+
+
 def step_validate(fatal: bool = True) -> bool:
     """Run all validation checks. Returns True if all pass."""
     log("Running validation", "STEP")
@@ -140,6 +161,30 @@ def step_ratios():
     )
 
 
+def step_forensics(company: str = None):
+    """Flag earnings-quality / leverage anomalies from the ratio table."""
+    cmd = [sys.executable, "scripts/15_forensics.py"]
+    if company:
+        cmd.extend(["--company", company])
+    run(cmd, "Financial forensics flags → DB + Excel", fatal=False)
+
+
+def step_forecast(company: str = None):
+    """CAGR + linreg forecasts per company/ratio."""
+    cmd = [sys.executable, "scripts/16_forecasting.py"]
+    if company:
+        cmd.extend(["--company", company])
+    run(cmd, "Forecasting (CAGR + linreg) → DB + Excel", fatal=False)
+
+
+def step_backtest(company: str = None):
+    """Rolling backtest to pick CAGR vs linreg per company/ratio."""
+    cmd = [sys.executable, "scripts/17_backtest.py"]
+    if company:
+        cmd.extend(["--company", company])
+    run(cmd, "Backtest CAGR vs linreg → DB + Excel", fatal=False)
+
+
 def step_statements(companies: list = None):
     """Generate statements for all (or specified) companies."""
     if not companies:
@@ -160,16 +205,26 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    ap.add_argument("--mode", choices=["full", "discover", "load", "validate", "ratios", "report"],
+    ap.add_argument("--mode", choices=["full", "discover", "load", "historical",
+                                        "validate", "ratios", "analyze", "report"],
                     default="full", help="Which part of the pipeline to run")
     ap.add_argument("--country", action="append", default=["FR"],
                     help="Country code(s) for discovery (default: FR)")
     ap.add_argument("--only", nargs="+",
-                    help="Only process these zip file stems (for load mode)")
+                    help="Only process these zip file stems (for load mode) or "
+                         "one company key (for historical mode)")
+    ap.add_argument("--company", help="Only analyse this one company (for analyze mode)")
     ap.add_argument("--no-reset", action="store_true",
                     help="Don't clear existing facts before loading (faster but may miss updates)")
+    ap.add_argument("--reset-historical", action="store_true",
+                    help="Clear previously-loaded historical facts before reloading "
+                         "(only needed after a mapping change, not for routine runs)")
     ap.add_argument("--skip-validate", action="store_true",
                     help="Skip validation checks (not recommended)")
+    ap.add_argument("--skip-historical", action="store_true",
+                    help="Skip loading data/raw/historical/ in full mode (V1 only)")
+    ap.add_argument("--skip-analysis", action="store_true",
+                    help="Skip forensics/forecast/backtest in full mode (ratios only)")
     ap.add_argument("--skip-statements", action="store_true",
                     help="Skip statement generation (saves time if only ratios needed)")
     args = ap.parse_args()
@@ -194,6 +249,12 @@ def main():
         if not args.skip_validate:
             step_validate()
 
+    elif args.mode == "historical":
+        only_key = args.only[0] if args.only else None
+        step_load_historical(only=only_key, reset=args.reset_historical)
+        if not args.skip_validate:
+            step_validate()
+
     elif args.mode == "validate":
         ok = step_validate(fatal=False)
         sys.exit(0 if ok else 1)
@@ -201,26 +262,42 @@ def main():
     elif args.mode == "ratios":
         step_ratios()
 
+    elif args.mode == "analyze":
+        step_forensics(company=args.company)
+        step_forecast(company=args.company)
+        step_backtest(company=args.company)
+
     elif args.mode == "report":
         step_ratios()
         if not args.skip_statements:
             step_statements()
 
     elif args.mode == "full":
-        # Full pipeline: discover → load → validate → ratios → statements
+        # Full pipeline: load -> historical -> validate -> ratios -> analysis -> statements
         log("Running full pipeline", "STEP")
 
-        # 1. load all companies
+        # 1. load V1 (latest filing per company)
         step_load(only=args.only, reset=not args.no_reset)
 
-        # 2. validate - fatal by default
+        # 2. load V2 historical filings (non-fatal: V1 pipeline still valid without it)
+        if not args.skip_historical:
+            step_load_historical(reset=args.reset_historical)
+
+        # 3. validate - fatal by default
         if not args.skip_validate:
             step_validate(fatal=True)
 
-        # 3. compute ratios
+        # 4. compute ratios
         step_ratios()
 
-        # 4. generate statements (optional skip for speed)
+        # 5. forensics + forecast + backtest (all read from the ratio table,
+        #    all non-fatal - a bug here shouldn't block statement generation)
+        if not args.skip_analysis:
+            step_forensics()
+            step_forecast()
+            step_backtest()
+
+        # 6. generate statements (optional skip for speed)
         if not args.skip_statements:
             step_statements()
 

@@ -1,132 +1,152 @@
 # IFRS Pipeline Project - Running Notes
-_Last updated: 2026-08-21_
+
+*Last updated: 2026-08-21*
 
 ## Where things stand
-- **L'Oreal**: fully through the pipeline (parsed -> mapped -> loaded -> statements generated). V0 complete.
-- **11 filings downloaded** in `data/raw/`: loreal_2025, LVMH_2024, Kering_2023, essilorluxottica_new, puig, danone, pernod_ricard, essity, Moncler_2025, Shell_2025, Amplifon_2025
-- **Mapping covers 303 concepts** after the batch classification (was 100 for L'Oreal alone)
-- **Only L'Oreal is actually loaded into the database.** Everything else is parsed-and-classified but not loaded.
+
+* **L'Oreal**: fully through the pipeline (parsed -> mapped -> loaded -> statements generated). V0 complete.
+* **11 filings downloaded** in `data/raw/`: loreal\_2025, LVMH\_2024, Kering\_2023, essilorluxottica\_new, puig, danone, pernod\_ricard, essity, Moncler\_2025, Shell\_2025, Amplifon\_2025
+* **Mapping covers 303 concepts** after the batch classification (was 100 for L'Oreal alone)
+* **Only L'Oreal is actually loaded into the database.** Everything else is parsed-and-classified but not loaded.
 
 ## Open / Unfinished
-- [ ] Run `_extend_mapping_batch.py` on the local machine (adds 203 concepts -> 303 total)
-- [ ] Load LVMH, then the other 9 companies, into the database
-- [ ] Run `08_validate.py` and fix whatever mapping errors it surfaces
-- [ ] Build the FX rate table + conversion layer (design decided, see below)
-- [ ] Build the canonical-concept layer so company-specific tags become comparable
-- [ ] Build the ratio engine (can start NOW - ratios are currency-neutral, no FX needed)
-- [ ] Connect to a remote GitHub repo (still local-only)
+
+* \[ ] Run `\\\_extend\\\_mapping\\\_batch.py` on the local machine (adds 203 concepts -> 303 total)
+* \[ ] Load LVMH, then the other 9 companies, into the database
+* \[ ] Run `08\\\_validate.py` and fix whatever mapping errors it surfaces
+* \[ ] Build the FX rate table + conversion layer (design decided, see below)
+* \[ ] Build the canonical-concept layer so company-specific tags become comparable
+* \[ ] Build the ratio engine (can start NOW - ratios are currency-neutral, no FX needed)
+* \[ ] Connect to a remote GitHub repo (still local-only)
 
 ## Key Decisions
-- **Group/consolidated filings only**, never subsidiary-level
-- **Skip Germany and Ireland** - officially unindexed on filings.xbrl.org
-- **V1 stops at ~10 companies**, not "all of Europe" - full coverage is V4 territory
-- **Different fiscal year ends and gappy year coverage are fine** - schema stores real dates, assumes no shared matrix
-- **Automated downloader built** (`00_find_filing.py`) - `--search`, `--entity --download`, and `--batch "A,B,C"` modes via filings.xbrl.org JSON:API
-- **Scripts are delivered as downloadable files, not chat copy-paste** - the paste workflow already lost one update silently
+
+* **Group/consolidated filings only**, never subsidiary-level
+* **Skip Germany and Ireland** - officially unindexed on filings.xbrl.org
+* **V1 stops at \~10 companies**, not "all of Europe" - full coverage is V4 territory
+* **Different fiscal year ends and gappy year coverage are fine** - schema stores real dates, assumes no shared matrix
+* **Automated downloader built** (`00\\\_find\\\_filing.py`) - `--search`, `--entity --download`, and `--batch "A,B,C"` modes via filings.xbrl.org JSON:API
+* **Scripts are delivered as downloadable files, not chat copy-paste** - the paste workflow already lost one update silently
 
 ### FX / currency (decided 2026-08-21, not yet built)
-- **Principle: IAS 21.** Balance sheet (instant facts) -> closing rate at period end. Income statement and cash flow (duration facts) -> average rate over the period. The `period_type` column already encodes this distinction, so no schema change is needed to apply the right rate.
-- **Store local currency only in `fact_value`.** Never overwrite as-reported values. Add a separate `fx_rate` table (currency, date, rate, source) and convert at QUERY time, not load time. Reasons: rates get revised; presentation currency may change; keeps database-as-single-source-of-truth intact.
-- **Expose both local and EUR** in outputs, local as primary.
-- **Ratios need no FX at all** - currency cancels out in a ratio, so margins/ROIC/cash conversion can be built across all companies before any FX work.
-- **Growth rates DO get contaminated by FX.** Build both reported and constant-currency (organic) growth once growth metrics exist.
-- **Scope: only 2 of 11 companies are non-EUR** (Essity=SEK, Shell=USD). Real but small.
-- **Rate source: ECB euro reference rates** (free, official, ~30 currencies, published ~16:00 CET each working day, history back to 1999).
-  - Daily XML: `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`
-  - Full history + SDMX API via ECB Data Portal, dataflow `EXR`, key pattern like `D.SEK.EUR.SP00.A`
-  - Python option: `pandaSDMX`; simpler wrapper: Frankfurter API
-  - CAVEAT: ECB states these are for information only and discourages transactional use. Fine for analysis/presentation, worth a footnote in the README.
 
-## Bugs Found & Fixed
-- **Arelle loaded 0 facts silently** -> fix: `PackageManager.addPackage()` + `rebuildRemappings()` before loading, so namespace URLs resolve to files inside the zip instead of the live internet
-- **Balance Sheet years one year ahead** -> fix: subtract 1 day from `end_date` for instant facts (Arelle's exclusive-boundary convention applies to instants too)
-- **Statement lines printed alphabetically** -> fix: explicit `STATEMENT_ORDER` per statement, alphabetical fallback for anything unlisted
-- **`00_find_filing.py` returned internal DB id (`14`) instead of a real identifier** -> fix: extract from the entity's `relationships.filings.links.related` URL
-- **Currency stored but never displayed** -> fix: `07_generate_statements.py` now prints reporting currency in the header and per statement
+* **Principle: IAS 21.** Balance sheet (instant facts) -> closing rate at period end. Income statement and cash flow (duration facts) -> average rate over the period. The `period\\\_type` column already encodes this distinction, so no schema change is needed to apply the right rate.
+* **Store local currency only in `fact\\\_value`.** Never overwrite as-reported values. Add a separate `fx\\\_rate` table (currency, date, rate, source) and convert at QUERY time, not load time. Reasons: rates get revised; presentation currency may change; keeps database-as-single-source-of-truth intact.
+* **Expose both local and EUR** in outputs, local as primary.
+* **Ratios need no FX at all** - currency cancels out in a ratio, so margins/ROIC/cash conversion can be built across all companies before any FX work.
+* **Growth rates DO get contaminated by FX.** Build both reported and constant-currency (organic) growth once growth metrics exist.
+* **Scope: only 2 of 11 companies are non-EUR** (Essity=SEK, Shell=USD). Real but small.
+* **Rate source: ECB euro reference rates** (free, official, \~30 currencies, published \~16:00 CET each working day, history back to 1999).
+
+  * Daily XML: `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`
+  * Full history + SDMX API via ECB Data Portal, dataflow `EXR`, key pattern like `D.SEK.EUR.SP00.A`
+  * Python option: `pandaSDMX`; simpler wrapper: Frankfurter API
+  * CAVEAT: ECB states these are for information only and discourages transactional use. Fine for analysis/presentation, worth a footnote in the README.
+
+## Bugs Found \& Fixed
+
+* **Arelle loaded 0 facts silently** -> fix: `PackageManager.addPackage()` + `rebuildRemappings()` before loading, so namespace URLs resolve to files inside the zip instead of the live internet
+* **Balance Sheet years one year ahead** -> fix: subtract 1 day from `end\\\_date` for instant facts (Arelle's exclusive-boundary convention applies to instants too)
+* **Statement lines printed alphabetically** -> fix: explicit `STATEMENT\\\_ORDER` per statement, alphabetical fallback for anything unlisted
+* **`00\\\_find\\\_filing.py` returned internal DB id (`14`) instead of a real identifier** -> fix: extract from the entity's `relationships.filings.links.related` URL
+* **Currency stored but never displayed** -> fix: `07\\\_generate\\\_statements.py` now prints reporting currency in the header and per statement
 
 ## Known weaknesses (acknowledged, not all fixed)
 
-### 0. WE WERE HAND-DOING WORK THE TAXONOMY ALREADY CONTAINS (biggest finding)
+### 0\. WE WERE HAND-DOING WORK THE TAXONOMY ALREADY CONTAINS (biggest finding)
+
 Verified directly against Arelle: every concept exposes
 `concept.label()` (official name, multi-language), `concept.periodType`
 (instant/duration), and `concept.balance` (debit/credit). Every filing also
 carries a PRESENTATION LINKBASE declaring its own statement structure, and
-IFRS taxonomy roles are numbered ([2xxxxx]=balance sheet, [3xxxxx]=P&L,
-[4xxxxx]=OCI, [5xxxxx]=cash flow, [6xxxxx]=changes in equity).
+IFRS taxonomy roles are numbered (\[2xxxxx]=balance sheet, \[3xxxxx]=P\&L,
+\[4xxxxx]=OCI, \[5xxxxx]=cash flow, \[6xxxxx]=changes in equity).
 
-So the ~300 hand-classifications were largely unnecessary:
-- `periodType == instant` is definitionally a balance sheet item - zero judgment needed
-- `balance` (debit/credit) solves the sign-convention problem for free
-- `label()` gives official display labels, better than my hand-written ones
-- The presentation linkbase gives the filer's own statement structure AND ordering,
-  which is what `STATEMENT_ORDER` in 07_generate_statements.py reinvents by hand
+So the \~300 hand-classifications were largely unnecessary:
 
-**`scripts/10_auto_classify.py` implements this.** Three tiers, each labelled
+* `periodType == instant` is definitionally a balance sheet item - zero judgment needed
+* `balance` (debit/credit) solves the sign-convention problem for free
+* `label()` gives official display labels, better than my hand-written ones
+* The presentation linkbase gives the filer's own statement structure AND ordering,
+which is what `STATEMENT\\\_ORDER` in 07\_generate\_statements.py reinvents by hand
+
+**`scripts/10\\\_auto\\\_classify.py` implements this.** Three tiers, each labelled
 in the output so confidence is visible:
-  1. Presentation linkbase role number (authoritative - the filer's own view)
-  2. periodType (instant -> balance_sheet, definitionally certain)
-  3. Concept-name keywords (LOW CONFIDENCE, explicitly marked)
+
+1. Presentation linkbase role number (authoritative - the filer's own view)
+2. periodType (instant -> balance\_sheet, definitionally certain)
+3. Concept-name keywords (LOW CONFIDENCE, explicitly marked)
 Anything none of the three resolve is marked REVIEW rather than guessed.
 
 Tested 4/4 correct against a purpose-built synthetic filing. NOT yet run
 against a real ESEF filing - that's the first thing to do with it.
-Use `--compare data/mappings/ifrs_concepts_v0.yaml` to diff the taxonomy's
+Use `--compare data/mappings/ifrs\\\_concepts\\\_v0.yaml` to diff the taxonomy's
 answer against my hand-classifications. Where they disagree, the taxonomy
 is almost certainly right.
 
-### 1. OUTPUT FORMATTING NEEDS REAL WORK (do this before showing anyone)
+### 1\. OUTPUT FORMATTING NEEDS REAL WORK (do this before showing anyone)
+
 Current statement output is functionally correct but visually raw. For a
 portfolio piece the presentation matters as much as the numbers. Backlog:
-- **Scale**: show EUR millions or billions, not 43486800000. Filings are
-  rounded to the nearest 100k anyway (`decimals=-5`), so full precision is fake.
-- **Subtotals and indentation**: real statements nest (Revenue, then indented
-  cost lines, then a ruled Gross Profit subtotal). The presentation linkbase
-  already encodes this hierarchy - use it instead of a flat list.
-- **Sign presentation**: expenses in brackets, per accounting convention.
-- **Excel styling**: openpyxl can do number formats, bold subtotals, frozen
-  header rows, column widths. Currently it's a bare dump.
-- **Currency + scale in the header**, e.g. "in EUR millions" - partially done.
-- **Percentage/ratio formatting** once the ratio engine exists (1 decimal, % sign).
-- **Consistent year column ordering** and clear FY labelling for any
-  off-calendar fiscal years.
 
-### 2. Company-specific tags are not comparable
+* **Scale**: show EUR millions or billions, not 43486800000. Filings are
+rounded to the nearest 100k anyway (`decimals=-5`), so full precision is fake.
+* **Subtotals and indentation**: real statements nest (Revenue, then indented
+cost lines, then a ruled Gross Profit subtotal). The presentation linkbase
+already encodes this hierarchy - use it instead of a flat list.
+* **Sign presentation**: expenses in brackets, per accounting convention.
+* **Excel styling**: openpyxl can do number formats, bold subtotals, frozen
+header rows, column widths. Currently it's a bare dump.
+* **Currency + scale in the header**, e.g. "in EUR millions" - partially done.
+* **Percentage/ratio formatting** once the ratio engine exists (1 decimal, % sign).
+* **Consistent year column ordering** and clear FY labelling for any
+off-calendar fiscal years.
+
+### 2\. Company-specific tags are not comparable
+
 `loreal:ResultatDexploitation`, `LVM:ProfitLossFromOperatingActivitiesRecurring...`,
 `essi:OperatingProfitExclIAC` are all "adjusted operating profit" with different
 definitions, currently three separate concepts. Needs a canonical layer - schema
-already supports it (`xbrl_tags` is a list, `concept_mapping` is many-to-one).
+already supports it (`xbrl\\\_tags` is a list, `concept\\\_mapping` is many-to-one).
 
-### 3. The "exactly 3 facts" filter silently drops data
+### 3\. The "exactly 3 facts" filter silently drops data
+
 Anything appearing 2x or 4x vanishes with no trace. Balance sheets commonly
 show only 2 comparative years, so for any 2-year filing we may be dropping
 balance sheet items entirely. Should be a RANGE (1-5), not exactly 3 - the
 dimensional filter is doing the real work. Amplifon showing 0 new concepts
 from 431 facts is a candidate symptom.
 
-### 4. Parsing re-runs from scratch every time
+### 4\. Parsing re-runs from scratch every time
+
 Each batch run re-parses all 11 filings (minutes). Filings never change once
 published, so: skip parsing if the facts CSV is newer than the zip. Note
 Arelle's global state is NOT thread-safe, so cache rather than parallelise.
 
-### 5. Dimensional facts dropped entirely
+### 5\. Dimensional facts dropped entirely
+
 No segment or geographic data. Blocks V3 (FX/geographic exposure). The
 `dimensions` JSONB column exists but is never populated.
 
-### 6. No regression tests
+### 6\. No regression tests
+
 One test asserting L'Oreal FY2024 revenue = 43,486,800,000 would catch any
 future mapping change that breaks known-good numbers. `tests/` exists, empty.
 
-### 7. Screenshots are a poor feedback channel
-They truncate. Better: `python scripts\08_validate.py > validation_output.txt`
+### 7\. Screenshots are a poor feedback channel
+
+They truncate. Better: `python scripts\\\\08\\\_validate.py > validation\\\_output.txt`
 then upload the file - complete and copyable.
 
-### 8. README is still the generic starter version
+### 8\. README is still the generic starter version
+
 For the portfolio goal this file matters more than any script - it's what a
 recruiter actually opens.
 
-### 9. Scope: stop adding companies, verify the ones loaded
+### 9\. Scope: stop adding companies, verify the ones loaded
+
 11 companies with unverified mappings is worth less than 4 verified. Shell
-(oil & gas) and Amplifon aren't real comparables for a beauty/luxury set -
+(oil \& gas) and Amplifon aren't real comparables for a beauty/luxury set -
 they were useful to prove the pipeline generalises, but would be noise in
 a comps table.
 
@@ -140,9 +160,10 @@ database, re-run, done. This property is called reproducibility, and it's what
 converts design mistakes from permanent into "an afternoon of re-running."
 
 The only genuinely irreplaceable things are the source zips - and even those
-can be re-downloaded via `00_find_filing.py`. So: no known dead ends.
+can be re-downloaded via `00\\\_find\\\_filing.py`. So: no known dead ends.
 
 ### R1. Single point of failure - no backup, no remote repo
+
 Everything lives in one folder on one laptop. Mitigations: (a) copy the
 project folder to cloud storage - 5 min, do immediately; (b) GitHub remote -
 the proper answer, but a first-time setup can take an hour, so give it its own
@@ -151,6 +172,7 @@ downloadable files in the chat history, so code loss is recoverable rather
 than catastrophic.
 
 ### R2. All engineering, zero analysis so far
+
 Parsing, mapping, loading, validating - not one computed margin. The stated
 goal is financial analysis; for controlling/IB roles the analysis IS the
 deliverable. Real failure mode: beautiful infrastructure, no insight about
@@ -158,7 +180,8 @@ L'Oreal vs LVMH. **Mitigation: the ratio engine is the next session's
 priority.** Ratios are currency-neutral, so FX work doesn't block it.
 
 ### R3. Nothing has been checked against reality
-The three accounting identities in `08_validate.py` check INTERNAL
+
+The three accounting identities in `08\\\_validate.py` check INTERNAL
 consistency. They would all pass even if every number were scaled wrong - if
 a bug divided everything by 1,000, Assets would still equal
 Equity+Liabilities. Mitigation: manually compare five line items against
@@ -167,191 +190,94 @@ between verification ("built it right") and validation ("built the right
 thing"), and no script substitutes for it.
 
 ### R4. Code ownership - almost all of it was written by Claude
+
 If the scripts can't be explained or modified by the user, it isn't really
 their project, and an interview will establish that in about 90 seconds.
 "How does your parser handle taxonomy resolution?" is a fair question about
 claimed work. Mitigation: rewrite one small script from scratch without
-copying - `06_check_revenue.py` is ~15 lines. Slower, uglier code that is
+copying - `06\\\_check\\\_revenue.py` is \~15 lines. Slower, uglier code that is
 understood beats better code that isn't.
 
 ### R5. Scope creep
+
 Every question so far has been good (all of Europe, more companies, full
 automation) but each expands the project. Five things at 80% is worth less
 than two things finished. For the portfolio goal, a COMPLETE V0+V1 with a
 strong README beats a sprawling half-built V3.
 
 ### R6. Credential exposure
+
 `.gitignore` covers `.env` - verify before any GitHub push. A password
 committed to a public repo remains in that repo's history even after
 deletion. The Neon password was already exposed once in chat and reset.
 
 ### R7. Neon free-tier retention
+
 Free tiers may suspend or delete inactive projects. Worth reading Neon's
 retention policy. Recoverable (the pipeline can re-run) but better known in
 advance than discovered.
-
-## V4 design idea: fully autonomous company discovery + onboarding (logged 2026-08-21)
-
-**The full vision:** the system discovers new companies and filings on its own,
-processes them automatically, and only involves a human for extension tag review.
-No manual "add this company" step at all.
-
-**The three layers needed:**
-
-### Layer 1: Company universe (what companies should we track?)
-The system needs a source of truth for "which companies exist."
-Options in order of effort:
-  - filings.xbrl.org full index: already have the API (`00_find_filing.py`),
-    can page through ALL filers by country. Already returns LEI + name + filing dates.
-  - ESMA OAM list: authoritative EU listed companies, public but less structured
-  - Market index (CAC 40, Euro Stoxx 600): curated, sector-sortable, but requires
-    a data source for index composition
-
-Recommended starting point: filings.xbrl.org by country filter. Can enumerate
-all French, Italian, Spanish, Swedish filers in one API call. Skip DE and IE
-(documented gaps). Store each company's LEI and last-seen filing date in a DB table.
-
-### Layer 2: Filing detection (when does a new filing appear?)
-Run a scheduled job (GitHub Actions cron, weekly) that:
-  1. Pages through filings.xbrl.org for all tracked companies
-  2. Compares filing dates against what's already loaded
-  3. Queues new filings for processing
-
-This is a straightforward extension of `00_find_filing.py` — already does the
-API calls, just needs a loop and a "last seen" comparison.
-
-### Layer 3: Human-in-the-loop for extension tags
-Same as the design above — auto-classify standard tags, route extensions to
-a reviewer via notification. The reviewer only sees the hard part.
-
-**What a run looks like:**
-1. Scheduler triggers weekly
-2. System scans filings.xbrl.org for all tracked companies
-3. For each new filing found: download -> parse -> auto-classify -> load standard tags
-4. If extensions exist: send notification with review link
-5. After review (or immediately if no extensions): update ratios + dashboard
-
-**The notification mechanism** (simple starting point):
-  - GitHub Actions can send email on completion via built-in notifications
-  - A Slack webhook is ~10 lines of Python and free
-  - Even a simple text file written to a "review_queue/" folder works as V4.0
-
-**Prerequisites:**
-  - A `company_universe` table in the DB (LEI, name, country, sector, last_filing_date)
-  - `00_find_filing.py` extended with a --scan-all --country FR mode
-  - GitHub Actions workflow calling the pipeline on a schedule
-  - The review notification mechanism (start with email, upgrade to UI later)
-
-**Note on scale and the extension tag problem:**
-At 1,000 companies, extension tags are a shrinking fraction of work. Most
-companies reuse a small vocabulary — once you've seen all the major French luxury
-and consumer companies, new ones mostly reuse the same extensions. A shared
-extension library grows over time, so new reviews become rarer.
-
-The human workload grows sublinearly, not proportionally to company count.
-At some point (maybe 200-300 companies) the review queue becomes so rare that
-it barely needs monitoring.
-
-## V4 design idea: human-in-the-loop company onboarding (logged 2026-08-21)
-
-**The idea:** instead of running 4 manual commands to add a new company, build a
-UI where someone clicks "add company X" and the system handles everything
-automatically — except the extension tag review step, which it routes to a human
-via notification.
-
-**The precise flow:**
-1. User clicks "Add company" in a UI (or triggers via API/scheduler)
-2. System: find filing -> download -> parse -> auto-classify standard tags
-3. If extension tags exist: send notification (email/Slack) to reviewer with
-   a link to a simple review form
-4. Reviewer classifies the extensions (10 min, only the hard part)
-5. System: completes load -> runs validation -> updates dashboard automatically
-
-**Why this is the right architecture:**
-This is called "human-in-the-loop" automation — you don't eliminate judgment,
-you automate everything AROUND it so humans only see what genuinely needs
-their attention. Same pattern as: content moderation at scale, fraud detection,
-document processing. The key insight is that 12_prep_company.py already does
-the separation correctly (auto vs REVIEW) — V4 just wraps orchestration and
-notification around what already exists.
-
-**Prerequisites before building this:**
-- V2/V3 complete (ratio engine solid, dashboard exists — something worth updating)
-- A scheduler (GitHub Actions cron is free and already planned)
-- A notification mechanism (email via SendGrid free tier, or Slack webhook)
-- A review UI (could start as a simple web form that writes to REVIEW_extensions.yaml)
-
-**Note on scale:**
-At thousands of companies, extension tags are a shrinking fraction of the work —
-most companies reuse the same small vocabulary of extensions, so a growing shared
-library means fewer new reviews over time. The human workload grows sublinearly,
-not proportionally.
-
-## How to add a new company (V1 workflow)
-
-**Standard workflow — 4 commands + ~10 min review:**
-
-```
-# 1. Find and download the filing
-python scripts\00_find_filing.py --search "CompanyName"
-python scripts\00_find_filing.py --entity <id> --download --out data\raw\companyname.zip
-
-# 2. Auto-classify: standard ifrs-full: tags go in automatically,
-#    extension tags (company:Tag) are written to REVIEW file
-python scripts\12_prep_company.py --zip data\raw\companyname.zip
-
-# 3. REQUIRED: open the REVIEW file and fill in 'statement' for each extension tag
-#    Valid values: income_statement / balance_sheet / cash_flow / other
-notepad data\mappings\REVIEW_extensions.yaml
-python scripts\12_apply_review.py
-
-# 4. Add company to data\companies.yaml (name, expected_currency, sector)
-#    Then load and validate
-python scripts\09_batch_load.py --only companyname
-python scripts\08_validate.py --company "CompanyName"
-```
-
-**IMPORTANT - extension tag review is NOT optional:**
-Standard ifrs-full: tags classify themselves from the taxonomy - zero manual work.
-Company extension tags (loreal:, LVM:, essi:, shel:, etc.) MUST be reviewed because:
-  - The taxonomy cannot classify what it doesn't define
-  - A misclassified extension tag (e.g. cash flow item on income statement) will
-    silently corrupt ratios for that company
-  - It takes ~10 minutes for a typical company (3-10 extension tags)
-  - Run with --dry-run first to see what's coming before committing
-
-**What 12_prep_company.py does precisely:**
-  - Reads the presentation linkbase (the filing's own statement structure)
-  - For standard tags: uses IFRS role numbers ([3xxxxx]=P&L, [5xxxxx]=CF, etc.)
-  - For extension tags with clear linkbase placement: auto-classifies (marked AUTO)
-  - For extension tags without clear placement: writes to REVIEW file, NOT loaded
-  - The REVIEW file overwrites each time - apply it before running for a second company
 
 ## How to link this together autonomously (the plan)
 
 The current scripts are standalone CLI tools that each re-implement loading, DB connection, and year logic. To make the pipeline self-running, three refactors in order:
 
-**Step 1 - Extract shared logic into `src/`.** Right now `01_explore_filing.py`, `04_batch_scan_concepts.py`, and the loaders each contain their own copy of `load_filing()` / `dump_facts()`. Move these into `src/parsing.py`, `src/mapping.py`, `src/database.py`, `src/fx.py`. Scripts become thin CLI wrappers over those functions. This is what makes step 2 possible at all.
+**Step 1 - Extract shared logic into `src/`.** Right now `01\\\_explore\\\_filing.py`, `04\\\_batch\\\_scan\\\_concepts.py`, and the loaders each contain their own copy of `load\\\_filing()` / `dump\\\_facts()`. Move these into `src/parsing.py`, `src/mapping.py`, `src/database.py`, `src/fx.py`. Scripts become thin CLI wrappers over those functions. This is what makes step 2 possible at all.
 
-**Step 2 - One orchestrator, `run_pipeline.py`, driven by a config file.** A `companies.yaml` lists each company (name, search term or identifier, expected currency). The orchestrator loops:
-  1. Download if the zip isn't already present (skip otherwise - idempotent)
-  2. Parse
-  3. Diff concepts against the mapping. **If unmapped concepts appear, FAIL LOUDLY and stop** rather than silently skipping - this is the one step needing human judgment, and hiding it is how bad data enters
-  4. Load into the database (already idempotent via get_or_create)
-  5. Run validation; report failures but don't necessarily halt
-  6. Refresh FX rates, recompute ratios, regenerate outputs
+**Step 2 - One orchestrator, `run\\\_pipeline.py`, driven by a config file.** A `companies.yaml` lists each company (name, search term or identifier, expected currency). The orchestrator loops:
 
-**Step 3 - Schedule it.** GitHub Actions on a cron (weekly is plenty - annual filings don't change often). The workflow runs `run_pipeline.py` against the Neon database, which is already cloud-hosted, so nothing needs migrating. Store `DATABASE_URL` as a GitHub secret, never in the repo.
+1. Download if the zip isn't already present (skip otherwise - idempotent)
+2. Parse
+3. Diff concepts against the mapping. **If unmapped concepts appear, FAIL LOUDLY and stop** rather than silently skipping - this is the one step needing human judgment, and hiding it is how bad data enters
+4. Load into the database (already idempotent via get\_or\_create)
+5. Run validation; report failures but don't necessarily halt
+6. Refresh FX rates, recompute ratios, regenerate outputs
 
-**Why the database-first design already makes this work:** every downstream artifact (statements, ratios, dashboard, Excel) reads from `fact_value` and recomputes rather than storing its own frozen copy. So refreshing the source automatically refreshes everything downstream on next run. That property was designed in from V0 and is what makes "everything updates together" achievable rather than a rewrite.
+**Step 3 - Schedule it.** GitHub Actions on a cron (weekly is plenty - annual filings don't change often). The workflow runs `run\\\_pipeline.py` against the Neon database, which is already cloud-hosted, so nothing needs migrating. Store `DATABASE\\\_URL` as a GitHub secret, never in the repo.
+
+**Why the database-first design already makes this work:** every downstream artifact (statements, ratios, dashboard, Excel) reads from `fact\\\_value` and recomputes rather than storing its own frozen copy. So refreshing the source automatically refreshes everything downstream on next run. That property was designed in from V0 and is what makes "everything updates together" achievable rather than a rewrite.
 
 **One thing NOT to automate:** classification of new concepts. That needs judgment about what a tag means. The orchestrator should surface them and stop, not guess.
 
 ## Note on Arelle (worth revisiting)
+
 We use `Cntlr.Cntlr()` directly. Arelle's own docs describe `Cntlr` as a base class not intended for direct use, and point to a newer `Session` API (`from arelle.api.Session import Session`) as the supported integration path. It also has **built-in ESEF validation** (`disclosureSystemName='esef'`, `plugins='validate/ESEF'`) which could complement our accounting-identity checks with real taxonomy-level validation. Our current approach works; this is an improvement to consider, not an emergency. Also note: Arelle's global state is NOT thread-safe, only one Session at a time - relevant if parallelising the batch parse later.
 
 ## Environment reminders
-- Project folder: `C:\Users\User\Downloads\ifrs-pipeline\ifrs-pipeline\`
-- Each new session: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` then `.venv\Scripts\Activate.ps1`
-- `.env` holds the real Neon `DATABASE_URL` - confirm it's the real one, it was swapped for a test value during debugging at one point
-- Neon password was exposed once in chat early on and reset
+
+* Project folder: `C:\\\\Users\\\\User\\\\Downloads\\\\ifrs-pipeline\\\\ifrs-pipeline\\\\`
+* Each new session: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` then `.venv\\\\Scripts\\\\Activate.ps1`
+* `.env` holds the real Neon `DATABASE\\\_URL` - confirm it's the real one, it was swapped for a test value during debugging at one point
+* Neon password was exposed once in chat early on and reset
+
+\## Note on forensics thresholds (worth revisiting when universe scales)
+
+`15\_forensics.py`'s thresholds (THIN\_MARGIN\_THRESHOLD=5pp, cash\_conversion
+
+extreme >250%/<-50%, HIGH\_LEVERAGE >4x) are fixed, sector-agnostic numbers
+
+chosen by eyeballing the current 11-company dataset. Verified empirically
+
+against actual data (cash\_conversion tops out at 211% normally vs 653.3%
+
+for the real EssilorLuxottica-2020 outlier, so the gap is real, not
+
+invented) - but a single fixed threshold across sectors is fundamentally
+
+wrong once the universe spans multiple industries (Shell/energy vs
+
+Moncler/luxury shouldn't share a leverage threshold). Don't hand-tune this
+
+further with 11 companies - not enough data for percentiles to mean
+
+anything. Revisit ONCE as a single pass - "make thresholds sector-relative"
+
+\- when the universe is large/diverse enough (multi-country, multi-sector)
+
+for per-sector medians to be meaningful. Bundle in the same pass: audit
+
+the remaining flags (only cash\_conversion and net\_debt\_ebitda\_proxy have
+
+been checked for the "denominator = Operating Profit" fragility pattern -
+
+the other 7 haven't been systematically reviewed).
+

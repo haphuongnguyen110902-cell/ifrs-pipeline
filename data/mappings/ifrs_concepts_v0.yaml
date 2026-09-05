@@ -510,6 +510,83 @@ income_statement:
     display_label: Recurring Operating Profit (Pernod Ricard)
     xbrl_tags:
     - pernod:ResultatOperationnelCourant
+  amp_other_gains_losses_and_impairment_loss_on_financial_assets:
+    display_label: Other gains (losses) and impairment loss on financial assets
+    xbrl_tags:
+    - AMP:OtherGainsLossesAndImpairmentLossOnFinancialAssets
+  dan_other_operating_income_expense_recurring:
+    display_label: Other operating income (expense), recurring
+    xbrl_tags:
+    - DAN:OtherOperatingIncomeExpenseRecurring
+  dan_profit_loss_from_operating_activities_recurring:
+    display_label: Profit (loss) from operating activities, recurring
+    xbrl_tags:
+    - DAN:ProfitLossFromOperatingActivitiesRecurring
+  dan_other_operating_income_expense_non_recurring:
+    display_label: Other operating income (expense), non-recurring
+    xbrl_tags:
+    - DAN:OtherOperatingIncomeExpenseNonRecurring
+  dan_profit_loss_before_tax_before_share_associates:
+    display_label: Profit (loss) before tax, before share of associates
+    xbrl_tags:
+    - DAN:ProfitLossBeforeTaxBeforeShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod
+  dan_profit_loss_before_share_associates_jv:
+    display_label: Profit (loss) before share of associates and JVs
+    xbrl_tags:
+    - DAN:ProfitLossBeforeShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod
+  el_other_operating_income_expenses:
+    display_label: Other operating income expenses
+    xbrl_tags:
+    - el:OtherOperatingIncomeExpenses
+  el_cost_of_net_debt:
+    display_label: Cost of net debt
+    xbrl_tags:
+    - el:CostOfNetDebt
+  essi_cost_of_goods_sold:
+    display_label: Cost of Goods Sold
+    xbrl_tags:
+    - essi:CostOfGoodsSold
+  essi_sales_general_and_administration:
+    display_label: Sales, general and administration
+    xbrl_tags:
+    - essi:SalesGeneralAndAdministration
+  essi_ebita_2021:
+    display_label: EBITA (Operating profit before acquisition intangible amortization)
+    xbrl_tags:
+    - essi:OperatingProfitBeforeAmortizationOfAcquisitionRelatedIntangibleAssetsEbitda
+  essi_amortization_acquisition_intangibles:
+    display_label: Amortization of acquisition-related intangible assets
+    xbrl_tags:
+    - essi:AmortizationOfAcquisitionRelatedIntangibleAssets
+  basic_and_diluted_earnings_loss_per_share:
+    display_label: Basic and diluted earnings (loss) per share
+    xbrl_tags:
+    - ifrs-full:BasicAndDilutedEarningsLossPerShare
+  essi_ebita_2022:
+    display_label: EBITA (Operating profit before acquisition intangible amortization)
+    xbrl_tags:
+    - essi:OperatingProfitBeforeAmortizationOfAcquisitionRelatedIntangibleAssetsEbita
+  essi_iac_acquisition_intangibles:
+    display_label: Items affecting comparability - acquisition-related intangible
+      assets
+    xbrl_tags:
+    - essi:ItemsAffectingComparabilityAcquisitionRelatedIntangibleAssets
+  kering_other_non_recurring_operating_2021:
+    display_label: Other non-recurring operating income and expenses
+    xbrl_tags:
+    - kering:OtherNon-RecurringOperatingIncomeAndExpenses
+  kering_net_income_excl_non_recurring_group:
+    display_label: Net income excl. non-recurring items, group share
+    xbrl_tags:
+    - kering:NetIncomeFromContinuingOperationsExcludingNon-RecurringItemsAttributableToTheGroup
+  kering_other_nonrecurring_operating_2022:
+    display_label: Other non-recurring operating income and expenses (2022)
+    xbrl_tags:
+    - kering:OtherNonrecurringOperatingIncomeAndExpenses
+  lvm_profit_loss_operating_recurring_2021:
+    display_label: Profit (loss) from operating activities, recurring (LVMH 2021)
+    xbrl_tags:
+    - LVM:ProfitLossFromOperatingActivitiesRecurring
 balance_sheet:
   accumulated_other_comprehensive_income:
     display_label: Accumulated Other Comprehensive Income
@@ -1082,6 +1159,66 @@ balance_sheet:
     display_label: Other Miscellaneous Reserves
     xbrl_tags:
     - shel:OtherMiscellaneousReserves
+  investments_in_associates:
+    display_label: Investments in associates
+    xbrl_tags:
+    - ifrs-full:InvestmentsInAssociates
+  dan_non_current_fv_financial_assets:
+    display_label: Non-current financial assets at fair value (FVTPL and FVOCI)
+    xbrl_tags:
+    - DAN:NonCurrentFinancialAssetsAtFairValueThroughProfitOrLossDesignatedUponInitialRecognitionAndNonCurrentInvestmentsInEquityInstrumentsDesignatedAtFairValueThroughOtherComprehensiveIncome
+  dan_misc_other_non_current_financial_assets:
+    display_label: Other non-current financial assets and loans and receivables
+    xbrl_tags:
+    - DAN:MiscellaneousOtherNonCurrentFinancialAssetsAndNonCurrentLoansAndReceivables
+  dan_current_loans:
+    display_label: Current loans
+    xbrl_tags:
+    - DAN:CurrentLoans
+  dan_retained_earnings_and_other_reserves:
+    display_label: Retained earnings and other reserves
+    xbrl_tags:
+    - DAN:RetainedEarningsAndOtherReserves
+  dan_long_term_borrowings_and_non_current_lease_liabilities:
+    display_label: Long-term borrowings and non-current lease liabilities
+    xbrl_tags:
+    - DAN:LongTermBorrowingsAndNonCurrentLeaseLiabilities
+  dan_non_current_put_options_nci:
+    display_label: Non-current put options granted to non-controlling interests
+    xbrl_tags:
+    - DAN:NonCurrentPutOptionsGrantedToNonControllingInterests
+  dan_other_long_term_provisions_non_current:
+    display_label: Other long-term provisions and non-current non-financial liabilities
+    xbrl_tags:
+    - DAN:OtherLongTermProvisionsAndOtherNonCurrentNonFinancialLiabilities
+  dan_current_borrowings_and_current_lease_liabilities:
+    display_label: Current borrowings and current lease liabilities
+    xbrl_tags:
+    - DAN:CurrentBorrowingsAndCurrentPortionOfNonCurrentBorrowingsAndCurrentLeaseLiabilities
+  dan_current_put_options_nci:
+    display_label: Current put options granted to non-controlling interests
+    xbrl_tags:
+    - DAN:CurrentPutOptionsGrantedToNonControllingInterests
+  el_retain_earnings_and_other_reserves:
+    display_label: Retained earnings and other reserves
+    xbrl_tags:
+    - el:RetainEarningsAndOtherReserves
+  el_retained_earnings_profit_loss_period:
+    display_label: Retained earnings - profit/loss for reporting period
+    xbrl_tags:
+    - el:RetainedEarningsProfitLossForReportingPeriod
+  loreal_reserves_autres:
+    display_label: Other reserves (L'Oreal)
+    xbrl_tags:
+    - loreal:ReservesAutres
+  loreal_resultat_net_part_du_groupe:
+    display_label: Net profit, group share (L'Oreal balance sheet)
+    xbrl_tags:
+    - loreal:ResultatNetPartDuGroupe
+  shel_ppe_including_right_of_use_assets:
+    display_label: Property, Plant and Equipment including Right-of-use Assets
+    xbrl_tags:
+    - shel:PropertyPlantAndEquipmentIncludingRightOfUseAssets
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense
@@ -1941,6 +2078,195 @@ cash_flow:
     display_label: Acquisition/(Disposal) of Treasury Shares (Pernod Ricard)
     xbrl_tags:
     - pernod:AcquisitionCessionDActionsPropres
+  proceeds_from_issue_of_subordinated_liabilities:
+    display_label: Proceeds from issue of subordinated liabilities
+    xbrl_tags:
+    - ifrs-full:ProceedsFromIssueOfSubordinatedLiabilities
+  bank_overdrafts_classified_as_cash_equivalents:
+    display_label: Bank overdrafts
+    xbrl_tags:
+    - ifrs-full:BankOverdraftsClassifiedAsCashEquivalents
+  average_foreign_exchange_rate:
+    display_label: 1) Omräkning till EUR redovisas för läsarens bekvämlighet. Följande
+      genomsnittskurser har använts
+    xbrl_tags:
+    - ifrs-full:AverageForeignExchangeRate
+  adjustments_for_reconcile_profit_loss:
+    display_label: Justering för poster som inte ingår i kassaflödet
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForReconcileProfitLoss
+  cash_advances_and_loans_made_to_other_parties_classified_as__etc:
+    display_label: Utbetalning av lån till utomstående
+    xbrl_tags:
+    - ifrs-full:CashAdvancesAndLoansMadeToOtherPartiesClassifiedAsInvestingActivities
+  closing_foreign_exchange_rate:
+    display_label: 2) Omräkning till EUR redovisas för läsarens bekvämlighet. Följande
+      balanskurser har använts
+    xbrl_tags:
+    - ifrs-full:ClosingForeignExchangeRate
+  adjustments_for_gain_loss_on_disposals_property_plant_and_eq_etc:
+    display_label: Resultat vid försäljning av tillgångar
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForGainLossOnDisposalsPropertyPlantAndEquipment
+  adjustments_for_gain_loss_on_disposal_of_investments_in_subs_etc:
+    display_label: Resultat vid avyttring och likvidation
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForGainLossOnDisposalOfInvestmentsInSubsidiariesJointVenturesAndAssociates
+  adjustments_for_fair_value_gains_losses:
+    display_label: Omvärdering av tidigare ägd andel vid förvärv
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForFairValueGainsLosses
+  purchase_of_investments_other_than_investments_accounted_for_etc:
+    display_label: Purchase of investments other than investments accounted for using
+      equity method
+    xbrl_tags:
+    - ifrs-full:PurchaseOfInvestmentsOtherThanInvestmentsAccountedForUsingEquityMethod
+  amp_other_cash_receipts_sales_equity_debt_instruments_etc:
+    display_label: Other cash receipts/payments for equity or debt instruments, investing
+    xbrl_tags:
+    - AMP:OtherCashReceiptsFromSalesOfEquityOrDebtInstrumentsOfOtherEntitiesAndOtherCashPaymentsToAcquireEquityOrDebtInstrumentsOfOtherEntitiesClassifiedAsInvestingActivities
+  amp_hedging_derivatives_and_other_non_current_assets_financing:
+    display_label: Hedging derivatives and other non-current assets, financing
+    xbrl_tags:
+    - AMP:HedgingDerivativesAndOtherNonCurrentAssetsClassifiedAsFinancingActivities
+  dan_adjustments_undistributed_profits_associates_net_dividends:
+    display_label: Adjustments for undistributed profits of associates, net of dividends
+    xbrl_tags:
+    - DAN:AdjustmentsForUndistributedProfitsOfAssociatesNetOfDividendsReceived
+  dan_adjustments_interest_expense_and_income:
+    display_label: Adjustments for interest expense and interest income
+    xbrl_tags:
+    - DAN:AdjustmentsForInterestExpenseAndAdjustmentsForInterestIncome
+  dan_interest_paid_and_received_operating:
+    display_label: Interest paid and received, operating activities
+    xbrl_tags:
+    - DAN:InterestPaidAndInterestReceivedClassifiedAsOperatingActivities
+  dan_net_change_interest_operating:
+    display_label: Net change interest income/expense, operating activities
+    xbrl_tags:
+    - DAN:NetChangeInterestIncomeExpenseClassifiedAsOperatingActivities
+  dan_adjustments_other_operating_receivables_payables:
+    display_label: Adjustments for changes in other operating receivables and payables
+    xbrl_tags:
+    - DAN:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivablesAndAdjustmentsForIncreaseDecreaseInOtherOperatingPayables
+  dan_purchase_financial_assets_investing:
+    display_label: Purchase of financial assets, investing activities
+    xbrl_tags:
+    - DAN:PurchaseOfFinancialAssetsClassifiedAsInvestingActivities
+  dan_proceeds_sales_financial_assets_investing:
+    display_label: Proceeds from sales of financial assets, investing activities
+    xbrl_tags:
+    - DAN:ProceedsFromSalesOfFinancialAssetsClassifiedAsInvestingActivities
+  dan_interest_expense_subordinated_notes_financing:
+    display_label: Interest expense and repurchase premium on subordinated notes,
+      financing
+    xbrl_tags:
+    - DAN:InterestExpenseAndRepurchasePremiumOnUndatedSubordinatedNotesClassifiedAsFinancingActivities
+  dan_transactions_nci_financing:
+    display_label: Transactions with non-controlling interests, financing
+    xbrl_tags:
+    - DAN:TransactionsWithNonControllingInterestsClassifiedAsFinancingActivities
+  dan_cash_flows_hedging_derivatives_financing:
+    display_label: Cash flows from hedging derivatives, financing
+    xbrl_tags:
+    - DAN:CashFlowsFromUsedInHedgingDerivativesClassifiedAsFinancingActivities
+  dan_net_proceeds_repayments_borrowings_financing:
+    display_label: Net proceeds/repayments of borrowings, financing
+    xbrl_tags:
+    - DAN:ProceedsFromBorrowingsAndRepaymentsOfBorrowingsClassifiedAsFinancingActivities
+  dan_interest_paid_subordinated_liabilities:
+    display_label: Interest paid on undated subordinated liabilities
+    xbrl_tags:
+    - DAN:InterestPaidOnUndatedSubordinatedLiabilities
+  dan_cash_flows_hedging_derivatives_financing_v2:
+    display_label: Cash flows from hedging derivatives, financing
+    xbrl_tags:
+    - dan:CashFlowsFromUsedInHedgingDerivativesClassifiedAsFinancingActivities
+  dan_increase_decrease_bank_overdrafts_cash_equivalents:
+    display_label: Change in bank overdrafts classified as cash equivalents
+    xbrl_tags:
+    - dan:IncreaseDecreaseBankOverdraftsClassifiedAsCashEquivalents
+  el_depreciation_amortization_impairment:
+    display_label: Depreciation, amortization and impairment
+    xbrl_tags:
+    - el:DepreciationAmortizationImpairment
+  el_changes_in_trade_working_capital:
+    display_label: Changes in trade working capital
+    xbrl_tags:
+    - el:ChangesInTradeWorkingCapital
+  el_changes_other_operating_receivables_payables:
+    display_label: Changes in other operating receivables and payables
+    xbrl_tags:
+    - el:ChangesInOtherOperatingReceivablesPayables
+  el_purchase_of_ppe_and_intangible:
+    display_label: Purchase of PP&E and intangible assets
+    xbrl_tags:
+    - el:PurchaseOfPpeAndIntangible
+  el_disposal_of_ppe_and_intangible:
+    display_label: Disposal of PP&E and intangible assets
+    xbrl_tags:
+    - el:DisposalOfPpeAndIntangible
+  el_changes_other_non_financial_assets:
+    display_label: Changes in other non-financial assets
+    xbrl_tags:
+    - el:ChangesInOtherNonFinancialAssets
+  el_changes_other_financial_assets:
+    display_label: Changes in other financial assets
+    xbrl_tags:
+    - el:ChangesInOtherFinancialAssets
+  essi_operating_profit_adjusted_non_cash:
+    display_label: Operating profit excluding non-cash items
+    xbrl_tags:
+    - essi:ProfitLossFromOperatingActivitiesAdjustedForNonCashItems
+  essi_non_cash_efficiency_program:
+    display_label: Non-cash items relating to efficiency program
+    xbrl_tags:
+    - essi:NonCashItemsRelatingToEfficencyProgram
+  essi_impact_pension_settlement:
+    display_label: Impact from settlement of pension liability
+    xbrl_tags:
+    - essi:ImpactFromSettlementOfPensionLiability
+  essi_change_provision_competition_case:
+    display_label: Change in provision for ongoing competition case
+    xbrl_tags:
+    - essi:ChangeInProvisionForOngoingCompetitionCase
+  essi_change_one_time_foreign_tax:
+    display_label: Change one-time foreign tax on non-current assets
+    xbrl_tags:
+    - essi:ChangeOneTimeForeignTaxOnNonCurrentAssets
+  essi_strategic_capex:
+    display_label: Strategic capital expenditures
+    xbrl_tags:
+    - essi:MeasuresToRaiseTheCapacityLevelOfOperationsStrategicCapitalExpenditures
+  essi_current_capex:
+    display_label: Current capital expenditures
+    xbrl_tags:
+    - essi:MeasuresToUpholdCapacityLevelCurrentCapitalExpenditures
+  essi_total_investments_intangibles_ppe:
+    display_label: Total investments in intangibles and PP&E including capitalized
+      interest
+    xbrl_tags:
+    - essi:TotalInvestmentsInIntangiblesAndPpeIncludingPaidCapitalizedInterest
+  loreal_elimination_charges_sans_incidence_tresorerie:
+    display_label: Non-cash charges elimination (D&A, provisions, other non-current)
+    xbrl_tags:
+    - loreal:EliminationDesChargesEtDesProduitsSansIncidenceSurLaTresorerieOuNonLiesALactiviteAmortissementsProvisionsEtAutresPassifsNonCourants
+  loreal_incidence_variations_devises_juste_valeur:
+    display_label: Impact of FX and fair value changes
+    xbrl_tags:
+    - loreal:IncidenceDesVariationsDeCoursDesDevisesEtDeJusteValeur
+  moncler_proceeds_issuing_shares_equity:
+    display_label: Proceeds from issuing shares and other equity instruments
+    xbrl_tags:
+    - moncler:ProceedsFromIssuingSharesAndOtherEquityInstruments
+  shel_share_profit_jv_associates:
+    display_label: Share of profit of joint ventures and associates
+    xbrl_tags:
+    - shel:ShareOfProfitOfJointVenturesAndAssociates
+  shel_capital_expenditure:
+    display_label: Capital Expenditure
+    xbrl_tags:
+    - shel:CapitalExpenditure
 other:
   income_tax_relating_to_cash_flow_hedges_of_other_comprehe_etc:
     display_label: Income Tax on Cash Flow Hedges (OCI)
@@ -2486,3 +2812,111 @@ other:
     display_label: Minority Share Buyout Commitment - Medik8
     xbrl_tags:
     - loreal:MinorityShareBuyoutCommitmentMedik8
+  other_comprehensive_income_before_tax_change_in_value_of_for_etc:
+    display_label: Other comprehensive income, before tax, change in value of foreign
+      currency basis spreads
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxChangeInValueOfForeignCurrencyBasisSpreads
+  increase_decrease_in_deferred_tax_liability_asset:
+    display_label: Increase (decrease) in deferred tax liability (asset)
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseInDeferredTaxLiabilityAsset
+  gains_losses_on_financial_assets_measured_at_fair_value_thro_etc:
+    display_label: Profits (pertes) sur des actifs financiers évalués à la juste valeur
+      par le biais des autres éléments du résultat global, avant impôt
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncomeBeforeTax
+  other_comprehensive_income_before_tax_gains_losses_on_hedgin_etc:
+    display_label: Verkligt värde över övrigt totalresultat
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxGainsLossesOnHedgingInstrumentsThatHedgeInvestmentsInEquityInstruments
+  gains_losses_on_exchange_differences_on_translation_before_t_etc:
+    display_label: Omräkningsdifferens på utländsk verksamhet
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnExchangeDifferencesOnTranslationBeforeTax
+  gains_losses_on_hedges_of_net_investments_in_foreign_operati_etc:
+    display_label: Resultat från säkring av nettoinvestering i utländsk verksamhet
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnHedgesOfNetInvestmentsInForeignOperationsBeforeTax
+  share_of_other_comprehensive_income_of_associates_and_joint__etc:
+    display_label: Övrigt totalresultat från intresseföretag
+    xbrl_tags:
+    - ifrs-full:ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLossBeforeTax
+  other_comprehensive_income_attributable_to_owners_of_parent:
+    display_label: Other comprehensive income, attributable to owners of parent
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeAttributableToOwnersOfParent
+  other_comprehensive_income_attributable_to_noncontrolling_in_etc:
+    display_label: Other comprehensive income, attributable to non-controlling interests
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeAttributableToNoncontrollingInterests
+  other_comprehensive_income_net_of_tax_gains_losses_on_revalu_etc:
+    display_label: Other comprehensive income, net of tax, gains (losses) on revaluation
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxGainsLossesOnRevaluation
+  increase_decrease_through_exercise_of_options:
+    display_label: Increase (decrease) through exercise of options, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughExerciseOfOptions
+  adjustments_for_amounts_transferred_to_initial_carrying_amou_etc:
+    display_label: Amounts removed from equity and included in carrying amount of
+      non-financial asset (liability) whose acquisition or incurrence was hedged highly
+      probable forecast transaction, net of tax
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForAmountsTransferredToInitialCarryingAmountOfHedgedItems
+  dan_other_immaterial_oci_reclassifiable:
+    display_label: Other immaterial OCI components reclassifiable to P&L, net of tax
+    xbrl_tags:
+    - DAN:OtherIndividuallyImmaterialComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax
+  dan_transactions_subordinated_notes_net_tax:
+    display_label: Transactions on undated subordinated notes, net of tax
+    xbrl_tags:
+    - DAN:TransactionsOnUndatedSubordinatedNotesIncludingInterestExpenseAndRepurchasePremiumNetOfTax
+  el_changes_consolidation_scope_and_nci:
+    display_label: Changes in consolidation scope and NCI
+    xbrl_tags:
+    - el:ChangesInConsolidationScopeAndNci
+  el_shares_delivered_employees_stock_options:
+    display_label: Shares delivered to employees and exercise of stock options
+    xbrl_tags:
+    - el:SharesDeliveredToEmployeesAndExerciseOfStockOptions
+  el_oci_hyperinflation_accounting:
+    display_label: OCI before tax - hyperinflation accounting
+    xbrl_tags:
+    - el:OtherComprehensiveIncomeBeforeTaxHyperinflationAccounting
+  essi_acquired_cash_flow_hedges:
+    display_label: Acquired cash flow hedges
+    xbrl_tags:
+    - essi:AquiredCashFlowHedges
+  essi_revaluation_effect_acquisition_nci:
+    display_label: Revaluation effect upon acquisition of non-controlling interests
+    xbrl_tags:
+    - essi:RevaluationEffectUponAcquisitionOfNonControllingInterests
+  loreal_hyperinflation:
+    display_label: Hyperinflation adjustment (L'Oreal)
+    xbrl_tags:
+    - loreal:Hyperinflation
+  loreal_augmentation_ifric_2021_ias19:
+    display_label: Increase related to IFRIC 2021 decision on IAS 19
+    xbrl_tags:
+    - loreal:AugmentationLieeALaDecisionIfricDe2021SurIas19
+  lvm_tax_oci_translation_hedges:
+    display_label: Tax on OCI - translation differences and net investment hedges
+    xbrl_tags:
+    - LVM:IncomeTaxRelatingToExchangeDifferencesOnTranslationOfOtherComprehensiveIncomeAndIncomeTaxRelatingToHedgesOfNetInvestmentsInForeignOperationsOfOtherComprehensiveIncome
+  lvm_oci_net_tax_translation_and_hedges:
+    display_label: OCI net of tax - translation differences and net investment hedges
+    xbrl_tags:
+    - LVM:OtherComprehensiveIncomeNetOfTaxExchangeDifferencesOnTranslationAndOtherComprehensiveIncomeNetOfTaxHedgesOfNetInvestmentsInForeignOperations
+  lvm_shares_issued_exercise_options:
+    display_label: Change in shares issued through exercise of options
+    xbrl_tags:
+    - LVM:IncreaseDecreaseInNumberOfSharesIssuedThroughExerciseOfOptions
+  lvm_cash_flow_hedges_pre_tiffany:
+    display_label: Cash flow hedge gains/losses before tax, prior to Tiffany acquisition
+    xbrl_tags:
+    - LVM:GainsLossesOnCashFlowHedgesBeforeTaxPriorToAcquisitionOfTiffanyShares
+  moncler_other_inflows_outflows_equity:
+    display_label: Other changes in equity
+    xbrl_tags:
+    - moncler:OtherInflowsOutflowsOfEquity
