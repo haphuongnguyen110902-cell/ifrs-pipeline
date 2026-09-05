@@ -16,6 +16,24 @@ Efficiency (currency-neutral):
   cash_conversion       Cash Flow from Operations / Operating Profit
                         > 1.0 means profit turns into MORE cash than booked
                         < 1.0 means some profit is not yet collected/paid
+  dso                   Days Sales Outstanding = Trade Receivables / Revenue * 365
+                        How many days of sales are sitting uncollected.
+  dio                   Days Inventory Outstanding = Inventories / COGS * 365
+                        How many days of stock sit in inventory before selling.
+  dpo                   Days Payables Outstanding = Trade Payables / COGS * 365
+                        How many days the company takes to pay its suppliers.
+  ccc                   Cash Conversion Cycle = DSO + DIO - DPO
+                        Days between paying cash out (for inventory) and
+                        collecting cash in (from customers). Lower is better -
+                        it means less cash is tied up in working capital.
+                        NOTE: uses ENDING balance sheet values, not the
+                        average of opening+closing (the textbook-correct
+                        version) - simpler, consistent with how net_debt/
+                        equity are already computed here, but means DSO/DIO/
+                        DPO will look slightly off for a year with a big
+                        swing in receivables/inventory/payables right at
+                        year-end. Fine for trend-watching, worth flagging if
+                        used for a precise working-capital target.
 
 Returns (currency-neutral):
   roic                  Operating Profit * (1 - tax_rate) / Invested Capital
@@ -189,6 +207,26 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     cfo = get_col(wide, "cash_flows_from_used_in_operating_activities")
     r["cash_conversion"] = safe_div(cfo, ebit, scale=100)
 
+    # --- working capital: DSO / DIO / DPO / CCC ---
+    # Controller's daily tool, not a bank's - this is exactly the kind of
+    # ratio a Contrôleur de Gestion actually watches month to month.
+    receivables = get_best(wide,
+        "current_trade_receivables",              # specific tag - preferred
+        "trade_and_other_current_receivables",    # broader fallback (includes non-trade)
+    )
+    inventory = get_best(wide, "inventories", "inventories_total")
+    payables = get_best(wide,
+        "trade_and_other_current_payables_to_trade_suppliers",  # specific - preferred
+        "trade_and_other_current_payables",                     # broader fallback
+        "other_current_payables",                               # weakest fallback
+    )
+    cogs = get_col(wide, "cost_of_sales").abs()
+
+    r["dso"] = safe_div(receivables, rev, scale=365)
+    r["dio"] = safe_div(inventory, cogs, scale=365)
+    r["dpo"] = safe_div(payables, cogs, scale=365)
+    r["ccc"] = r["dso"] + r["dio"] - r["dpo"]  # NaN if any component is NaN - never fake a CCC
+
     # --- effective tax rate ---
     tax = get_col(wide, "income_tax_expense_continuing_operations")
 
@@ -254,6 +292,10 @@ RATIO_META = {
     "operating_margin":     ("Operating Margin",          True,  "%"),
     "net_margin":           ("Net Margin",                True,  "%"),
     "cash_conversion":      ("Cash Conversion",           True,  "%"),
+    "dso":                  ("DSO (Days Sales Outstanding)",      True,  "days"),
+    "dio":                  ("DIO (Days Inventory Outstanding)",  True,  "days"),
+    "dpo":                  ("DPO (Days Payables Outstanding)",   True,  "days"),
+    "ccc":                  ("Cash Conversion Cycle",     True,  "days"),
     "tax_rate":             ("Effective Tax Rate",        True,  "%"),
     "roic":                 ("ROIC",                      True,  "%"),
     "roe":                  ("ROE",                       True,  "%"),
@@ -268,6 +310,8 @@ def format_ratio(value, unit):
         return f"{value:.1f}%"
     if unit == "x":
         return f"{value:.1f}x"
+    if unit == "days":
+        return f"{value:.0f}d"
     return f"{value:.2f}"
 
 
@@ -345,6 +389,18 @@ def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict):
     return rows_written
 
 
+def sanitize_sheet_name(name: str) -> str:
+    """Excel sheet names can't contain \\ / ? * [ ] : and are capped at 31
+    chars. Strip the illegal characters rather than trusting every future
+    RATIO_META label to avoid them - this is exactly the kind of bug a new
+    ratio's label (like DSO's original 'O/S' abbreviation) can reintroduce
+    without anyone noticing until save_to_excel crashes AFTER the DB write
+    already succeeded."""
+    for ch in '\\/?*[]:':
+        name = name.replace(ch, "")
+    return name[:31]
+
+
 def save_to_excel(ratios: pd.DataFrame, out_path: str):
     """Save one sheet per ratio, plus a summary sheet."""
     with pd.ExcelWriter(out_path, engine="openpyxl") as writer:
@@ -363,7 +419,7 @@ def save_to_excel(ratios: pd.DataFrame, out_path: str):
                     lambda v: format_ratio(v, unit))
         display.columns = [RATIO_META.get(c, (c,))[0] if c in RATIO_META else c
                            for c in display.columns]
-        display.to_excel(writer, sheet_name="Summary (latest year)")
+        display.to_excel(writer, sheet_name=sanitize_sheet_name("Summary (latest year)"))
 
         # one sheet per ratio showing all companies and years
         for ratio_name, (label, neutral, unit) in RATIO_META.items():
@@ -374,7 +430,7 @@ def save_to_excel(ratios: pd.DataFrame, out_path: str):
                 values=ratio_name, aggfunc="first"
             ).sort_index(axis=1)
             pivot = pivot.map(lambda v: format_ratio(v, unit))
-            sheet_name = label[:31]  # Excel sheet name limit
+            sheet_name = sanitize_sheet_name(label)
             pivot.to_excel(writer, sheet_name=sheet_name)
 
     print(f"Saved to {out_path}")

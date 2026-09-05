@@ -53,6 +53,7 @@ Usage:
     python scripts/16_forecasting.py --no-db   # Excel only, no DB write
 """
 import argparse
+import importlib.util
 import os
 import sys
 from pathlib import Path
@@ -62,10 +63,32 @@ import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
+_r11_spec = importlib.util.spec_from_file_location("ratio_engine_11", Path(__file__).parent / "11_ratio_engine.py")
+r11 = importlib.util.module_from_spec(_r11_spec)
+_r11_spec.loader.exec_module(r11)
+RATIO_UNITS = {name: unit for name, (_, _, unit) in r11.RATIO_META.items()}
+
+
+def format_value(value, ratio_name):
+    """Format using the SAME unit 11_ratio_engine.py uses for this ratio -
+    without this, DSO/DIO/DPO/CCC (measured in days) would get printed with
+    a '%' sign, which is exactly the kind of unit-mismatch bug already found
+    once in this script (see the .1% vs .1f fix in an earlier version)."""
+    if pd.isna(value):
+        return "n/a"
+    unit = RATIO_UNITS.get(ratio_name, "%")
+    if unit == "days":
+        return f"{value:.0f}d"
+    if unit == "x":
+        return f"{value:.1f}x"
+    return f"{value:.1f}%"
+
+
 MIN_YEARS = 3  # fewer points than this and neither method means much
 DEFAULT_RATIOS = [
     "gross_margin", "operating_margin", "net_margin",
     "roic", "roe", "cash_conversion",
+    "dso", "dio", "dpo", "ccc",
 ]
 
 FORECAST_SCHEMA = Path(__file__).parent.parent / "sql" / "schema_forecast.sql"
@@ -241,10 +264,7 @@ if __name__ == "__main__":
     for _, r in forecasts.sort_values(["company", "ratio_name"]).iterrows():
         cagr_str = f"{r['cagr']:.1%}" if pd.notna(r.get("cagr")) else "n/a"
         r2_str = f"{r['linreg_r2']:.2f}" if pd.notna(r.get("linreg_r2")) else "n/a"
-        # ratio table already stores values as percentage points (74.3 == 74.3%),
-        # not as fractions (0.743) - so plain .1f + '%', NOT Python's .1% format
-        # (which would multiply by 100 again and print 7430%).
-        latest_str = f"{r['latest_value']:.1f}%" if pd.notna(r.get("latest_value")) else "n/a"
+        latest_str = format_value(r.get("latest_value"), r["ratio_name"])
         print(f"{r['company']:18s} {r['ratio_name']:18s} {int(r['n_years']):4d} "
               f"{latest_str:>9s} {cagr_str:>8s} {r2_str:>10s}  {r.get('note', '')}")
 

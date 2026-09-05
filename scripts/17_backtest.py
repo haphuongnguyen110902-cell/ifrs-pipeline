@@ -274,15 +274,20 @@ if __name__ == "__main__":
     print(f"{'Company':18s} {'Ratio':18s} {'Method':7s} {'Folds':>5s} "
           f"{'MAE':>7s} {'RMSE':>7s} {'Bias':>7s} {'MAPE':>7s}  Winner")
     print(f"{'=' * 95}")
+    def unit_suffix(ratio_name):
+        unit = f16.RATIO_UNITS.get(ratio_name, "%")
+        return "d" if unit == "days" else ("x" if unit == "x" else "pp")
+
     for _, r in results.sort_values(["company", "ratio_name", "method"]).iterrows():
         if r["n_folds"] == 0:
             print(f"{r['company']:18s} {r['ratio_name']:18s} {r['method']:7s} "
                   f"{'0':>5s}  {'--- ' + r['note']}")
             continue
+        u = unit_suffix(r["ratio_name"])
         mape_str = f"{r['mape']:.1f}%" if pd.notna(r.get("mape")) else "n/a"
         winner_str = f"*** WINNER ({r['confidence']})" if r["is_winner"] else ""
         print(f"{r['company']:18s} {r['ratio_name']:18s} {r['method']:7s} {int(r['n_folds']):5d} "
-              f"{r['mae']:7.2f} {r['rmse']:7.2f} {r['bias']:7.2f} {mape_str:>7s}  "
+              f"{r['mae']:6.2f}{u:<1s} {r['rmse']:6.2f}{u:<1s} {r['bias']:6.2f}{u:<1s} {mape_str:>7s}  "
               f"{winner_str}")
 
     n_pairs = results.groupby(["company", "ratio_name"]).ngroups
