@@ -162,18 +162,23 @@ DB - see its own docstring).
   but not guaranteed for one company alone. Fixed with a `safe_year_col()`
   helper used everywhere `compute_flags()` looks up a prior year's value.
 
-### Phase 3 — Real automation (GitHub Actions cron)
-NOTES.md already documents this plan in detail - execute it, don't just
-plan it. `run_pipeline.py --mode full` runs on a weekly GitHub Actions
-schedule against the Neon database (already cloud-hosted), with
-`DATABASE_URL` as a repo secret. Moved up early, right after the
-website exists, because "automated" should stop being a claim and start
-being a fact as early as possible - everything built from Phase 4 onward
-then inherits a genuinely self-refreshing pipeline underneath it, rather
-than automation being a checkbox ticked at the very end after everything
-else is already built by hand.
+### Phase 3 — Real automation (GitHub Actions cron) ✅ DONE
+`.github/workflows/pipeline.yml` runs `--mode analyze` every Monday
+06:00 UTC, verified by a real successful manual trigger (not just
+enabled and assumed working). Deliberately forces `analyze` mode
+specifically for schedule/CI runs regardless of what `workflow_dispatch`
+requests, since `data/raw/*` is gitignored - a fresh CI checkout has no
+local `.zip` files, so `full`/`load`/`historical` would find nothing to
+parse. `analyze` only needs database connectivity, which CI has.
 
-One thing explicitly NOT automated (per NOTES.md's own reasoning,
+One real setup gotcha hit and fixed: the GitHub Actions `DATABASE_URL`
+secret is a SEPARATE value from the Streamlit Cloud secret of the same
+name - and unlike Streamlit's TOML format (which requires quotes), a
+GitHub Actions secret must be the raw connection string with NO
+surrounding quotes. Pasting the TOML-quoted version caused
+"Could not parse SQLAlchemy URL from given URL string".
+
+One thing explicitly NOT automated (per NOTES.md's original reasoning,
 correct then and still correct now): classification of new extension
 tags. The workflow should surface unmapped concepts and stop, never
 guess - this is the one step needing human judgment.
