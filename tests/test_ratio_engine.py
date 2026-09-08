@@ -1,0 +1,127 @@
+"""
+tests/test_ratio_engine.py
+
+Regression tests for scripts/11_ratio_engine.py. Every assertion here
+was originally verified by hand in a chat session - see ROADMAP.md's
+"Done" section for the story behind each one. Turning them into fixed
+asserts means a future change to compute_ratios() that breaks one of
+these gets caught by CI, not by re-deriving the same hand-calculation
+again from scratch.
+"""
+import math
+
+import pandas as pd
+import pytest
+
+
+@pytest.fixture(scope="module")
+def r11(load_script):
+    return load_script("11_ratio_engine.py")
+
+
+def make_wide_row(**overrides):
+    """One fully-populated company/year row for compute_ratios(), with
+    sane defaults so a test only needs to override what it's testing."""
+    row = {
+        "company": "TestCo", "company_id": 1, "year": 2023,
+        "revenue": 1000.0, "cost_of_sales": -600.0,
+        "current_trade_receivables": 150.0, "inventories": 90.0,
+        "trade_and_other_current_payables_to_trade_suppliers": 60.0,
+        "gross_profit": 400.0, "profit_loss_from_operating_activities": 100.0,
+        "profit_loss_attributable_to_owners_of_parent": 50.0,
+        "cash_flows_from_used_in_operating_activities": 90.0,
+        "tax_expense_continuing_operations": 20.0, "profit_loss_before_tax": 70.0,
+        "equity_attributable_to_owners_of_parent": 500.0, "noncontrolling_interests": 0.0,
+        "cash_and_cash_equivalents": 50.0,
+        "longterm_borrowings": 200.0,
+        "current_borrowings_and_current_portion_of_noncurrent_borr_etc": 30.0,
+        "depreciation_property_plant_and_equipment": 25.0,
+        "depreciation_rightofuse_assets": 5.0,
+        "amortisation_intangible_assets_other_than_goodwill": 10.0,
+    }
+    row.update(overrides)
+    return pd.DataFrame([row])
+
+
+class TestWorkingCapitalRatios:
+    """DSO=54.75d, DIO=54.75d, DPO=36.5d, CCC=73.0d for
+    revenue=1000, COGS=600, receivables=150, inventory=90, payables=60
+    (365-day convention) - hand-calculated, verified against GuruFocus
+    for the real L'Oreal case this formula was built from."""
+
+    def test_dso(self, r11):
+        r = r11.compute_ratios(make_wide_row())
+        assert r["dso"].iloc[0] == pytest.approx(54.75, abs=0.01)
+
+    def test_dio(self, r11):
+        r = r11.compute_ratios(make_wide_row())
+        assert r["dio"].iloc[0] == pytest.approx(54.75, abs=0.01)
+
+    def test_dpo(self, r11):
+        r = r11.compute_ratios(make_wide_row())
+        assert r["dpo"].iloc[0] == pytest.approx(36.5, abs=0.01)
+
+    def test_ccc(self, r11):
+        r = r11.compute_ratios(make_wide_row())
+        assert r["ccc"].iloc[0] == pytest.approx(73.0, abs=0.01)
+
+    def test_dpo_missing_payables_is_nan_not_zero(self, r11):
+        """A company that doesn't disclose trade payables should get NaN,
+        never a silently-wrong 0 that would corrupt CCC."""
+        wide = make_wide_row(**{"trade_and_other_current_payables_to_trade_suppliers": None})
+        wide = wide.drop(columns=["trade_and_other_current_payables_to_trade_suppliers"])
+        r = r11.compute_ratios(wide)
+        assert math.isnan(r["dpo"].iloc[0])
+        assert math.isnan(r["ccc"].iloc[0])
+
+
+class TestAbsoluteValuesForValuation:
+    """19_valuation.py reuses these _-prefixed columns instead of
+    re-deriving revenue/EBIT/net debt/EBITDA with separate logic - if
+    compute_ratios() ever stops populating them, valuation silently
+    breaks. Locking the exact values in place."""
+
+    def test_ebitda_is_ebit_plus_da(self, r11):
+        r = r11.compute_ratios(make_wide_row())
+        # EBIT=100 (operating profit), D&A=25+5+10=40 -> EBITDA=140
+        assert r["_ebitda"].iloc[0] == pytest.approx(140.0)
+
+    def test_net_debt(self, r11):
+        r = r11.compute_ratios(make_wide_row())
+        # (200 long-term + 30 current borrowings) - 50 cash = 180
+        assert r["_net_debt"].iloc[0] == pytest.approx(180.0)
+
+    def test_revenue_and_net_income_kept(self, r11):
+        r = r11.compute_ratios(make_wide_row())
+        assert r["_revenue"].iloc[0] == pytest.approx(1000.0)
+        assert r["_net_income"].iloc[0] == pytest.approx(50.0)
+
+    def test_missing_da_defaults_to_zero_not_nan(self, r11):
+        """A company that only tags SOME D&A line items should still get
+        a usable (if understated) EBITDA, not NaN - see the module
+        docstring's reasoning for this fillna(0) choice."""
+        wide = make_wide_row()
+        wide = wide.drop(columns=["depreciation_rightofuse_assets",
+                                    "amortisation_intangible_assets_other_than_goodwill"])
+        r = r11.compute_ratios(wide)
+        assert r["_ebitda"].iloc[0] == pytest.approx(125.0)  # EBIT 100 + only PP&E D&A 25
+
+
+class TestExcelSheetNameSanitizer:
+    """Found via a real crash: 'DSO (Days Sales O/S)' has a '/', which
+    Excel rejects as a sheet name - AFTER the DB write had already
+    succeeded, so the bug only showed up at export time."""
+
+    def test_strips_illegal_characters(self, r11):
+        assert r11.sanitize_sheet_name("DSO (Days Sales O/S)") == "DSO (Days Sales OS)"
+
+    def test_strips_every_illegal_character(self, r11):
+        result = r11.sanitize_sheet_name("A/B\\C?D*E[F]G:H")
+        assert not any(ch in result for ch in "\\/?*[]:")
+
+    def test_truncates_to_31_chars(self, r11):
+        result = r11.sanitize_sheet_name("x" * 50)
+        assert len(result) == 31
+
+    def test_leaves_clean_names_alone(self, r11):
+        assert r11.sanitize_sheet_name("Gross Margin") == "Gross Margin"

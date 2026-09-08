@@ -1,0 +1,34 @@
+# Runs the pytest regression suite on every push/PR - no DATABASE_URL
+# needed, since every test in tests/ uses synthetic in-memory data (see
+# each test file's docstring for what real-world case it locks in).
+#
+# Kept deliberately separate from pipeline.yml: that workflow runs the
+# real pipeline against the live Neon database (needs DATABASE_URL);
+# this one just proves the CODE is still correct, independent of any
+# database state.
+
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run test suite
+        run: python -m pytest tests/ -v

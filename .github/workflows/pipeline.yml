@@ -20,8 +20,10 @@ on:
         options:
           - full
           - load
+          - historical
           - validate
           - ratios
+          - analyze
           - discover
 
   # Uncomment to enable weekly scheduled runs (V4)

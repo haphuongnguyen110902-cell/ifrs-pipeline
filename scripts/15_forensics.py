@@ -26,7 +26,8 @@ Flags computed:
 Output:
   - Terminal: summary table of all flags
   - Excel: data/raw/forensics_report.xlsx with detail + flag explanation
-  - DB: forensics table (created if not exists)
+  (no DB table - flags are recomputed from the `ratio` table each run,
+  cheap enough at this dataset size that persisting a copy isn't needed)
 
 Usage:
     python scripts/15_forensics.py
@@ -170,6 +171,21 @@ def pivot_ratios(df: pd.DataFrame) -> pd.DataFrame:
 
 # ---------------------------------------------------------------- flag engine
 
+def safe_year_col(co: pd.DataFrame, year: int, col: str) -> pd.Series:
+    """Like co[co['year']==year][col], but never raises KeyError when
+    `col` doesn't exist at all - which happens when compute_flags() is
+    called on a SINGLE company's data (e.g. from app.py's per-company
+    forensics view) and that company has zero rows for that ratio_name
+    anywhere in its history. Running the full universe together never
+    hits this, because pivot_ratios() only omits a column when NO
+    company in the filtered set has any row for it - with 11 companies
+    together, someone almost always does. Filtered to one company, that
+    assumption breaks."""
+    if col not in co.columns:
+        return pd.Series(dtype=float)
+    return co[co["year"] == year][col]
+
+
 def compute_flags(wide: pd.DataFrame) -> pd.DataFrame:
     """
     Scan the ratio table for each company/year and produce a flags table.
@@ -210,7 +226,7 @@ def compute_flags(wide: pd.DataFrame) -> pd.DataFrame:
             # --- margin flags ---
             if pd.notna(op_margin):
                 # get prior year margin
-                prior = co[co["year"] == year - 1]["operating_margin"]
+                prior = safe_year_col(co, year - 1, "operating_margin")
                 if not prior.empty and pd.notna(prior.iloc[0]):
                     delta = op_margin - prior.iloc[0]
                     if delta < -3:
@@ -222,7 +238,7 @@ def compute_flags(wide: pd.DataFrame) -> pd.DataFrame:
 
             # --- cash conversion YoY ---
             if pd.notna(cc):
-                prior_cc = co[co["year"] == year - 1]["cash_conversion"]
+                prior_cc = safe_year_col(co, year - 1, "cash_conversion")
                 if not prior_cc.empty and pd.notna(prior_cc.iloc[0]):
                     delta_cc = cc - prior_cc.iloc[0]
                     if delta_cc < -20:
@@ -234,7 +250,7 @@ def compute_flags(wide: pd.DataFrame) -> pd.DataFrame:
                         # unwinding, not 2021 getting worse). Check both
                         # endpoints of the delta for a thin denominator before
                         # trusting the flag at full severity.
-                        prior_op_margin = co[co["year"] == year - 1]["operating_margin"]
+                        prior_op_margin = safe_year_col(co, year - 1, "operating_margin")
                         thin_this_year = pd.notna(op_margin) and abs(op_margin) < THIN_MARGIN_THRESHOLD
                         thin_prior_year = (not prior_op_margin.empty
                                             and pd.notna(prior_op_margin.iloc[0])
@@ -254,7 +270,21 @@ def compute_flags(wide: pd.DataFrame) -> pd.DataFrame:
             # --- leverage ---
             if pd.notna(leverage):
                 if leverage > 4:
-                    flag("HIGH_LEVERAGE", leverage, f"Net Debt / Op. Profit: {leverage:.1f}x")
+                    # net_debt_ebitda_proxy divides by the SAME Operating Profit
+                    # denominator as cash_conversion, so it needs the same
+                    # thin-margin caution (see the CASH_CONVERSION_DROP block
+                    # above and THIN_DENOMINATOR below) - without this, a
+                    # thin-margin year could print a false "high" leverage
+                    # warning that's really just a small-denominator artifact.
+                    thin_this_year = pd.notna(op_margin) and abs(op_margin) < THIN_MARGIN_THRESHOLD
+                    if thin_this_year:
+                        flag("HIGH_LEVERAGE", leverage,
+                             f"Net Debt / Op. Profit: {leverage:.1f}x — baseline distorted: "
+                             f"Operating Profit was thin this year ({op_margin:.1f}% margin, "
+                             f"see THIN_DENOMINATOR flag), so this multiple overstates real leverage",
+                             severity_override="low")
+                    else:
+                        flag("HIGH_LEVERAGE", leverage, f"Net Debt / Op. Profit: {leverage:.1f}x")
                 elif leverage < 0:
                     flag("NEGATIVE_NET_DEBT", leverage, f"Net Cash: {abs(leverage):.1f}x Op. Profit")
 
