@@ -281,7 +281,24 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # --- Net Debt / Operating Profit ---
     r["net_debt_ebitda_proxy"] = safe_div(r["_net_debt"], ebit)
 
-    r = r.drop(columns=["_ebit", "_net_debt"])
+    # --- absolute values kept for downstream use (valuation, EV multiples) ---
+    # Prefixed with _ so RATIO_META (which drives print/DB/Excel) never picks
+    # them up by accident - they're in native currency, not ratios.
+    r["_revenue"] = rev
+    r["_net_income"] = net
+
+    # EBITDA proxy = EBIT + D&A add-back. IFRS filers don't tag "EBITDA"
+    # directly (it's a non-GAAP/non-IFRS measure), so this reconstructs it
+    # from whichever D&A line items are actually tagged. Missing pieces
+    # default to 0 (fillna) rather than making the whole figure NaN - a
+    # company that only discloses PP&E depreciation still gives a usable
+    # (if slightly understated) EBITDA, which is better than nothing for
+    # a trading-comps EV/EBITDA multiple.
+    da_ppe = get_col(wide, "depreciation_property_plant_and_equipment").fillna(0)
+    da_rou = get_col(wide, "depreciation_rightofuse_assets").fillna(0)
+    amort = get_col(wide, "amortisation_intangible_assets_other_than_goodwill").fillna(0)
+    r["_da_total"] = da_ppe + da_rou + amort
+    r["_ebitda"] = ebit + r["_da_total"]
     return r
 
 

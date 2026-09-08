@@ -93,16 +93,16 @@ _spec.loader.exec_module(batch09)
 # data/companies.yaml's `name` values so V1 rows and historical rows land
 # on the SAME company_id - get_or_create_company matches on exact name.
 COMPANY_MAP = {
-    "loreal": ("L'Oreal", "EUR"),
-    "lvmh": ("LVMH", "EUR"),
-    "kering": ("Kering", "EUR"),
-    "essilorluxottica": ("EssilorLuxottica", "EUR"),
-    "danone": ("Danone", "EUR"),
-    "essity": ("Essity", "SEK"),
-    "moncler": ("Moncler", "EUR"),
-    "shell": ("Shell", "USD"),
-    "amplifon": ("Amplifon", "EUR"),
-    "puig": ("Puig Brands", "EUR"),
+    "loreal": ("L'Oreal", "EUR", "Consumer / Beauty", "France"),
+    "lvmh": ("LVMH", "EUR", "Luxury Goods", "France"),
+    "kering": ("Kering", "EUR", "Luxury Goods", "France"),
+    "essilorluxottica": ("EssilorLuxottica", "EUR", "Consumer / Eyewear", "France"),
+    "danone": ("Danone", "EUR", "Consumer Staples", "France"),
+    "essity": ("Essity", "SEK", "Consumer / Hygiene", "Sweden"),
+    "moncler": ("Moncler", "EUR", "Luxury Apparel", "Italy"),
+    "shell": ("Shell", "USD", "Energy", "United Kingdom"),
+    "amplifon": ("Amplifon", "EUR", "Consumer Health Retail", "Italy"),
+    "puig": ("Puig Brands", "EUR", "Consumer / Beauty", "Spain"),
     # Pernod Ricard intentionally excluded: its June 30 fiscal year end
     # is not comparable to the December filers above without extra work
     # (see NOTES.md / roadmap "known architectural issue").
@@ -128,12 +128,14 @@ def discover_files(raw_dir: Path):
         if key not in COMPANY_MAP:
             unmatched.append(zip_path)
             continue
-        name, currency = COMPANY_MAP[key]
+        name, currency, sector, country = COMPANY_MAP[key]
         matched.append({
             "path": zip_path,
             "key": key,
             "company": name,
             "expected_currency": currency,
+            "sector": sector,
+            "country": country,
             "fiscal_year_end": f"{y}-{mo}-{d}",
         })
     return matched, unmatched
@@ -243,6 +245,8 @@ if __name__ == "__main__":
         zip_path = item["path"]
         company = item["company"]
         expected_cur = item["expected_currency"]
+        sector = item["sector"]
+        country = item["country"]
         fye = item["fiscal_year_end"]
 
         print(f"{'=' * 60}\n{company}  ({zip_path.name})\n{'=' * 60}")
@@ -305,7 +309,7 @@ if __name__ == "__main__":
         inserted = skipped_unmapped = skipped_dim = 0
         with conn:
             with conn.cursor() as cur:
-                company_id = batch09.get_or_create_company(cur, company)
+                company_id = batch09.get_or_create_company(cur, company, sector=sector, country=country)
                 filing_id = get_or_create_historical_filing(cur, company_id, str(zip_path), fye)
 
                 for _, row in df.iterrows():
@@ -376,7 +380,12 @@ if __name__ == "__main__":
         print("*** Run 04b_batch_scan_concepts.py / 10_auto_classify.py to pool them for classification.")
 
     ok = sum(1 for row in summary if row[2] == "OK")
-    print(f"\n{ok}/{len(summary)} filings loaded successfully.")
+    if args.dry_run:
+        would_load = sum(1 for row in summary if row[2] == "dry run")
+        print(f"\nDRY RUN: {would_load}/{len(summary)} filings parsed cleanly and would load. "
+              f"Nothing was written to the DB. Re-run without --dry-run to load for real.")
+    else:
+        print(f"\n{ok}/{len(summary)} filings loaded successfully.")
     if not args.dry_run and ok:
         print("\nNext steps:")
         print("  python scripts/08_validate.py")

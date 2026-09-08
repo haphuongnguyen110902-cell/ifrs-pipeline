@@ -96,12 +96,22 @@ def load_mapping(path: str) -> dict:
 
 # ---------------------------------------------------------------- database
 
-def get_or_create_company(cur, name):
+def get_or_create_company(cur, name, sector=None, country=None):
     cur.execute("SELECT company_id FROM company WHERE name = %s", (name,))
     row = cur.fetchone()
     if row:
+        # backfill sector/country on an existing row if we now have values
+        # and the row doesn't (e.g. company created before this metadata
+        # existed) - never overwrite an existing non-null value with None.
+        if sector or country:
+            cur.execute(
+                "UPDATE company SET sector = COALESCE(%s, sector), "
+                "country = COALESCE(%s, country) WHERE company_id = %s",
+                (sector, country, row[0]))
         return row[0]
-    cur.execute("INSERT INTO company (name) VALUES (%s) RETURNING company_id", (name,))
+    cur.execute(
+        "INSERT INTO company (name, sector, country) VALUES (%s, %s, %s) RETURNING company_id",
+        (name, sector, country))
     return cur.fetchone()[0]
 
 
@@ -276,7 +286,10 @@ if __name__ == "__main__":
         inserted = skipped_unmapped = skipped_dim = 0
         with conn:
             with conn.cursor() as cur:
-                company_id = get_or_create_company(cur, company)
+                company_id = get_or_create_company(
+                    cur, company,
+                    sector=config[stem].get("sector"),
+                    country=config[stem].get("country"))
                 filing_id = get_or_create_filing(cur, company_id, str(zip_path))
 
                 if args.reset_facts:
