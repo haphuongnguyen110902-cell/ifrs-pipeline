@@ -185,25 +185,37 @@ guess - this is the one step needing human judgment.
 **Serves:** both (a live "last updated: [date]" on the public site is a
 concrete, checkable automation claim - not an assertion to take on faith).
 
-### Phase 4 — Finish trading comps + precedent transactions
-Sector grouping (at minimum: energy vs. consumer/luxury - Shell should
-never sit in the same peer stats as Moncler), peer min/median/max per
-multiple, implied valuation (peer median multiple × target's own metric),
-and forward multiples (wire in `16_forecasting.py`'s revenue/margin
-forecasts instead of only trailing figures).
+### Phase 4 — Finish trading comps + precedent transactions ✅ DONE
+`19_valuation.py` extended: sector-grouped peer stats (min/median/max),
+implied valuation (peer median multiple × own EBITDA → implied EV →
+premium/discount vs. actual market cap, requiring ≥2 peers to avoid a
+meaningless "median of one"), and forward multiples (CAGR-projected NTM
+revenue/EBITDA, reusing `16_forecasting.py`'s `cagr_forecast`).
+`20_precedents.py` added: 2 real, cited M&A deals (L'Oreal/Aesop,
+EssilorLuxottica/GrandVision) compared against current trading comps -
+deliberately only 2 well-verified deals rather than padding to 5 with
+uncertain figures.
 
-**Also add precedent transactions** (`20_precedents.py`) - the third leg
-of the DCF/comps/precedents "valuation triangle" every real valuation
-presentation includes, and almost certainly part of Dauphine's Business
-Valuation coursework. No paid M&A database needed: curate 3-5 real,
-publicly-announced deals in the same sectors (luxury/consumer - these
-get press coverage, deal multiples are usually disclosed), compute
-implied EV/EBITDA and EV/Sales at announcement, compare against the
-trading comps range. Manual/curated by design - this is a legitimate
-professional approach when a paid database isn't available, not a
-shortcut to hide.
-**Serves:** Dauphine (Banque d'investissement et de marché - this IS the
-standard valuation methodology, all three legs expected together).
+**Two real bugs found and fixed while actually running this on live data:**
+- EBITDA reconstruction only summed 3 granular D&A concepts
+  (PP&E/right-of-use/intangibles) - Shell (and likely other capital-
+  intensive/extractive companies) discloses ONLY a single combined
+  cash-flow-statement D&A line, never the granular breakdown, so its
+  `_da_total` silently computed to 0 and its EV/EBITDA came out ~2x too
+  high (10.2x vs. the real ~4.3-5.2x, verified against 4 independent
+  sources). Fixed by preferring the combined concept when present,
+  falling back to the granular sum only when no combined line exists.
+- A genuine DATA-LOSS INCIDENT: `09_batch_load.py --reset-facts` (run to
+  backfill sector/country metadata) deleted ALL of a company's
+  `fact_value` rows regardless of which filing loaded them, silently
+  wiping the 2017-2020 historical data `load_historical.py` had loaded -
+  caught only because the ratio engine's year coverage collapsed from
+  2017-2025 back to 2021-2025 and that was noticed before moving on.
+  Fixed by scoping `clear_company_facts()` to exclude any filing whose
+  `source_file` contains "historical", with a regression test locking
+  the exclusion in place. Data recovered by re-running
+  `load_historical.py` (idempotent, source zips still present locally).
+**Serves:** Dauphine (Banque d'investissement et de marché).
 
 ### Phase 5 — Linked 3-statement projection model
 **Before DCF, not after** - a DCF needs projected Free Cash Flow, and
