@@ -1,0 +1,23 @@
+# Requirements for webapp/app.py ONLY (the Streamlit dashboard),
+# separate from the repo root's requirements.txt used by the data
+# pipeline scripts.
+#
+# WHY THIS FILE EXISTS HERE (in webapp/, not the repo root):
+# requirements.txt includes arelle-release, which app.py never imports
+# (only 09_batch_load.py / load_historical.py need it for XBRL parsing)
+# - arelle is a heavy dependency with many transitive requirements,
+# risking a slow or failed Streamlit Cloud build for no benefit, since
+# the dashboard only ever reads already-parsed data from the database.
+#
+# Streamlit Community Cloud has no UI field to pick a custom requirements
+# filename - it auto-detects by searching the entrypoint file's own
+# directory FIRST, then falling back to the repo root. Since
+# webapp/app.py is the entrypoint, this file (webapp/requirements.txt)
+# is found and used instead of the root's - no manual configuration
+# needed beyond setting "Main file path" to webapp/app.py at deploy time.
+
+pandas>=2.2.0
+SQLAlchemy>=2.0.0
+psycopg2-binary>=2.9.9
+python-dotenv>=1.0.0
+streamlit>=1.38.0

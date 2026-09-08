@@ -18,11 +18,17 @@ Excel/DB until some later "build the dashboard" phase. See ROADMAP.md's
 "Vision" section for the full reasoning.
 
 Deploy: push to GitHub, then deploy for free at share.streamlit.io,
-pointing at this file. Set DATABASE_URL in the app's Secrets (same value
-as your local .env) - never commit it to the repo.
+Main file path = webapp/app.py. Streamlit Cloud auto-detects
+webapp/requirements.txt (a light dependency set, NOT the repo root's
+requirements.txt which includes the heavy arelle dependency the pipeline
+scripts need but this dashboard doesn't) because it searches the
+entrypoint's own directory before falling back to the repo root - see
+webapp/requirements.txt for why this file lives here specifically.
+Set DATABASE_URL in the app's Secrets (same value as your local .env) -
+never commit it to the repo.
 
-Run locally:
-    streamlit run app.py
+Run locally (from the repo root, so paths match Streamlit Cloud):
+    streamlit run webapp/app.py
 """
 import os
 
@@ -115,7 +121,7 @@ def render_forensics(engine, company_name: str):
     from pathlib import Path
 
     spec = importlib.util.spec_from_file_location(
-        "forensics_15", Path(__file__).parent / "scripts" / "15_forensics.py")
+        "forensics_15", Path(__file__).parent.parent / "scripts" / "15_forensics.py")
     forensics = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(forensics)
 
