@@ -90,6 +90,10 @@ _fx_spec = importlib.util.spec_from_file_location("fx_convert_18", _THIS_DIR / "
 fx18 = importlib.util.module_from_spec(_fx_spec)
 _fx_spec.loader.exec_module(fx18)
 
+_f16_spec = importlib.util.spec_from_file_location("forecasting_16", _THIS_DIR / "16_forecasting.py")
+f16 = importlib.util.module_from_spec(_f16_spec)
+_f16_spec.loader.exec_module(f16)
+
 VALUATION_SCHEMA = Path(__file__).parent.parent / "sql" / "schema_valuation.sql"
 
 # company name (as stored in the `company` table) -> (Yahoo Finance ticker, quote currency)
@@ -177,7 +181,24 @@ def fetch_latest_fundamentals(engine, company_filter=None) -> pd.DataFrame:
     if df.empty:
         return df
     latest_idx = df.groupby("company")["year"].idxmax()
-    return df.loc[latest_idx].reset_index(drop=True)
+    latest = df.loc[latest_idx].reset_index(drop=True)
+
+    # sector comes from the `company` table (wired through in V2.6) -
+    # single source of truth rather than duplicating it in this script
+    sectors = pd.read_sql(text("SELECT name AS company, sector FROM company"), engine)
+    return latest.merge(sectors, on="company", how="left")
+
+
+def fetch_fundamentals_history(engine, company_filter=None) -> pd.DataFrame:
+    """Like fetch_latest_fundamentals but keeps EVERY year, not just the
+    latest - needed to CAGR-project forward revenue/EBITDA for forward
+    multiples (see compute_forward_multiples)."""
+    facts = r11.fetch_facts(engine, company_filter)
+    wide = r11.pivot_to_wide(facts)
+    ratios = r11.compute_ratios(wide)
+    keep = ["company", "company_id", "year", "_revenue", "_ebitda"]
+    df = ratios[keep].dropna(subset=["_revenue", "_ebitda"], how="any")
+    return df.sort_values(["company", "year"])
 
 
 # ---------------------------------------------------------------- comps
@@ -217,7 +238,7 @@ def build_comps(fundamentals: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
         ev_eur = market_cap_eur + net_debt_eur
 
         rows.append({
-            "company": company, "year": year, "ticker": ticker,
+            "company": company, "sector": f.get("sector"), "year": year, "ticker": ticker,
             "market_cap_eur": market_cap_eur, "net_debt_eur": net_debt_eur,
             "ev_eur": ev_eur, "revenue_eur": revenue_eur, "ebitda_eur": ebitda_eur,
             "net_income_eur": net_income_eur,
@@ -227,6 +248,114 @@ def build_comps(fundamentals: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
             "note": "" if (net_income_eur is None or net_income_eur > 0) else "P/E n/a - negative net income",
         })
     return pd.DataFrame(rows)
+
+
+# ---------------------------------------------------------------- peer comps (Phase 4)
+
+def add_peer_stats(comps: pd.DataFrame) -> pd.DataFrame:
+    """Sector-grouped min/median/max per multiple - this is what makes it
+    real 'comps' rather than a flat multiples calculator: Shell (energy,
+    EV/EBITDA typically 4-6x) must never be benchmarked against Moncler
+    (luxury, typically 12-20x) as if they were peers. n_peers_in_sector
+    is included so a 1-company sector (nothing to compare Shell against
+    in this 11-company universe) is visible rather than silently
+    producing a 'median' that's really just that one company's own number."""
+    comps = comps.copy()
+    if "sector" not in comps.columns or comps.empty:
+        return comps
+    for metric in ("ev_ebitda", "ev_sales", "pe"):
+        if metric not in comps.columns:
+            continue
+        grp = comps.groupby("sector")[metric]
+        comps[f"{metric}_sector_median"] = comps["sector"].map(grp.median())
+        comps[f"{metric}_sector_min"] = comps["sector"].map(grp.min())
+        comps[f"{metric}_sector_max"] = comps["sector"].map(grp.max())
+    comps["n_peers_in_sector"] = comps["sector"].map(comps.groupby("sector").size())
+    return comps
+
+
+def add_implied_valuation(comps: pd.DataFrame) -> pd.DataFrame:
+    """Apply the PEER median multiple (excluding the company itself) to
+    the company's own EBITDA/Revenue to get an implied EV, then an
+    implied equity value - compared against the company's actual market
+    cap, this is the entire point of trading comps: is this company
+    trading above or below where its sector says it should. Requires
+    >=2 peers in the sector (excluding self) - with only 1, 'median of
+    peers excluding self' is undefined, not just noisy."""
+    comps = comps.copy()
+    implied_ev_ebitda, implied_premium_pct = [], []
+    for idx, row in comps.iterrows():
+        peers = comps[(comps["sector"] == row["sector"]) & (comps.index != idx)]
+        if len(peers) < 2 or pd.isna(row.get("ebitda_eur")) or row.get("ebitda_eur", 0) <= 0:
+            implied_ev_ebitda.append(None)
+            implied_premium_pct.append(None)
+            continue
+        peer_median_multiple = peers["ev_ebitda"].median()
+        if pd.isna(peer_median_multiple):
+            implied_ev_ebitda.append(None)
+            implied_premium_pct.append(None)
+            continue
+        implied_ev = peer_median_multiple * row["ebitda_eur"]
+        implied_equity = implied_ev - row["net_debt_eur"]
+        implied_ev_ebitda.append(implied_ev)
+        if implied_equity and implied_equity > 0:
+            premium = (row["market_cap_eur"] / implied_equity - 1) * 100
+            implied_premium_pct.append(premium)
+        else:
+            implied_premium_pct.append(None)
+    comps["implied_ev_from_peers"] = implied_ev_ebitda
+    comps["premium_vs_peers_pct"] = implied_premium_pct
+    return comps
+
+
+def compute_forward_multiples(comps: pd.DataFrame, history: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
+    """NTM-style forward EV/EBITDA and EV/Sales, using CAGR-projected
+    revenue/EBITDA one year ahead (reuses 16_forecasting.py's
+    cagr_forecast - same math, same 'undefined if base/endpoint is
+    non-positive' guard, not a separate implementation to keep in sync).
+
+    FX caveat: a forward year has no ECB rate yet (rates are only
+    computed for years that have already happened). Uses the MOST
+    RECENT available rate as an approximation rather than leaving
+    forward multiples undefined for non-EUR companies - documented here
+    rather than silently assumed."""
+    comps = comps.copy()
+    fwd_ev_ebitda, fwd_ev_sales = [], []
+    for _, row in comps.iterrows():
+        company = row["company"]
+        h = history[history["company"] == company].sort_values("year")
+        if len(h) < 3:
+            fwd_ev_ebitda.append(None)
+            fwd_ev_sales.append(None)
+            continue
+        years, rev, ebitda = h["year"].tolist(), h["_revenue"].tolist(), h["_ebitda"].tolist()
+        _, rev_fc = f16.cagr_forecast(years, rev, horizon=1)
+        _, ebitda_fc = f16.cagr_forecast(years, ebitda, horizon=1)
+        next_year = years[-1] + 1
+        if next_year not in rev_fc or next_year not in ebitda_fc:
+            fwd_ev_ebitda.append(None)
+            fwd_ev_sales.append(None)
+            continue
+
+        ticker, quote_ccy = TICKER_MAP.get(company, (None, "EUR"))
+        if quote_ccy == "EUR":
+            rev_eur, ebitda_eur = rev_fc[next_year], ebitda_fc[next_year]
+        else:
+            available_years = [y for (c, y) in fx_lookup if c == quote_ccy]
+            if not available_years:
+                fwd_ev_ebitda.append(None)
+                fwd_ev_sales.append(None)
+                continue
+            latest_fx_year = max(available_years)
+            rate = fx_lookup[(quote_ccy, latest_fx_year)]["avg_rate"]
+            rev_eur, ebitda_eur = rev_fc[next_year] / rate, ebitda_fc[next_year] / rate
+
+        ev = row.get("ev_eur")
+        fwd_ev_ebitda.append(ev / ebitda_eur if ev and ebitda_eur and ebitda_eur > 0 else None)
+        fwd_ev_sales.append(ev / rev_eur if ev and rev_eur and rev_eur > 0 else None)
+    comps["fwd_ev_ebitda"] = fwd_ev_ebitda
+    comps["fwd_ev_sales"] = fwd_ev_sales
+    return comps
 
 
 # ---------------------------------------------------------------- persistence
@@ -245,21 +374,37 @@ def save_to_db(engine, comps: pd.DataFrame) -> int:
                 continue
             conn.execute(text("""
                 INSERT INTO valuation
-                    (company, year, ticker, market_cap_eur, net_debt_eur, ev_eur,
-                     revenue_eur, ebitda_eur, net_income_eur, ev_ebitda, ev_sales, pe, computed_at)
+                    (company, sector, year, ticker, market_cap_eur, net_debt_eur, ev_eur,
+                     revenue_eur, ebitda_eur, net_income_eur, ev_ebitda, ev_sales, pe,
+                     ev_ebitda_sector_median, n_peers_in_sector, implied_ev_from_peers,
+                     premium_vs_peers_pct, fwd_ev_ebitda, fwd_ev_sales, computed_at)
                 VALUES
-                    (:company, :year, :ticker, :mc, :nd, :ev, :rev, :ebitda, :ni, :evebitda, :evsales, :pe, now())
+                    (:company, :sector, :year, :ticker, :mc, :nd, :ev, :rev, :ebitda, :ni,
+                     :evebitda, :evsales, :pe, :sectmed, :npeers, :impliedev, :premium,
+                     :fwdevebitda, :fwdevsales, now())
                 ON CONFLICT (company, year)
-                DO UPDATE SET ticker = EXCLUDED.ticker, market_cap_eur = EXCLUDED.market_cap_eur,
+                DO UPDATE SET ticker = EXCLUDED.ticker, sector = EXCLUDED.sector,
+                              market_cap_eur = EXCLUDED.market_cap_eur,
                               net_debt_eur = EXCLUDED.net_debt_eur, ev_eur = EXCLUDED.ev_eur,
                               revenue_eur = EXCLUDED.revenue_eur, ebitda_eur = EXCLUDED.ebitda_eur,
                               net_income_eur = EXCLUDED.net_income_eur, ev_ebitda = EXCLUDED.ev_ebitda,
-                              ev_sales = EXCLUDED.ev_sales, pe = EXCLUDED.pe, computed_at = now()
+                              ev_sales = EXCLUDED.ev_sales, pe = EXCLUDED.pe,
+                              ev_ebitda_sector_median = EXCLUDED.ev_ebitda_sector_median,
+                              n_peers_in_sector = EXCLUDED.n_peers_in_sector,
+                              implied_ev_from_peers = EXCLUDED.implied_ev_from_peers,
+                              premium_vs_peers_pct = EXCLUDED.premium_vs_peers_pct,
+                              fwd_ev_ebitda = EXCLUDED.fwd_ev_ebitda, fwd_ev_sales = EXCLUDED.fwd_ev_sales,
+                              computed_at = now()
             """), {
-                "company": r["company"], "year": int(r["year"]), "ticker": r["ticker"],
-                "mc": r["market_cap_eur"], "nd": r["net_debt_eur"], "ev": r["ev_eur"],
-                "rev": r["revenue_eur"], "ebitda": r["ebitda_eur"], "ni": r["net_income_eur"],
-                "evebitda": r["ev_ebitda"], "evsales": r["ev_sales"], "pe": r["pe"],
+                "company": r["company"], "sector": r.get("sector"), "year": int(r["year"]),
+                "ticker": r["ticker"], "mc": r["market_cap_eur"], "nd": r["net_debt_eur"],
+                "ev": r["ev_eur"], "rev": r["revenue_eur"], "ebitda": r["ebitda_eur"],
+                "ni": r["net_income_eur"], "evebitda": r["ev_ebitda"], "evsales": r["ev_sales"],
+                "pe": r["pe"],
+                "sectmed": r.get("ev_ebitda_sector_median"),
+                "npeers": int(r["n_peers_in_sector"]) if pd.notna(r.get("n_peers_in_sector")) else None,
+                "impliedev": r.get("implied_ev_from_peers"), "premium": r.get("premium_vs_peers_pct"),
+                "fwdevebitda": r.get("fwd_ev_ebitda"), "fwdevsales": r.get("fwd_ev_sales"),
             })
             rows_written += 1
     return rows_written
@@ -298,18 +443,31 @@ if __name__ == "__main__":
 
     print("Fetching live market data (yfinance) and building comps...\n")
     comps = build_comps(fundamentals, fx_lookup)
+    comps = add_peer_stats(comps)
+    comps = add_implied_valuation(comps)
 
-    print(f"{'Company':18s} {'Yr':>5s} {'EV (EURm)':>11s} {'EV/EBITDA':>10s} {'EV/Sales':>9s} {'P/E':>7s}  Note")
-    for _, r in comps.iterrows():
+    print("Computing forward multiples (CAGR-projected NTM revenue/EBITDA)...")
+    history = fetch_fundamentals_history(engine, args.company)
+    comps = compute_forward_multiples(comps, history, fx_lookup)
+
+    print(f"\n{'Company':18s} {'Sector':22s} {'EV/EBITDA':>10s} {'Peers':>6s} "
+          f"{'Fwd EV/EBITDA':>14s} {'vs Peers':>10s}")
+    for _, r in comps.sort_values(["sector", "company"]).iterrows():
         if "ev_eur" not in r or pd.isna(r.get("ev_eur")):
-            print(f"{r['company']:18s} {int(r['year']):5d}  {'--- ' + str(r.get('note', ''))}")
+            print(f"{r['company']:18s}  --- {r.get('note', '')}")
             continue
-        ev_str = f"{r['ev_eur']/1e6:,.0f}"
         evebitda_str = f"{r['ev_ebitda']:.1f}x" if pd.notna(r.get("ev_ebitda")) else "n/a"
-        evsales_str = f"{r['ev_sales']:.1f}x" if pd.notna(r.get("ev_sales")) else "n/a"
-        pe_str = f"{r['pe']:.1f}x" if pd.notna(r.get("pe")) else "n/a"
-        print(f"{r['company']:18s} {int(r['year']):5d} {ev_str:>11s} {evebitda_str:>10s} "
-              f"{evsales_str:>9s} {pe_str:>7s}  {r.get('note', '')}")
+        n_peers = int(r["n_peers_in_sector"]) - 1 if pd.notna(r.get("n_peers_in_sector")) else 0
+        fwd_str = f"{r['fwd_ev_ebitda']:.1f}x" if pd.notna(r.get("fwd_ev_ebitda")) else "n/a"
+        prem_str = (f"{r['premium_vs_peers_pct']:+.0f}%"
+                    if pd.notna(r.get("premium_vs_peers_pct")) else "n/a")
+        print(f"{r['company']:18s} {str(r.get('sector', '')):22s} {evebitda_str:>10s} "
+              f"{n_peers:>6d} {fwd_str:>14s} {prem_str:>10s}")
+
+    n_no_peers = (comps["n_peers_in_sector"] <= 1).sum() if "n_peers_in_sector" in comps.columns else 0
+    if n_no_peers:
+        print(f"\n{n_no_peers} compan(y/ies) have no sector peers in this universe - "
+              f"'vs Peers' is n/a for them, not a data error.")
 
     if not args.no_db:
         ensure_valuation_table(engine)

@@ -158,15 +158,30 @@ def get_or_create_period(cur, filing_id, start, end, ptype):
 
 
 def clear_company_facts(cur, company_name):
-    """Delete existing fact rows for a company so a re-load doesn't duplicate."""
+    """Delete existing V1 fact rows for a company so a re-load doesn't
+    duplicate - SCOPED to exclude historical filings (source_file
+    containing 'historical'), so this can never again wipe the
+    multi-year data loaded by load_historical.py the way an earlier,
+    unscoped version of this function once did (a real incident: a
+    --reset-facts run silently deleted 2017-2020 data, discovered only
+    when the ratio engine's year coverage collapsed back to 2021-2025).
+    Use load_historical.py's own --reset-historical to clear THAT data
+    specifically, never this function.
+
+    Pattern is '%historical%' (not a path with a hardcoded separator)
+    because source_file is stored with whatever separator the OS that
+    loaded it used - backslash on Windows, forward slash on Linux CI -
+    a single hardcoded separator would silently fail to match on
+    whichever platform didn't write it."""
     cur.execute("""
         DELETE FROM fact_value
         WHERE filing_id IN (
             SELECT f.filing_id FROM filing f
             JOIN company c ON f.company_id = c.company_id
             WHERE c.name = %s
+              AND f.source_file NOT LIKE %s
         )
-    """, (company_name,))
+    """, (company_name, "%historical%"))
     return cur.rowcount
 
 

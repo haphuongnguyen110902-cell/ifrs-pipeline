@@ -89,3 +89,36 @@ def test_no_metadata_given_does_not_issue_a_pointless_update(b09):
     kinds = [c[0] for c in cur.calls]
     assert kinds == ["SELECT"]
     assert "UPDATE" not in kinds
+
+
+def test_clear_company_facts_never_touches_historical_filings(b09):
+    """Regression test for a REAL data-loss incident: an earlier,
+    unscoped version of clear_company_facts() deleted ALL of a company's
+    fact_value rows regardless of which filing loaded them. Running
+    `09_batch_load.py --reset-facts` (recommended for an unrelated
+    sector/country backfill) silently wiped 2017-2020 data that
+    load_historical.py had loaded - discovered only when
+    11_ratio_engine.py's year coverage collapsed from 2017-2025 back to
+    2021-2025. Fixed by excluding any filing whose source_file contains
+    'historical' - this test locks in that exclusion so a future
+    refactor can't silently drop it again."""
+
+    class SqlCapturingCursor:
+        def __init__(self):
+            self.last_sql = None
+            self.last_params = None
+
+        def execute(self, sql, params=None):
+            self.last_sql = sql
+            self.last_params = params
+
+        rowcount = 0
+
+    cur = SqlCapturingCursor()
+    b09.clear_company_facts(cur, "Shell")
+    assert "NOT LIKE" in cur.last_sql
+    assert cur.last_params == ("Shell", "%historical%"), (
+        "clear_company_facts must exclude filings whose source_file "
+        "contains 'historical' - without this, --reset-facts wipes "
+        "multi-year data loaded by load_historical.py"
+    )

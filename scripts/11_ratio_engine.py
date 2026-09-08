@@ -294,10 +294,32 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # company that only discloses PP&E depreciation still gives a usable
     # (if slightly understated) EBITDA, which is better than nothing for
     # a trading-comps EV/EBITDA multiple.
+    # D&A add-back for EBITDA reconstruction. Two disclosure styles exist
+    # in practice: some companies (e.g. L'Oreal-style) break D&A into
+    # granular sub-concepts (PP&E, right-of-use assets, intangibles);
+    # others (e.g. Shell) report ONLY a single combined cash-flow-
+    # statement adjustment line and never tag the granular breakdown at
+    # all. Summing only the granular concepts silently gave Shell
+    # _da_total=0 (none of the 3 granular concepts exist for it) - EBITDA
+    # collapsed to just EBIT, understating it by ~$25-31bn/year and
+    # roughly doubling the computed EV/EBITDA (10.2x vs the real ~4.3-5.2x
+    # per GuruFocus/Multiples.vc/StockAnalysis/Investing.com). Fix:
+    # PREFER the combined line when a company has one - it's already the
+    # total, more complete than any sub-breakdown (captures exploration/
+    # decommissioning-related D&A a granular PP&E/ROU/intangibles split
+    # might miss) - and only fall back to summing the granular concepts
+    # for companies that never disclose a combined total at all.
     da_ppe = get_col(wide, "depreciation_property_plant_and_equipment").fillna(0)
     da_rou = get_col(wide, "depreciation_rightofuse_assets").fillna(0)
     amort = get_col(wide, "amortisation_intangible_assets_other_than_goodwill").fillna(0)
-    r["_da_total"] = da_ppe + da_rou + amort
+    granular_da_sum = da_ppe + da_rou + amort
+
+    da_combined = get_best(
+        wide,
+        "adjustments_for_depreciation_and_amortisation_expense_and_etc",
+        "depreciation_amortisation_and_impairment_loss_reversal_of_etc",
+    )
+    r["_da_total"] = da_combined.where(da_combined.notna(), granular_da_sum)
     r["_ebitda"] = ebit + r["_da_total"]
     return r
 

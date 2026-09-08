@@ -17,6 +17,7 @@
 CREATE TABLE IF NOT EXISTS valuation (
     valuation_id    SERIAL PRIMARY KEY,
     company         TEXT NOT NULL,
+    sector          TEXT,
     year            INTEGER NOT NULL,
     ticker          TEXT,
     market_cap_eur  NUMERIC,
@@ -28,8 +29,24 @@ CREATE TABLE IF NOT EXISTS valuation (
     ev_ebitda       NUMERIC,
     ev_sales        NUMERIC,
     pe              NUMERIC,
+    ev_ebitda_sector_median NUMERIC,
+    n_peers_in_sector       INTEGER,
+    implied_ev_from_peers   NUMERIC,
+    premium_vs_peers_pct    NUMERIC,
+    fwd_ev_ebitda           NUMERIC,
+    fwd_ev_sales            NUMERIC,
     computed_at     TIMESTAMP DEFAULT now(),
     UNIQUE(company, year)
 );
 
 CREATE INDEX IF NOT EXISTS idx_valuation_company ON valuation(company);
+
+-- Added after the table already existed and had been written to once -
+-- IF NOT EXISTS makes this safe to re-run on an existing table.
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS sector TEXT;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS ev_ebitda_sector_median NUMERIC;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS n_peers_in_sector INTEGER;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS implied_ev_from_peers NUMERIC;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS premium_vs_peers_pct NUMERIC;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS fwd_ev_ebitda NUMERIC;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS fwd_ev_sales NUMERIC;

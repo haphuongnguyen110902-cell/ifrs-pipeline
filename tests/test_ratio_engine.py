@@ -106,6 +106,37 @@ class TestAbsoluteValuesForValuation:
         r = r11.compute_ratios(wide)
         assert r["_ebitda"].iloc[0] == pytest.approx(125.0)  # EBIT 100 + only PP&E D&A 25
 
+    def test_combined_da_concept_preferred_over_granular_sum(self, r11):
+        """The real Shell bug: some companies (oil & gas especially) only
+        ever tag a single COMBINED cash-flow-statement D&A line and never
+        the granular PP&E/ROU/intangibles breakdown at all. Summing only
+        the granular concepts silently gave _da_total=0 for such a
+        company, understating EBITDA by the full D&A amount and roughly
+        doubling the computed EV/EBITDA (10.2x vs the real ~4.3-5.2x,
+        verified against GuruFocus/Multiples.vc/StockAnalysis/
+        Investing.com). Fixed by preferring the combined concept when
+        present, falling back to the granular sum only when a company
+        never discloses a combined total."""
+        wide = make_wide_row()
+        wide = wide.drop(columns=[
+            "depreciation_property_plant_and_equipment",
+            "depreciation_rightofuse_assets",
+            "amortisation_intangible_assets_other_than_goodwill",
+        ])
+        wide["adjustments_for_depreciation_and_amortisation_expense_and_etc"] = 31290.0
+        r = r11.compute_ratios(wide)
+        assert r["_da_total"].iloc[0] == pytest.approx(31290.0)
+        assert r["_ebitda"].iloc[0] == pytest.approx(100.0 + 31290.0)  # EBIT + combined D&A
+
+    def test_granular_sum_still_used_when_no_combined_concept_exists(self, r11):
+        """Guards the fix against over-firing: a company that discloses
+        the granular breakdown (L'Oreal-style) and has NO combined line
+        must still get the summed granular total, not silently drop to
+        zero because the preferred combined concept is simply absent."""
+        r = r11.compute_ratios(make_wide_row())  # has all 3 granular concepts, no combined
+        assert r["_da_total"].iloc[0] == pytest.approx(40.0)  # 25 + 5 + 10, as before
+        assert r["_ebitda"].iloc[0] == pytest.approx(140.0)
+
 
 class TestExcelSheetNameSanitizer:
     """Found via a real crash: 'DSO (Days Sales O/S)' has a '/', which
