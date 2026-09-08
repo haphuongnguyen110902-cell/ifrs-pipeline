@@ -1,7 +1,14 @@
-# IFRS Pipeline — scheduled automation (V4 foundation)
+# IFRS Pipeline — scheduled automation (ROADMAP.md Phase 3)
 #
-# Currently set to manual trigger only (workflow_dispatch).
-# To enable weekly scheduled runs, uncomment the schedule block.
+# IMPORTANT: data/raw/* is gitignored (raw XBRL zips aren't committed -
+# correctly, they're large binaries). This means a fresh GitHub Actions
+# checkout has NONE of the source filings on disk. 'full'/'load'/
+# 'historical' modes need those local files and will find nothing to
+# parse in CI - they only make sense run manually on a machine that has
+# the files. The scheduled (cron) trigger below always forces
+# --mode analyze instead, which only reads from the already-populated
+# Neon database (forensics/forecast/backtest) and needs no local files -
+# this is what can genuinely run unattended every week.
 #
 # Requires GitHub secret: DATABASE_URL (your Neon connection string)
 # Add it at: Settings → Secrets and variables → Actions → New repository secret
@@ -9,26 +16,30 @@
 name: IFRS Pipeline
 
 on:
-  # Manual trigger - run from GitHub Actions tab anytime
+  # Manual trigger - run from GitHub Actions tab anytime. 'full'/'load'/
+  # 'historical' will find no local files to parse here (see note above)
+  # - use 'analyze', 'ratios', or 'validate' for a meaningful CI run, or
+  # trigger 'full' only if you've arranged for data/raw/*.zip to be
+  # present some other way (e.g. a future automated-download step).
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Pipeline mode'
+        description: 'Pipeline mode (full/load/historical need local files CI does not have - see workflow comments)'
         required: true
-        default: 'full'
+        default: 'analyze'
         type: choice
         options:
+          - analyze
+          - ratios
+          - validate
           - full
           - load
           - historical
-          - validate
-          - ratios
-          - analyze
           - discover
 
-  # Uncomment to enable weekly scheduled runs (V4)
-  # schedule:
-  #   - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+  # Weekly scheduled runs - always 'analyze' (see note above for why)
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
 
 jobs:
   run-pipeline:
@@ -47,19 +58,29 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Determine mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "value=analyze" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.event.inputs.mode || 'analyze' }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run pipeline
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          python run_pipeline.py --mode ${{ github.event.inputs.mode || 'full' }} --skip-statements
+          python run_pipeline.py --mode ${{ steps.mode.outputs.value }} --skip-statements
 
-      - name: Upload ratio outputs
+      - name: Upload outputs
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ratio-outputs
-          path: data/raw/comps_ratios.xlsx
+          name: pipeline-outputs
+          path: data/raw/*.xlsx
           retention-days: 30
+          if-no-files-found: ignore
 
       - name: Notify on failure
         if: failure()
@@ -67,6 +88,9 @@ jobs:
           echo "Pipeline failed. Check the logs above."
           echo "Common causes:"
           echo "  - DATABASE_URL secret not set"
+          echo "  - Ran 'full'/'load'/'historical' via workflow_dispatch: these need"
+          echo "    data/raw/*.zip files that only exist on a developer's own machine,"
+          echo "    not in a fresh CI checkout (data/raw/ is gitignored on purpose)"
           echo "  - New company has unmapped extension tags (human review required)"
           echo "  - Validation checks failed (mapping error)"
           exit 1

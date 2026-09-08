@@ -139,6 +139,29 @@ isolated in Excel/DB until Phase 11.
 **Serves:** both - this is the product shell the whole project has been
 building toward, made concrete and shareable early.
 
+### Phase 2 — Walking-skeleton website, deployed publicly ✅ DONE
+Live at: https://haphuongnguyen110902-cell-ifrs-pipeline-webappapp-iwnn9s.streamlit.app/
+Deployed from `webapp/app.py` (moved from repo root so Streamlit
+Community Cloud's directory-based auto-detection picks up
+`webapp/requirements.txt` - a light dependency set - instead of the
+repo root's `requirements.txt`, which includes the heavy `arelle`
+dependency the dashboard doesn't need). Filters by country/sector,
+shows ratios + forensics flags per company, recomputing forensics live
+rather than reading a stored table (15_forensics.py doesn't persist to
+DB - see its own docstring).
+
+**Bugs found and fixed by actually running this in Streamlit Cloud/locally, not by reading code:**
+- Assigning formatted strings into a float64-dtype DataFrame via `.loc`
+  raised `LossySetitemError` - fixed by building the display frame with
+  `dtype=object` from the start.
+- `15_forensics.py`'s `compute_flags()` crashed with `KeyError:
+  'operating_margin'` when filtered to a single company that has zero
+  rows for that ratio_name anywhere in its history - pivot_table only
+  creates a column when SOME row in the filtered input has that
+  ratio_name, which is always true across the full 11-company universe
+  but not guaranteed for one company alone. Fixed with a `safe_year_col()`
+  helper used everywhere `compute_flags()` looks up a prior year's value.
+
 ### Phase 3 — Real automation (GitHub Actions cron)
 NOTES.md already documents this plan in detail - execute it, don't just
 plan it. `run_pipeline.py --mode full` runs on a weekly GitHub Actions
@@ -281,6 +304,11 @@ a CV bullet nor a GitHub repo link communicates on their own.
   can be built AND tested against real unmapped tags, not synthetic ones.
 - **Kering DSO/CCC gap** — one XBRL tag for receivables not yet mapped,
   low priority, note only.
+- **Streamlit app URL is auto-generated and long** (haphuongnguyen110902-cell-ifrs-pipeline-webappapp-iwnn9s.streamlit.app) -
+  cosmetic, not urgent. Streamlit Cloud allows setting a custom subdomain
+  under app Settings → General → App URL, once a short/memorable name is
+  decided on. Revisit once the app has more content (Phase 4+) worth
+  giving a polished URL to.
 - **Sector-relative forensics thresholds** — current thresholds are fixed
   and were sanity-checked against the current 11-company dataset, but
   will need to become per-sector once the universe is large/diverse
