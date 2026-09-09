@@ -523,13 +523,17 @@ a CV bullet nor a GitHub repo link communicates on their own.
 
 - **Claude API auto-classifier** — wait for the next new company, so it
   can be built AND tested against real unmapped tags, not synthetic ones.
-- **Kering DSO/CCC gap** — one XBRL tag for receivables not yet mapped,
-  low priority, note only.
+- ~~Kering DSO/CCC gap~~ — **RESOLVED.** Was actually the `_revenue`/
+  gross-profit fallback gap fixed in Phase 6's follow-up (Kering never
+  tagged bare "revenue", only "revenue_from_contracts_with_customers") -
+  not a single missing receivables tag as originally guessed here. DSO,
+  DIO, DPO, CCC all work for Kering now.
 - **Streamlit app URL is auto-generated and long** (haphuongnguyen110902-cell-ifrs-pipeline-webappapp-iwnn9s.streamlit.app) -
-  cosmetic, not urgent. Streamlit Cloud allows setting a custom subdomain
-  under app Settings → General → App URL, once a short/memorable name is
-  decided on. Revisit once the app has more content (Phase 4+) worth
-  giving a polished URL to.
+  cosmetic, not urgent, but genuinely unblocked now: "once the app has
+  content worth a polished URL" (Phase 4+) has been true since this
+  phase shipped. Streamlit Cloud allows setting a custom subdomain under
+  app Settings → General → App URL - a 5-minute task whenever it's
+  worth doing, not gated on anything else anymore.
 - **Sector-relative forensics thresholds** — current thresholds are fixed
   and were sanity-checked against the current 11-company dataset, but
   will need to become per-sector once the universe is large/diverse
@@ -542,3 +546,22 @@ a CV bullet nor a GitHub repo link communicates on their own.
   perturbations" machinery extends to "recompute across companies") and
   before Phase 11's breadth expansion. Noted now because of the added
   Asset Management consideration, not scheduled yet.
+- **Canonical concept layer** — company-specific "adjusted operating
+  profit" tags (`loreal:ResultatDexploitation`,
+  `LVM:ProfitLossFromOperatingActivitiesRecurring...`,
+  `essi:OperatingProfitExclIAC`) are each their own concept today, three
+  separate definitions treated as comparable by `get_best()`'s fallback
+  chains rather than genuinely unified. The schema already supports a
+  proper many-to-one canonical layer (`concept_mapping`) - this is
+  design debt carried since V0 (see the now-archived `archive/NOTES.md`),
+  not a new finding, and still unaddressed. Worth a dedicated pass once
+  the universe grows past 11 companies and the "different tag, same
+  economic line item" pattern gets more frequent, not urgent at this size.
+- **Dimensional facts** — segment/geographic breakdowns are dropped
+  entirely at parse time; the `dimensions` JSONB column exists in the
+  schema but has never been populated. Blocks any geographic-exposure or
+  segment-margin analysis (relevant to the Asset Management track
+  specifically). Same V0-era design debt as the canonical concept layer
+  above - real, not forgotten, just correctly sequenced behind breadth
+  (Phase 11) rather than done now for an 11-company universe where it
+  wouldn't yet pay for itself.
