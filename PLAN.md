@@ -810,20 +810,130 @@ precedent match.
 
 ---
 
-# ⛔ GATE — measure before committing to breadth
+# ⛔ GATE — measure before committing to breadth ✅ MEASURED (2026-09-09/10)
 
-Before WP7, run the ~40-company step and **record three numbers**:
+Before WP7, run the ~40-company step and **record three numbers**. Done: a
+real sample of 40 companies **not in the database** — 8 each from France,
+Italy, Netherlands, Sweden, Belgium (the SCOPE.md-recommended "Nordics +
+France + Italy + Benelux" core), deliberately large/index-type names
+(Carrefour, Renault, Eni, Heineken, Sandvik, Umicore, BNP Paribas, ...)
+matching WP7's own target-universe rule ("national-index member OR market
+cap > €2bn"), downloaded live from `filings.xbrl.org` into `data/raw/gate40/`
+(gitignored, ~1GB). All measurement ran with **zero writes to the live
+database**.
 
-1. **Extension auto-classification rate** — what % of new companies need zero
-   manual review? Currently ~10 min/company manual; at 300 that is ~50 hours.
-   This number decides whether 300 is reachable at all.
-2. **Ticker resolution rate** from WP4 on unseen companies.
-3. **Parse throughput** — filings/hour on your machine, measured.
+**1. Extension auto-classification — first pass: 36.5% (475/1,302 tags),
+FAILS the ~80% bar.** Only 5/40 companies (12.5%) needed zero manual
+review. The worst review counts clustered on sectors the original
+11-company mapping had never seen — banks (Banco BPM 84 review tags,
+Mediobanca 70, KBC Groep 68) and a payment processor (Adyen).
 
-If (1) is below ~80%, **fix classification before scaling**, do not grind
-through manual review. That is what the Claude-API auto-classifier was
-deferred for, and this is the moment it finally has real unmapped tags to earn
-its keep.
+**2. Ticker resolution on unseen companies — 24/40 (60%)**, consistent with
+WP4's 63.6% on the known 11 (same root cause already documented there:
+several ACTIVE LEI candidates share a similar name, and the real listed
+parent isn't always among the first few tried). Not blocking.
+
+**3. Parse throughput — 506 filings/hour** (7.1s/filing average, real Arelle
+parse + full fact extraction, 40/40 succeeded). Far better than SCOPE.md's
+earlier **unverified** 30-60s/filing guess — at this rate 2,700 filings is
+~5-6 hours, not 30+. Not blocking.
+
+**Verdict on the first pass: classification is the one real blocker.** See
+WP4b below for what actually fixed it, and two rejected detours along the
+way — kept as recorded history, not summarized away.
+
+---
+
+## WP4b — ESEF anchoring: the real, free fix for classification ✅ DONE
+
+**Two rejected detours first, in the order they happened, because both are
+useful to know about before anyone reaches for an LLM here again:**
+
+1. **`scripts/28_claude_classify.py`** was built exactly as ROADMAP.md's
+   long-deferred "Claude API auto-classifier" item specified — batches the
+   827 review tags to Claude via a strict tool schema, writes proposals to
+   a review file, never touches the trusted mapping directly. The user
+   caught, correctly, that calling it needs a billed `ANTHROPIC_API_KEY`,
+   which **directly contradicts this project's own free-tools principle**
+   (the same one SCOPE.md already used to reject paid identifier vendors).
+   Nobody caught the contradiction earlier — ROADMAP.md had been carrying
+   this deferred item for a long time, and this plan's own GATE section,
+   two paragraphs up, still said "that is what the Claude-API
+   auto-classifier was deferred for" without flagging the conflict either.
+   **Kept in the repo as optional infrastructure, not merged, not run.**
+   Branch: `feature/claude-classifier`.
+2. Instead, the actual classification was done directly inside the Claude
+   Code session already building this feature — zero incremental cost,
+   same underlying LLM judgment, written to
+   `data/mappings/CLAUDE_REVIEW_extensions.yaml` with a
+   `classification_source: claude-session-suggested` provenance tag
+   (827/827 entries, 641 high confidence). **Also not merged** — the user's
+   objection here wasn't cost, it was that a human reading and classifying
+   827 tags inside a chat conversation is not reproducible or automatable;
+   it doesn't belong in a pipeline that runs again at 150 and 300
+   companies. Branch: `classify/gate40-session-review`.
+
+**What actually fixed it — a free, deterministic, regulator-mandated
+signal the pipeline had never read.** Under the ESEF RTS, an issuer using
+an extension element **in the primary financial statements** must anchor
+it to the closest standard IFRS element via the wider-narrower arcrole in
+the **definition linkbase** (subtotals are exempt; everything else is
+mandatory). That anchor is a machine-readable declaration, not a guess —
+and `10_auto_classify.py`/`12_prep_company.py`/`13_batch_prep.py` all only
+ever read the **presentation** linkbase (`XbrlConst.parentChild`); nothing
+touched the definition linkbase or its anchoring arcrole.
+
+**Verified live before writing a line of classification code** (this
+project's own standing rule — see WP0/WP4's own verification sections):
+`XbrlConst.widerNarrower` exists in Arelle and resolves to
+`http://www.esma.europa.eu/xbrl/esef/arcrole/wider-narrower`; tested
+against 5 real filings from the gate40 sample (banco_bpm, adyen, renault,
+mediobanca, kbc_groep) and all 5 genuinely declare these relationships —
+e.g. Banco BPM's `Acconti_su_dividendi` (one of this pass's own low-
+confidence LLM guesses) anchors directly to `ifrs-full:DividendsPaid`, and
+KBC's `ExceptionalInterimDividendPaidPerShare` (another low-confidence
+guess) anchors to `ifrs-full:DividendsPaidOrdinarySharesPerShare`.
+
+**Implementation, additive to `13_batch_prep.py`:**
+- `build_anchor_map(model)` — reads `model.relationshipSet(XbrlConst.widerNarrower)`,
+  returns `{extension_tag: standard_anchor_concept}`.
+- `resolve_via_anchor(anchor_concept, pres_map, tag_to_statement)` — resolves
+  the anchor's OWN statement via the same trust order already used for
+  standard tags: (1) already in the trusted mapping (fastest, most direct),
+  (2) the anchor's own presentation-linkbase role, (3) the anchor's own
+  `periodType`. This is exactly this project's established layered-fallback
+  pattern (CLAUDE.md: "XBRL concept-name variance is handled by layered
+  fallback, not exceptions"), applied to statement classification instead
+  of value extraction.
+- `scan_zips()` tries anchoring **first**, for extension tags only, before
+  the existing presentation-role/periodType/keyword tiers — a filer's own
+  declared anchor outranks a role keyword match.
+- 6 new pure-function tests in `tests/test_batch_prep_anchoring.py`
+  (`resolve_via_anchor`'s three fallback tiers + the unresolvable case,
+  no Arelle model needed) — `build_anchor_map` itself is deliberately not
+  unit-tested (same reasoning as `test_entity_resolution.py`'s network
+  calls: it needs a real filing, and is exercised live below, not mocked).
+
+**Re-measured against the same 40-company sample, clean mapping state
+(642 tags, no detour artifacts): 1,008/1,302 (77.4%) now auto-classify
+with zero AI and zero cost** — up from 36.5%, and this time from a real,
+reproducible, regulator-grounded signal instead of an LLM's self-reported
+confidence. Coverage varies sharply by filer: FinecoBank 64/67 review tags
+resolved by anchoring alone, Unilever 29/30, KBC 50/76 — but **Mediobanca
+anchored 0 of its 78 unmatched tags**, a real, disclosed limit: not every
+filer's extension taxonomy declares anchoring as faithfully as the RTS
+requires, and this pipeline should not assume 100% coverage from any one
+filer just because most do it well.
+
+**Still short of the 80% bar, honestly reported, not rounded up.** The
+free lever not yet built: rank the remaining review tags by their value's
+materiality to what this project's own ratio engine actually reads
+(revenue-relative size) — a tag worth a fraction of a percent of revenue
+that no ratio ever touches can honestly stay `UNKNOWN` forever at zero
+analytical cost, per this project's own rule 7 ("prefer an explicit 'not
+available' state"), rather than needing classification at all. Not
+implemented yet — the next concrete step before re-measuring the gate
+again, not a promise this document is counting as already done.
 
 ---
 
@@ -897,7 +1007,8 @@ WP3 company columns     1.0           ← DONE
 WP4 entity resolution   2.0           ← DONE (7/11 real coverage, TICKER_MAP kept)
 WP5 thin screener       1.0           ← DONE
 WP6 Phase 10 one-pager  2.0           ← DONE - priority #1 payoff, portfolio artifact
---- GATE: measure 3 numbers ---
+--- GATE: measure 3 numbers ---            ← MEASURED, classification failed at 36.5%
+WP4b ESEF anchoring     1.0           ← DONE - 77.4% auto-classified, free, deterministic
 WP7 breadth staged      3.0+
 WP8 sector comparison   2.0
 ```
@@ -906,9 +1017,12 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: the GATE, then WP7** (WP0-WP6 are all done — see
-above; WP4's `TICKER_MAP` retirement is incomplete at 7/11 real coverage and
-should be revisited before/alongside WP7's staged breadth, not blocking
-anything that came before it). WP6 (the one-pager) was the last item that
-serves the Contrôleur de Gestion job search directly - everything from here
-is the Asset Management / breadth bet, per §6's own strategic-honesty note.
+**Immediate next action: the materiality-based triage described at the end
+of WP4b, then re-measure the gate, then WP7** (WP0-WP6 are all done, the
+GATE is measured, WP4b closed most of the classification gap for free —
+see above; WP4's `TICKER_MAP` retirement is incomplete at 7/11 real
+coverage and should be revisited before/alongside WP7's staged breadth,
+not blocking anything that came before it). WP6 (the one-pager) was the
+last item that serves the Contrôleur de Gestion job search directly -
+everything from here is the Asset Management / breadth bet, per §6's own
+strategic-honesty note.

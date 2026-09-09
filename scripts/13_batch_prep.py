@@ -91,6 +91,67 @@ def open_zip(zip_path):
     return c, m
 
 
+def build_anchor_map(model):
+    """ESEF anchoring: the ESMA RTS requires an issuer using an extension
+    element in the primary financial statements to anchor it to the
+    closest standard IFRS element via the wider-narrower arcrole in the
+    definition linkbase (subtotals are exempt; everything else is
+    mandatory) - a machine-readable, regulator-mandated pointer, not a
+    guess. Confirmed live against real filings before relying on this:
+    Arelle exposes it as XbrlConst.widerNarrower, and every filing tried
+    (banco_bpm, adyen, renault, mediobanca, kbc_groep) genuinely declares
+    these relationships - see PLAN.md's WP4b write-up for the verification
+    and the exact resolutions found (e.g. an Italian bank's
+    'Acconti_su_dividendi' anchors directly to 'ifrs-full:DividendsPaid').
+
+    Returns {extension_qname_str: standard_concept_object} - the WIDER
+    (standard) side of the relationship points TO the NARROWER (extension)
+    concept, so this maps the extension tag to its anchor, taking the
+    first relationship found if a tag is (unusually) anchored more than
+    once - ESEF requires anchoring to the CLOSEST standard element, so
+    multiple anchors for one tag are not expected in practice."""
+    result = {}
+    relset = model.relationshipSet(XbrlConst.widerNarrower)
+    if not relset:
+        return result
+    for rel in relset.modelRelationships:
+        wider, narrower = rel.fromModelObject, rel.toModelObject
+        if wider is None or narrower is None:
+            continue
+        if not getattr(narrower, "qname", None) or not getattr(wider, "qname", None):
+            continue
+        qn = str(narrower.qname)
+        if qn not in result:
+            result[qn] = wider
+    return result
+
+
+def resolve_via_anchor(anchor_concept, pres_map, tag_to_statement):
+    """Given the standard concept an extension tag anchors to, resolve
+    ITS statement - reusing the exact same trust order the rest of this
+    file already uses for standard tags: (1) it's already in the trusted
+    mapping (fastest, most direct - a real concept this project already
+    classified), (2) its own presentation-linkbase role, (3) its own
+    periodType. Returns (statement, reason) - statement is '' if none of
+    these resolve it (rare for a standard concept)."""
+    anchor_qn = str(anchor_concept.qname)
+    if anchor_qn in tag_to_statement:
+        return tag_to_statement[anchor_qn], f"ESEF anchor -> {anchor_qn} (already in mapping)"
+
+    stmt, _ = pres_map.get(anchor_qn, ("", ""))
+    if stmt:
+        return stmt, f"ESEF anchor -> {anchor_qn} (anchor's own presentation role)"
+
+    if anchor_concept.periodType == "instant":
+        return "balance_sheet", f"ESEF anchor -> {anchor_qn} (anchor's periodType=instant)"
+
+    stmt, _ = statement_from_name(anchor_qn, anchor_concept.label() or anchor_qn.split(":")[-1])
+    if stmt:
+        return stmt, f"ESEF anchor -> {anchor_qn} (anchor's own name keyword)"
+
+    return "", f"ESEF anchor -> {anchor_qn} (anchor itself unclassifiable - rare)"
+
+
 def build_pres_map(model):
     result = {}
     relset = model.relationshipSet(XbrlConst.parentChild)
@@ -121,30 +182,22 @@ def slugify(name):
     return key[:60] + "_etc" if len(key) > 60 else key
 
 
-if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--mapping", default="data/mappings/ifrs_concepts_v0.yaml")
-    ap.add_argument("--raw-dir", default="data/raw")
-    ap.add_argument("--review-out", default="data/mappings/REVIEW_extensions.yaml")
-    ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--only", nargs="+", help="Only process these zip filenames")
-    args = ap.parse_args()
+def scan_zips(zips, existing_tags, tag_to_statement=None):
+    """Scan every filing in `zips`, classifying every numeric fact not
+    already in `existing_tags`. Returns (all_auto, all_review, per_company) -
+    pooled across all companies, same shape __main__ below always used
+    inline. Factored out so other scripts can reuse the exact same
+    classification pass via importlib (this project's established
+    cross-script reuse pattern - see CLAUDE.md) instead of duplicating this
+    loop.
 
-    with open(args.mapping, encoding="utf-8") as f:
-        existing = yaml.safe_load(f)
-    existing_tags = set()
-    for stmt, concepts in existing.items():
-        for name, info in concepts.items():
-            existing_tags.update(info["xbrl_tags"])
-    print(f"Existing mapping: {len(existing_tags)} tags\n")
-
-    raw_dir = Path(args.raw_dir)
-    if args.only:
-        zips = [raw_dir / z for z in args.only if (raw_dir / z).exists()]
-    else:
-        zips = sorted(raw_dir.glob("*.zip"))
-
-    # pool results across all companies
+    `tag_to_statement` (optional, {xbrl_tag: statement}) lets ESEF anchoring
+    (see build_anchor_map/resolve_via_anchor above) resolve an extension tag
+    straight to a statement it ALREADY knows, when the tag it anchors to is
+    already in the trusted mapping - the strongest tier of the whole
+    classification ladder, since it's the filer's own regulator-mandated
+    declaration, not a guess (PLAN.md's WP4b)."""
+    tag_to_statement = tag_to_statement or {}
     all_auto = {}       # tag -> entry (standard or clearly classifiable extension)
     all_review = {}     # tag -> entry + which companies use it
     per_company = []
@@ -163,7 +216,8 @@ if __name__ == "__main__":
             continue
 
         pres_map = build_pres_map(model)
-        auto_n = review_n = skip_n = 0
+        anchor_map = build_anchor_map(model)
+        auto_n = review_n = skip_n = anchor_n = 0
 
         for fact in model.facts:
             concept = fact.concept
@@ -177,6 +231,23 @@ if __name__ == "__main__":
             is_std = qn.startswith("ifrs-full:")
             label = concept.label() or qn.split(":")[-1]
             key = slugify(qn.split(":")[-1])
+
+            # Tier 1 (highest authority): ESEF-mandated anchoring to a
+            # standard concept, tried before the presentation-linkbase
+            # tiers below - a filer's own declared anchor beats a role
+            # keyword match even for extension tags.
+            if not is_std and qn in anchor_map:
+                a_stmt, a_reason = resolve_via_anchor(anchor_map[qn], pres_map, tag_to_statement)
+                if a_stmt:
+                    entry = {
+                        "xbrl_tag": qn, "suggested_key": key, "display_label": label,
+                        "statement": a_stmt, "balance": concept.balance or "n/a",
+                        "reason": a_reason, "used_by": [company],
+                    }
+                    all_auto[qn] = entry
+                    auto_n += 1
+                    anchor_n += 1
+                    continue
 
             stmt, reason = pres_map.get(qn, ("", ""))
             if not stmt:
@@ -208,7 +279,38 @@ if __name__ == "__main__":
 
         c.close()
         per_company.append((company, auto_n, review_n))
-        print(f"  auto={auto_n}  review={review_n}  already_known={skip_n}")
+        print(f"  auto={auto_n} (of which anchor-resolved={anchor_n})  review={review_n}  already_known={skip_n}")
+
+    return all_auto, all_review, per_company
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--mapping", default="data/mappings/ifrs_concepts_v0.yaml")
+    ap.add_argument("--raw-dir", default="data/raw")
+    ap.add_argument("--review-out", default="data/mappings/REVIEW_extensions.yaml")
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--only", nargs="+", help="Only process these zip filenames")
+    args = ap.parse_args()
+
+    with open(args.mapping, encoding="utf-8") as f:
+        existing = yaml.safe_load(f)
+    existing_tags = set()
+    tag_to_statement = {}
+    for stmt, concepts in existing.items():
+        for name, info in concepts.items():
+            existing_tags.update(info["xbrl_tags"])
+            for tag in info["xbrl_tags"]:
+                tag_to_statement[tag] = stmt
+    print(f"Existing mapping: {len(existing_tags)} tags\n")
+
+    raw_dir = Path(args.raw_dir)
+    if args.only:
+        zips = [raw_dir / z for z in args.only if (raw_dir / z).exists()]
+    else:
+        zips = sorted(raw_dir.glob("*.zip"))
+
+    all_auto, all_review, per_company = scan_zips(zips, existing_tags, tag_to_statement)
 
     print(f"\n{'='*60}")
     print(f"TOTAL across all companies:")
