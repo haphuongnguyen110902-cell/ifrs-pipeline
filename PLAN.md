@@ -810,20 +810,86 @@ precedent match.
 
 ---
 
-# ⛔ GATE — measure before committing to breadth
+# ⛔ GATE — measure before committing to breadth ✅ MEASURED (2026-09-09) — **FAIL on (1)**
 
-Before WP7, run the ~40-company step and **record three numbers**:
+Before WP7, run the ~40-company step and **record three numbers**. Done: a
+real sample of 40 companies **not in the database**, downloaded live from
+`filings.xbrl.org` — 8 each from France, Italy, Netherlands, Sweden, Belgium
+(the SCOPE.md-recommended "Nordics + France + Italy + Benelux" core),
+deliberately picked as large/index-type names (Carrefour, Renault, Eni,
+Heineken, Sandvik, Umicore, BNP Paribas, ...) matching WP7's own target
+universe rule ("national-index member OR market cap > €2bn") — not an
+easy/cherry-picked sample. Saved to `data/raw/gate40/` (gitignored, ~1GB;
+not cleaned up yet in case a follow-up needs to re-inspect the same sample).
+All three measurements ran with **zero writes to the live database** —
+(1) and (3) via `13_batch_prep.py --dry-run` (reads zips + the local mapping
+file only) and a scratch reuse of `09_batch_load.py`'s own
+`load_filing()`/`dump_facts()`; (2) via a scratch script that calls
+`26_entity_resolution.py`'s `resolve_company()` directly in-process,
+skipping its `save_to_db()` entirely — this project's own established
+"measure before writing anything live" pattern (WP0), applied here because
+this measurement's whole point is deciding *whether* to write 40 partially-
+mapped companies into the DB that backs the public dashboard, not doing it
+first and finding out after.
 
-1. **Extension auto-classification rate** — what % of new companies need zero
-   manual review? Currently ~10 min/company manual; at 300 that is ~50 hours.
-   This number decides whether 300 is reachable at all.
-2. **Ticker resolution rate** from WP4 on unseen companies.
-3. **Parse throughput** — filings/hour on your machine, measured.
+**1. Extension auto-classification rate — FAILS the ~80% bar, badly.**
+Across the 40 filings, 1,302 distinct concepts were found that aren't in
+the current 642-tag mapping (itself built entirely from the 11-company
+consumer/luxury/energy universe). Of those:
+- **475/1,302 (36.5%) auto-classified** (standard `ifrs-full:` tags resolved
+  via the presentation-linkbase role, or an authoritative extension role).
+- **827/1,302 (63.5%) need human review.**
+- Read the other way, per this section's own original framing ("what % of
+  *companies* need zero manual review"): only **5/40 (12.5%)** — BNP Paribas,
+  Carrefour, FinecoBank, Hermes International, Safran — had `review=0` and
+  needed no human review at all. The other 35 companies ranged from a
+  handful of review tags up to Banco BPM's 84.
+- **A real, likely-explanatory pattern, not yet confirmed by reading the
+  actual tags for every case:** the worst review counts cluster on
+  companies in sectors the current 11-company mapping has zero coverage of
+  - Banco BPM (84), Mediobanca (70), KBC Groep (68) are banks (loan books,
+  regulatory capital, IFRS 9 categories - concepts no consumer/luxury/energy
+  filer ever tags), and Adyen (15 review tags, sampled directly - e.g.
+  `ady:CurrentReceivablesFromMerchantsAndFinancialInstitutions`) is a
+  payment processor with its own extension vocabulary. This suggests the
+  gap is **sector breadth**, not merely company count - worth confirming
+  before assuming a generic auto-classifier alone fixes it.
+- **Verdict per this section's own rule: below 80%, so fix classification
+  before scaling.** Do not grind through ~830 tags of manual review by hand
+  for this sample alone, let alone the thousands more that 150-300
+  companies across new sectors would add.
 
-If (1) is below ~80%, **fix classification before scaling**, do not grind
-through manual review. That is what the Claude-API auto-classifier was
-deferred for, and this is the moment it finally has real unmapped tags to earn
-its keep.
+**2. Ticker resolution rate on unseen companies — 24/40 (60%).**
+Comparable to WP4's 7/11 (63.6%) on the *known* 11, so not a new regression
+- the same structural cause WP4 already documented (a common company name
+  matches several ACTIVE LEIs - treasury vehicles, investment funds, foreign
+  branches - and the real listed parent isn't always among the first 10
+  candidates tried; see e.g. Renault's 10 candidates, none the actual listed
+  entity, in the raw run log). Not the blocking number here - (1) is.
+
+**3. Parse throughput — 506 filings/hour (7.1s/filing average, 40/40
+succeeded, min 2.3s/max 28.3s).** Measured as real Arelle load + full
+numeric-fact extraction (the same work `09_batch_load.py` does per filing),
+not just a lightweight scan. This is far better than SCOPE.md's earlier
+**unverified** 30-60s/filing estimate (a 4-8x difference) - at this
+measured rate, 2,700 filings is roughly 5-6 hours, not 30+. **Not the
+blocking number either.**
+
+**Net: parse speed and ticker resolution are both fine at this sample size.
+Extension classification is the one real blocker, and it looks like a
+sector-coverage problem more than a raw-scale problem.** This is exactly
+what this gate exists to catch, and exactly what the Claude-API
+auto-classifier (ROADMAP.md's "Explicitly deferred" list) was deferred for
+- it now has 827 real unmapped tags, across sectors the current mapping has
+never seen, to actually earn its keep against, rather than the synthetic
+tags it would have had before any of these 40 companies existed.
+
+**Not yet decided: what "fix classification" means concretely** - build the
+Claude-API auto-classifier now (ROADMAP's long-deferred item), or narrow the
+first breadth wave to sectors the mapping already covers (consumer/luxury/
+retail/industrials - skip banks/insurers/payment processors until their own
+concepts are mapped), or both. That decision, not the measurement, is the
+next thing to take back to the user before touching WP7 or the live DB.
 
 ---
 
