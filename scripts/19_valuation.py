@@ -190,8 +190,11 @@ def fetch_latest_fundamentals(engine, company_filter=None) -> pd.DataFrame:
     # completely alone (still the detail-level free text shown in the
     # company header/sidebar filter elsewhere), we just ALSO pull the
     # standardized field peer-grouping actually needs below.
+    # ticker/ticker_currency (PLAN.md WP4): the DB-resolved fallback for
+    # any company not in TICKER_MAP - see resolve_ticker_currency() below.
     sectors = pd.read_sql(
-        text("SELECT name AS company, sector AS sector_detail, sector_std FROM company"), engine)
+        text("SELECT name AS company, sector AS sector_detail, sector_std, "
+             "ticker AS db_ticker, ticker_currency AS db_ticker_currency FROM company"), engine)
     return latest.merge(sectors, on="company", how="left")
 
 
@@ -257,16 +260,32 @@ def populate_sector_std(engine, force: bool = False) -> int:
     return n_updated
 
 
+def resolve_ticker_currency(company: str, db_ticker=None, db_currency=None):
+    """PLAN.md WP4: prefers TICKER_MAP (hand-verified, currently correct
+    for the 11-company universe - see PLAN.md WP4's own verification
+    requirement) when the company is in it; falls back to the DB-resolved
+    ticker/currency (26_entity_resolution.py) for anything TICKER_MAP
+    doesn't have, e.g. a company added after WP4 landed. Deliberately NOT
+    the other way around: TICKER_MAP stays authoritative for companies
+    it already covers until the resolver's real match rate is proven
+    reliable enough to retire it (see PLAN.md WP4's gate)."""
+    if company in TICKER_MAP:
+        return TICKER_MAP[company]
+    if db_ticker:
+        return db_ticker, db_currency
+    return None, None
+
+
 # ---------------------------------------------------------------- comps
 
 def build_comps(fundamentals: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
     rows = []
     for _, f in fundamentals.iterrows():
         company = f["company"]
-        if company not in TICKER_MAP:
+        ticker, quote_ccy = resolve_ticker_currency(company, f.get("db_ticker"), f.get("db_ticker_currency"))
+        if not ticker:
             rows.append({"company": company, "year": f["year"], "note": "no ticker mapped - skipped"})
             continue
-        ticker, quote_ccy = TICKER_MAP[company]
 
         try:
             market = fetch_market_data(ticker)
@@ -303,7 +322,7 @@ def build_comps(fundamentals: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
             # sector_detail is carried alongside for anyone who wants the
             # original, more precise per-company text.
             "company": company, "sector": f.get("sector_std"), "sector_detail": f.get("sector_detail"),
-            "year": year, "ticker": ticker,
+            "year": year, "ticker": ticker, "quote_ccy": quote_ccy,
             "market_cap_eur": market_cap_eur, "net_debt_eur": net_debt_eur,
             "ev_eur": ev_eur, "revenue_eur": revenue_eur, "ebitda_eur": ebitda_eur,
             "net_income_eur": net_income_eur,
@@ -402,7 +421,10 @@ def compute_forward_multiples(comps: pd.DataFrame, history: pd.DataFrame, fx_loo
             fwd_ev_sales.append(None)
             continue
 
-        ticker, quote_ccy = TICKER_MAP.get(company, (None, "EUR"))
+        # quote_ccy was already resolved once in build_comps() (PLAN.md
+        # WP4: TICKER_MAP-or-DB-fallback via resolve_ticker_currency) -
+        # read it back from this row rather than re-deriving it here.
+        quote_ccy = row.get("quote_ccy", "EUR")
         if quote_ccy == "EUR":
             rev_eur, ebitda_eur = rev_fc[next_year], ebitda_fc[next_year]
         else:

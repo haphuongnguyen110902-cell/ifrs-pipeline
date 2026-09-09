@@ -310,11 +310,20 @@ if __name__ == "__main__":
         sys.exit(1)
     engine = create_engine(db_url)
 
-    if args.company not in val19.TICKER_MAP:
-        print(f"No ticker mapped for {args.company} in 19_valuation.py's TICKER_MAP - "
-              f"cannot fetch price history. Add it there first.")
+    # PLAN.md WP4: prefer TICKER_MAP (hand-verified) but fall back to the
+    # DB-resolved ticker (26_entity_resolution.py) for anything not in it
+    # - see 19_valuation.py's resolve_ticker_currency() docstring.
+    with engine.connect() as _conn:
+        db_row = _conn.execute(text(
+            "SELECT ticker, ticker_currency FROM company WHERE name = :n"
+        ), {"n": args.company}).fetchone()
+    db_ticker, db_currency = (db_row.ticker, db_row.ticker_currency) if db_row else (None, None)
+    ticker, _quote_ccy = val19.resolve_ticker_currency(args.company, db_ticker, db_currency)
+    if not ticker:
+        print(f"No ticker mapped for {args.company} (checked 19_valuation.py's TICKER_MAP and "
+              f"company.ticker) - cannot fetch price history. Run scripts/26_entity_resolution.py "
+              f"or add it to TICKER_MAP first.")
         sys.exit(1)
-    ticker, _quote_ccy = val19.TICKER_MAP[args.company]
 
     print(f"Fetching {args.period} of daily price history for {ticker} vs {args.benchmark}...")
     try:

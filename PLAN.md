@@ -455,7 +455,7 @@ cases), +4 in `test_forensics.py` (3 off-calendar-fye genericity tests +
 
 ---
 
-# WP4 — Entity resolution: LEI → ISIN → ticker
+# WP4 — Entity resolution: LEI → ISIN → ticker ✅ DONE (partial - see below)
 
 **Objective:** new `scripts/26_entity_resolution.py`. Retire `TICKER_MAP`.
 
@@ -504,6 +504,113 @@ is disappointing for smaller Nordic names. **Effort:** 1.5–2 sessions.
 
 **Unblocks:** breadth entirely. Without this, company #12 onward has no market
 data.
+
+**What actually happened - built, verified live, and honestly incomplete:**
+
+**The free path changed shape once actually built, verified live before
+committing to it:**
+- `filings.xbrl.org` was dropped in favor of **GLEIF's own LEI-search API**
+  (`api.gleif.org/api/v1/lei-records?filter[entity.legalName]=...`) -
+  more authoritative for name→LEI than filings.xbrl.org's sparse entity
+  endpoint (confirmed: `filter[name]=` on that endpoint returned zero
+  results for every company name tried).
+- The ~1GB+ **bulk ISIN-to-LEI relationship file** this WP originally
+  specified was dropped in favor of **GLEIF's own per-LEI ISIN endpoint**
+  (`.../lei-records/{lei}/isins`) - found live while building this: it
+  serves the identical mapping, queried on demand, which is far more
+  practical at 11→low-hundreds scale than downloading and indexing a
+  bulk file for a few hundred lookups.
+
+**A real complication found building this, not assumed:** one LEI maps
+to MANY ISINs, not one - L'Oreal's alone has 32 (equity + bond issuances
+across currencies/tenors), and a single legal name can match SEVERAL
+ACTIVE LEIs (LVMH returned 9: "ACTIONS LVMH", "LVMH Group Treasury",
+"LVMH LUXURY VENTURES FUND I", ..., and the real parent, "LVMH MOET
+HENNESSY LOUIS VUITTON" - no name-text heuristic reliably tells them
+apart). Solved by **verifying candidates against real market data
+instead of guessing from name text**: for an ambiguous LEI, each
+candidate's ISINs are checked via OpenFIGI until one actually resolves
+to a live, exchange-listed common-stock security - a subsidiary/
+treasury/foundation LEI does not itself have separately listed common
+stock, so this is a verification, not an inference.
+
+**A second real bug found running this, not assumed, and actually
+fixed:** the first live check flagged Essity as a "mismatch"
+(`TICKER_MAP` says `ESSITY-B.ST`, resolver said `ESSITYB.ST`) - not a
+wrong company, a wrong ticker FORMAT: OpenFIGI's raw `ticker` field
+doesn't carry the hyphen yfinance requires for share-class tickers.
+Confirmed live: `ESSITYB.ST` genuinely 404s on yfinance; `ESSITY-B.ST`
+works. Fixed with `resolve_working_ticker()` - validates a candidate
+ticker against yfinance itself before trusting it (never persist a
+plausible-looking-but-broken value, per this project's own "never
+guess" rule), trying one well-justified normalization (insert a hyphen
+before a trailing single-letter share-class suffix) if the raw form
+fails. This turned the one real mismatch into a correct resolve on
+re-verification.
+
+**A third real, structural finding: OpenFIGI's anonymous rate limit is
+tighter and has a longer cooldown than a fixed per-request delay alone
+can survive.** A company with many bond ISINs (Danone: 60+) can burn
+through the anonymous budget mid-company and trigger a wall of 429s
+that a flat delay doesn't recover from. Fixed with
+`_post_openfigi_with_retry()` - exponential backoff (3 attempts) on a
+429 specifically, not just a longer flat delay. This measurably
+improved the real match rate across successive live runs as the fix
+landed: 1/11 → 3/11 (partially rate-limited) → 6/11 (1 mismatch, since
+fixed) → **7/11, 0 mismatched, 4 unresolved**, the number recorded below
+and in the README per this WP's own instruction ("that number is a real
+result and belongs in the README").
+
+**Final live spot-check against all 11 current companies (this WP's own
+required verification step):**
+
+| Result | Companies |
+|---|---|
+| Matched (7) | L'Oreal, Kering, Pernod Ricard, Essity, Moncler, Amplifon, Puig Brands |
+| Mismatched (0) | none |
+| Unresolved (4) | LVMH, EssilorLuxottica, Danone, Shell |
+
+All four unresolved cases are large multinationals where the real
+equity ISIN sits behind more bond ISINs than
+`MAX_ISINS_TO_CHECK_PER_LEI` (20) practically allows to check under
+OpenFIGI's rate limit even with retry/backoff, or (Shell, EssilorLuxottica)
+GLEIF's own candidate list didn't yield a working listing within the
+LEI-candidate cap (10) tried. Not a logic bug - a real, disclosed
+external-API constraint. **Not fixed further here**: an OpenFIGI API
+key (free to obtain, materially higher rate limits) would likely close
+most of this gap, but signing up for a third-party account is not
+something to do on the user's behalf without asking first - flagged as
+the clear next step rather than done here.
+
+**Decision: `TICKER_MAP` is NOT retired.** `19_valuation.py`'s new
+`resolve_ticker_currency()` prefers `TICKER_MAP` (hand-verified, still
+correct for all 11 companies) and falls back to the DB-resolved
+`company.ticker`/`ticker_currency` only for a company `TICKER_MAP`
+doesn't have - the opposite priority from this WP's original "delete
+TICKER_MAP in the same PR" instruction, and deliberately so: at 7/11
+real coverage, deleting it would be a regression, not a cleanup.
+`22_dcf.py`/`23_market_risk.py` updated to the same fallback pattern.
+Revisit retiring `TICKER_MAP` only once the resolver's real coverage is
+re-measured and materially better (e.g. with an API key, or once WP7's
+company universe makes hand-maintaining `TICKER_MAP` itself impractical).
+
+**Also added, not originally specified:** `company.ticker_currency`
+(`sql/migration_003_ticker_currency.sql`) - `TICKER_MAP`'s second
+element (quote currency) had no column to land in after WP3b's
+original scope (`ticker`/`ticker_exchange`/`isin`/`ticker_source` only).
+A small exchange→currency table (`EXCH_TO_CURRENCY`) mirrors
+`EXCH_TO_YF_SUFFIX`, with the same "never guess an unmapped exchange"
+rule - includes a note on the LSE's GBX-pence complication, matching
+`19_valuation.py`'s existing documented Shell simplification.
+
+**Verification performed:** 12 new tests in `tests/test_entity_resolution.py`
+(the pure `pick_best_equity_hit`/`_ticker_variants` ranking and
+ticker-normalization logic - the network-calling functions are
+deliberately exercised live via `--verify`, per this WP's own spec,
+not mocked). Migration 003 applied and confirmed idempotent (ran twice,
+no error). `tests/test_baseline_regression.py` stayed green throughout -
+this WP never touched the five WP1-migrated tables. Full suite passing
+(see commit for the exact count).
 
 ---
 
@@ -648,7 +755,7 @@ WP0 safety net          0.5 session   ← DONE
 WP1 company_id          1.5           ← DONE
 WP2 forensics persist   1.0           ← DONE
 WP3 company columns     1.0           ← DONE
-WP4 entity resolution   2.0           ← the real wall before breadth
+WP4 entity resolution   2.0           ← DONE (7/11 real coverage, TICKER_MAP kept)
 WP5 thin screener       1.0
 WP6 Phase 10 one-pager  2.0           ← priority #1 payoff, portfolio artifact
 --- GATE: measure 3 numbers ---
@@ -660,4 +767,6 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: WP4** (WP0, WP1, WP2 and WP3 are done — see above).
+**Immediate next action: WP5** (WP0-WP4 are done — see above; WP4's
+`TICKER_MAP` retirement is incomplete at 7/11 real coverage and should be
+revisited before/alongside WP7, not blocking WP5/WP6).
