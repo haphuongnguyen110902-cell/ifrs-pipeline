@@ -614,7 +614,7 @@ this WP never touched the five WP1-migrated tables. Full suite passing
 
 ---
 
-# WP5 — Thin screener (validate the pattern before breadth, not after)
+# WP5 — Thin screener (validate the pattern before breadth, not after) ✅ DONE
 
 **Objective:** a universe landing page in the existing Streamlit app.
 
@@ -642,6 +642,66 @@ most expensive possible moment.
 If it is doing one query per company, it will not survive 300.
 
 **Risk:** low. **Effort:** 1 session.
+
+**What actually happened, including a real bug found in the same class as
+an already-known one:**
+
+- `sql/schema_screener.sql` defines `company_latest_metrics`, a VIEW
+  (not a table - no module "owns" it the way other schema files' tables
+  are owned, since it joins `ratio`/`valuation`/`credit_profile`/
+  `forensics_flag` across modules) joining each source table's own
+  latest year per company, plus all-time HIGH/total forensics flag
+  counts. One query for the whole universe, verified live: **0.057s for
+  all 11 companies**, `webapp/app.py`'s new `ensure_screener_view()` +
+  `load_screener()` replace what used to be a 9-tab-per-company render.
+- **Real bug found running this against live data, the same class as an
+  already-known one:** Pernod Ricard's `operating_margin`/`roic` came
+  back NULL on the first live query. Traced to the exact case
+  `21_three_statement_model.py`'s `select_base_year_row()` already
+  exists for: Pernod Ricard's June 30 fiscal year end leaves its
+  numerically latest `ratio` year (2025) completely empty, and the
+  view's original `DISTINCT ON (company_id, ratio_name) ORDER BY year
+  DESC` picked that empty row over 2024's real value. Fixed by filtering
+  `WHERE value IS NOT NULL` (ditto for `valuation.ev_ebitda` and
+  `credit_profile.net_debt_ebitda`) before ranking by year - skip NULLs
+  before picking "latest", the same fix in a new place. Locked in with a
+  regression test that cross-checks the view's answer against the
+  `ratio` table directly rather than hand-coding the expected number.
+- **A second real bug, found by actually clicking through the app, not
+  by reading the code:** the initial filter logic used a Python ternary
+  that fell back to the literal `True` (not a pandas Series) when a
+  multiselect was empty - `mask_a & mask_b` where BOTH masks are plain
+  `True` collapses to a scalar `True`, and `df[True]` raises
+  `KeyError(True)` (pandas tries to look up a column named `True`).
+  Crashed the app on first load, before any filter was ever touched.
+  Fixed with `pd.Series(True, index=...)` as the empty-filter fallback
+  instead of a bare Python `True`.
+- Click-to-select via `st.dataframe(..., on_select="rerun",
+  selection_mode="single-row")` (native since Streamlit 1.35; this app
+  runs 1.63) - clicking a row's checkbox loads that company's existing
+  9-tab detail view below, unchanged, exactly as specified. Defaults to
+  the first row selected so the detail view always shows something
+  useful on first load, rather than an empty "click a row" placeholder.
+- Country/sector filters now default to nothing pre-selected, but an
+  empty selection is treated as "no filter" (shows everything) rather
+  than "filter to nothing" - deliberately different from a literal
+  reading of "default to nothing selected": a blank landing page on
+  first load would be a worse default than today's, and the actual
+  problem this WP names (300 pre-checked chips cluttering the sidebar)
+  is solved either way.
+- Sector filter now uses `sector_std` (WP3a), not the free-text
+  `sector` - per this WP's own spec. The company header/caption above
+  the 9 tabs still shows the free-text detail (`France · Consumer /
+  Beauty`), untouched.
+- `render_comps()`'s hardcoded `"11-company universe"` string now takes
+  `n_companies` as a parameter, sourced from `len(companies)` at
+  render time - verified live (still reads "11" today, correctly, but
+  now from the query rather than a literal).
+- 4 new tests in `tests/test_screener.py` (DB-guarded, same pattern as
+  `test_baseline_regression.py`): one row per company, the Pernod Ricard
+  NULL-skip case specifically, no unexpected NULLs across the current
+  universe, and that a single query returns every company's full metric
+  set. Full suite: 183/183 passing.
 
 ---
 
@@ -756,7 +816,7 @@ WP1 company_id          1.5           ← DONE
 WP2 forensics persist   1.0           ← DONE
 WP3 company columns     1.0           ← DONE
 WP4 entity resolution   2.0           ← DONE (7/11 real coverage, TICKER_MAP kept)
-WP5 thin screener       1.0
+WP5 thin screener       1.0           ← DONE
 WP6 Phase 10 one-pager  2.0           ← priority #1 payoff, portfolio artifact
 --- GATE: measure 3 numbers ---
 WP7 breadth staged      3.0+
@@ -767,6 +827,6 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: WP5** (WP0-WP4 are done — see above; WP4's
+**Immediate next action: WP6** (WP0-WP5 are done — see above; WP4's
 `TICKER_MAP` retirement is incomplete at 7/11 real coverage and should be
-revisited before/alongside WP7, not blocking WP5/WP6).
+revisited before/alongside WP7, not blocking WP6).
