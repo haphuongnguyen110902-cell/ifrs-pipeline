@@ -26,10 +26,12 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 - **Classifies credit profile** — Net Debt/EBITDA trajectory bucketed into sector-agnostic leverage bands with a YoY trend label, computed from true EBITDA (not the differently-named `net_debt_ebitda_proxy` ratio, which is actually Net Debt/EBIT — see `24_credit.py`)
 - **Runs scenario/sensitivity analysis** — perturb revenue, margin, growth, cost of debt, or capex (any combination) and see the resulting shift in FCFF, Enterprise Value and leverage band, with WACC held constant so the delta is attributable to the operating shock alone
 - **Auto-classifies** new companies using the IFRS taxonomy's own presentation linkbase — standard tags require zero manual work
+- **Resolves entity identifiers** — LEI (GLEIF) → ISIN (GLEIF) → ticker/exchange (OpenFIGI) — the free path meant to replace `19_valuation.py`'s hardcoded `TICKER_MAP`; real coverage measured live at 7/11 companies (see [Known limitations](#known-limitations))
+- **Generates a one-page PDF per company** — DCF, trading comps and actual market EV reconciled side by side with a "football field" bar chart and a one-sentence verdict on whether they converge, plus key ratios, credit profile, earnings-quality flags, and a matching precedent transaction where one exists
 - **Orchestrates** the full pipeline end-to-end with `run_pipeline.py --mode full`, or just the analysis layer with `--mode analyze`
-- **Serves** a public Streamlit dashboard (`webapp/app.py`) with 9 tabs per company — ratios, forensics flags, trading comps, the 3-statement model, DCF valuation, market risk, credit profile, forecast backtest results, and precedent transactions
+- **Serves** a public Streamlit dashboard (`webapp/app.py`) — a sortable/filterable universe screener landing page (one query for every company) that clicks through to 9 tabs per company: ratios, forensics flags, trading comps, the 3-statement model, DCF valuation, market risk, credit profile, forecast backtest results, and precedent transactions
 - **Refreshes automatically** every Monday via GitHub Actions (`--mode analyze`, no local files needed — see [Automation](#automation))
-- **Tests itself** — 131 pytest regression tests covering every bug found and fixed during development, run on every push via CI
+- **Tests itself** — 192 pytest regression tests covering every bug found and fixed during development, run on every push via CI
 
 ## Current status — V2 complete, valuation + market risk + credit layer live, automation running weekly
 
@@ -46,7 +48,7 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Market risk (volatility, Sharpe, beta, drawdown) | 11/11 companies — price-history-only, doesn't inherit the fundamentals side's data gaps |
 | Credit profile (Net Debt/true EBITDA trajectory) | computed for every company/year with both net debt and EBITDA available; years with no D&A tag matched are flagged, not hidden |
 | Regression tests (data) | 5/5 pass — verified against L'Oréal's published 2024 annual report |
-| Regression tests (code) | 131 pytest tests, run on every push via GitHub Actions CI |
+| Regression tests (code) | 192 pytest tests, run on every push via GitHub Actions CI (a handful are deliberately DB-only and skip there, since CI has no DATABASE_URL secret - see `tests.yml`) |
 | Forensics flags | 62 across 10 companies (26 high / 12 medium / 24 low severity) |
 | Backtest coverage | 78/82 company-ratio pairs have enough rolling folds to pick a method |
 | Unmapped facts | 0 — all non-dimensional facts fully mapped |
@@ -231,6 +233,8 @@ python scripts/22_dcf.py --company "COMPANY NAME"
 python scripts/23_market_risk.py --company "COMPANY NAME"
 python scripts/24_credit.py --company "COMPANY NAME"
 python scripts/25_scenario.py --company "COMPANY NAME" --margin-shock -2
+python scripts/26_entity_resolution.py --verify   # spot-check the resolver against TICKER_MAP
+python scripts/27_onepager.py --company "COMPANY NAME"   # one-page PDF -> data/raw/onepagers/
 
 # or all at once:
 python run_pipeline.py --mode full      # everything, first run
@@ -268,8 +272,10 @@ streamlit run webapp/app.py
 | `23_market_risk.py` | Volatility, Sharpe ratio, max drawdown, beta/correlation vs. STOXX Europe 600 |
 | `24_credit.py` | Net Debt/true-EBITDA trajectory → leverage band + trend classification |
 | `25_scenario.py` | Perturb revenue/margin/growth/cost of debt/capex, recompute FCFF/EV/leverage vs. base case |
+| `26_entity_resolution.py` | LEI (GLEIF) → ISIN (GLEIF) → ticker/exchange (OpenFIGI), replacing `19_valuation.py`'s hardcoded `TICKER_MAP` for companies added beyond the current 11 — real coverage measured live at 7/11 (`--verify`), `TICKER_MAP` kept as the primary source until that improves (see [Known limitations](#known-limitations)) |
+| `27_onepager.py` | One-page PDF per company — DCF/comps/market-EV reconciled side by side (with a "football field" bar chart), key ratios, trading comps, credit profile, earnings-quality flags, and a matching precedent transaction where one exists |
 | `run_pipeline.py` | Orchestrates the above (`--mode full` / `--mode analyze` / others) |
-| `webapp/app.py` | Public Streamlit dashboard — 7 tabs per company (ratios, forensics, comps, 3-statement, DCF, backtest, precedents) |
+| `webapp/app.py` | Public Streamlit dashboard — universe screener landing page (PLAN.md WP5) + 9 tabs per company (ratios, forensics, comps, 3-statement, DCF, market risk, credit profile, backtest, precedents) |
 | `tests/` | pytest regression suite (87 tests) — see each file's docstring for the real bug it locks in |
 
 ## Known limitations
@@ -287,6 +293,7 @@ streamlit run webapp/app.py
 - The comps/3-statement/DCF/precedents/market-risk/credit layer (`19`-`24_*.py`) is run by hand, not yet wired into `run_pipeline.py`'s `--mode analyze` or the weekly cron — see the note under [Architecture](#architecture)
 - `net_debt_ebitda_proxy` (in `11_ratio_engine.py`/the Ratios tab, display label "Net Debt vs Op. Profit") is Net Debt / EBIT despite its name — a real naming inconsistency found while building `24_credit.py`, which computes true Net Debt/EBITDA separately rather than reusing that column. Not renamed here because other code already depends on the existing name; worth a rename pass on its own
 - `19_valuation.py`'s `TICKER_MAP` (hand-verified for the current 11 companies) is not yet retired — `26_entity_resolution.py` (LEI via GLEIF → ISIN via GLEIF's per-LEI endpoint → ticker/exchange via OpenFIGI, all free) was built to replace it for companies added beyond this universe, but a live spot-check against all 11 current companies matched only **7/11, 0 mismatched, 4 unresolved** (LVMH, EssilorLuxottica, Danone, Shell) — a real, disclosed result, not a bug: all four are large multinationals whose LEI carries dozens of bond ISINs ahead of the actual equity one, and OpenFIGI's anonymous-tier rate limit (with retry/backoff already added) caps how many can practically be checked per company. `19_valuation.py`/`22_dcf.py`/`23_market_risk.py` all prefer `TICKER_MAP` first and fall back to the DB-resolved ticker only for a company not in it, so this doesn't regress anything today — it's the mechanism a company added after this point will use, and its real coverage should be re-measured (not assumed fixed) before ever relying on it alone
+- `27_onepager.py`'s single-page layout was tuned empirically against the current 11 companies' actual data (verified live: all 11 render as exactly one page, locked in by a regression test) — the font sizes/spacing are not the result of a general "shrink to fit" algorithm, so a future company combining an unusually long list of forensics flags with a matching precedent transaction could in principle still overflow to a second page. Worth re-checking (the same live test would catch it) if a company like that gets added, not assumed safe by extrapolation
 
 ## Roadmap
 

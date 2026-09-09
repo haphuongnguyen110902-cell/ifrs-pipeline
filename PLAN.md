@@ -705,7 +705,7 @@ an already-known one:**
 
 ---
 
-# WP6 — Phase 10: the one-pager
+# WP6 — Phase 10: the one-pager ✅ DONE
 
 **Objective:** one polished PDF or PPTX per company — comps table, DCF range,
 key ratios, forensics flags — generated from data already in the DB.
@@ -728,6 +728,85 @@ someone who does not know the project. If they cannot say what the company is
 worth and why, it is not finished.
 
 **Risk:** low. **Effort:** 1.5–2 sessions.
+
+**What actually happened, three real bugs found by actually reading the
+rendered PDF, not by reading the code:**
+
+- `scripts/27_onepager.py` fetches everything already persisted (`ratio`,
+  `valuation`, `dcf_valuation`, `credit_profile`, `forensics_flag`,
+  `precedent_transaction`) - no recomputation, matching this WP's own "nothing
+  here is new analysis" framing. `reportlab` (Platypus) added to
+  `requirements.txt`, chosen per the `pdf` skill's own guidance for
+  building a structured document, read *before* writing any layout code
+  per this WP's own instruction.
+- **The actual deliverable is `build_reconciliation()`**: DCF Enterprise
+  Value, peer-implied EV (from trading comps), and the company's actual
+  market EV, always shown together with a one-sentence verdict on
+  whether they converge - never one number with the other two hidden.
+  Rendered as a real "football field" bar chart (reportlab shapes, no
+  extra dependency), not just a table of three numbers, so the spread is
+  seen, not just read.
+- **Bug 1, found by looking at the first rendered PDF:** the page was
+  mostly blank below ~40% down an A4 sheet - Platypus doesn't auto-size
+  the page to content, and 8.5pt/tightly-spaced tables simply didn't
+  fill it. Fixed with larger type (10-13pt), more generous section
+  spacing, and the bar chart itself (real content, not padding).
+- **Bug 2, found immediately after fixing bug 1:** the fix overcorrected
+  - L'Oreal and EssilorLuxottica (the only 2 companies with a matching
+    precedent transaction) now overflowed to a near-empty second page,
+  and a naive first fix left the *section heading* orphaned alone at the
+  page-1/page-2 boundary with its content on page 2. Fixed by trimming
+  padding/spacing precisely (not guessing at a page-size change) and
+  wrapping the precedent heading + its paragraph in `KeepTogether` so
+  they move as one unit if they ever don't fit - verified by regenerating
+  and reading the actual PDF again, not assumed fixed from the diff.
+- **Bug 3, a real crash:** `decimal.Decimal` values from psycopg2/
+  SQLAlchemy don't mix with the `float` math reportlab's own units (`mm`)
+  and the bar chart use - `Decimal * float` raised `TypeError`. Fixed by
+  coercing every numeric to `float()` once, in `build_reconciliation()`,
+  rather than at each later use site.
+- **Bug 4, a second real crash found generating all 11 (not just the one
+  spot-checked first):** one company's `implied_ev_from_peers` came back
+  as a genuine float `NaN` (not SQL `NULL`), which `is not None` alone
+  doesn't catch - it passed straight through into the bar chart and
+  crashed reportlab's own PDF renderer (`cannot convert float NaN to
+  integer`), deep enough in a third-party library that the real cause
+  wasn't obvious from the traceback alone. Fixed with a `_real()` helper
+  (`v is not None and not pd.isna(v)`) used everywhere a DB value is
+  checked for presence in this script.
+- **Bug 5, a data-integrity bug, not a crash:** "D&A fallback" rendered
+  as "D&A;" - reportlab's `Paragraph` parses its content as restricted
+  XML, and an un-escaped `&` in dynamic text gets read as the start of a
+  malformed entity, silently garbling real analytical content rather
+  than raising an error. Fixed by escaping every dynamic string
+  (`xml.sax.saxutils.escape`) at the point it enters a `Paragraph` -
+  table cells via a shared `_cell()` helper, plus each forensics-flag/
+  precedent field individually (not the whole markup string, which
+  would have also escaped intentional `<b>` tags).
+- A plain-string `Table` cell doesn't wrap in reportlab - only a
+  `Paragraph` flowable does. Found live: "Sector peer median EV/EBITDA"
+  ran straight into its value with no visible gap (the label overflowing
+  the column, not wrapping). Fixed generally, not just for that one
+  label, by wrapping every table cell in a `Paragraph`.
+- Verified live for all 11 companies, not just spot-checked: every
+  one-pager is exactly one page (locked in by a test that actually
+  builds all 11 and checks `len(reader.pages) == 1` via `pypdf`), Shell/
+  Amplifon correctly show "not available" rather than a fabricated DCF
+  number, and both precedent-matched companies (L'Oreal, EssilorLuxottica)
+  render correctly with the reconciliation, comps, credit, forensics, and
+  precedent sections all present and readable.
+- 9 new tests in `tests/test_onepager.py`: pure-function tests for the
+  NaN-guard and reconciliation logic (synthetic data, run in every CI
+  build), plus a live, DB-guarded end-to-end test that regenerates all 11
+  one-pagers and asserts each is a single page with no leaked XML
+  entities - exactly the two bugs above, locked in so a future change
+  can't reintroduce them silently. Full suite: 192/192 passing.
+
+**Not done here, noted as a real, disclosed limitation:** the layout was
+tuned empirically against the current 11 companies' actual data, not by a
+general "shrink to fit" algorithm - see README's Known limitations for what
+that means for a future company with an unusually long flag list plus a
+precedent match.
 
 ---
 
@@ -817,7 +896,7 @@ WP2 forensics persist   1.0           ← DONE
 WP3 company columns     1.0           ← DONE
 WP4 entity resolution   2.0           ← DONE (7/11 real coverage, TICKER_MAP kept)
 WP5 thin screener       1.0           ← DONE
-WP6 Phase 10 one-pager  2.0           ← priority #1 payoff, portfolio artifact
+WP6 Phase 10 one-pager  2.0           ← DONE - priority #1 payoff, portfolio artifact
 --- GATE: measure 3 numbers ---
 WP7 breadth staged      3.0+
 WP8 sector comparison   2.0
@@ -827,6 +906,9 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: WP6** (WP0-WP5 are done — see above; WP4's
-`TICKER_MAP` retirement is incomplete at 7/11 real coverage and should be
-revisited before/alongside WP7, not blocking WP6).
+**Immediate next action: the GATE, then WP7** (WP0-WP6 are all done — see
+above; WP4's `TICKER_MAP` retirement is incomplete at 7/11 real coverage and
+should be revisited before/alongside WP7's staged breadth, not blocking
+anything that came before it). WP6 (the one-pager) was the last item that
+serves the Contrôleur de Gestion job search directly - everything from here
+is the Asset Management / breadth bet, per §6's own strategic-honesty note.
