@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ifrs-dashboard",
+      "runtimeExecutable": ".venv/Scripts/streamlit.exe",
+      "runtimeArgs": ["run", "webapp/app.py", "--server.headless", "true"],
+      "port": 8501
+    }
+  ]
+}
