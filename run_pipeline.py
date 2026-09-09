@@ -263,6 +263,19 @@ def main():
         step_ratios()
 
     elif args.mode == "analyze":
+        # step_ratios() added here after a real gap found by hand: this
+        # mode is what pipeline.yml's weekly cron runs, and it used to
+        # skip straight to forensics/forecast/backtest, assuming the
+        # `ratio` table was already fresh. It reads only from fact_value
+        # and writes only to the DB (+ a local Excel side-artifact CI
+        # doesn't need), so it needs no local filing files - identical
+        # constraint to the three steps that were already here. Without
+        # it, any future fix to 11_ratio_engine.py's ratio logic would
+        # silently never reach the live `ratio` table via the automated
+        # weekly run - only a manual `--mode ratios`/`--mode full` would
+        # pick it up, exactly what today's D&A/revenue/gross-profit fixes
+        # required by hand before this was added.
+        step_ratios()
         step_forensics(company=args.company)
         step_forecast(company=args.company)
         step_backtest(company=args.company)
