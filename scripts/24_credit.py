@@ -163,24 +163,36 @@ def ensure_credit_table(engine):
         conn.execute(text(ddl))
 
 
+def _company_id_map(conn) -> dict:
+    """company name -> company_id. See PLAN.md WP1 - credit_profile now
+    has a real company_id FK alongside the legacy `company` TEXT column."""
+    rows = conn.execute(text("SELECT company_id, name FROM company")).fetchall()
+    return {name: cid for cid, name in rows}
+
+
 def save_to_db(engine, df: pd.DataFrame) -> int:
     rows_written = 0
     with engine.begin() as conn:
+        company_ids = _company_id_map(conn)
         for _, r in df.iterrows():
+            company_id = company_ids.get(r["company"])
+            if company_id is None:
+                print(f"  *** no company_id found for '{r['company']}' - skipped (run the loader first)")
+                continue
             conn.execute(text("""
                 INSERT INTO credit_profile
-                    (company, year, net_debt, ebitda, net_debt_ebitda, is_da_fallback,
+                    (company, company_id, year, net_debt, ebitda, net_debt_ebitda, is_da_fallback,
                      band, yoy_change, trend, computed_at)
                 VALUES
-                    (:company, :year, :nd, :ebitda, :nde, :fallback, :band, :yoy, :trend, now())
-                ON CONFLICT (company, year)
-                DO UPDATE SET net_debt = EXCLUDED.net_debt, ebitda = EXCLUDED.ebitda,
+                    (:company, :company_id, :year, :nd, :ebitda, :nde, :fallback, :band, :yoy, :trend, now())
+                ON CONFLICT (company_id, year)
+                DO UPDATE SET company = EXCLUDED.company, net_debt = EXCLUDED.net_debt, ebitda = EXCLUDED.ebitda,
                               net_debt_ebitda = EXCLUDED.net_debt_ebitda,
                               is_da_fallback = EXCLUDED.is_da_fallback,
                               band = EXCLUDED.band, yoy_change = EXCLUDED.yoy_change,
                               trend = EXCLUDED.trend, computed_at = now()
             """), {
-                "company": r["company"], "year": int(r["year"]),
+                "company": r["company"], "company_id": company_id, "year": int(r["year"]),
                 "nd": float(r["net_debt"]), "ebitda": float(r["ebitda"]),
                 "nde": float(r["net_debt_ebitda"]) if pd.notna(r["net_debt_ebitda"]) else None,
                 "fallback": bool(r["is_da_fallback"]), "band": r["band"],

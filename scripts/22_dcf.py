@@ -231,22 +231,33 @@ def ensure_dcf_table(engine):
         conn.execute(text(ddl))
 
 
+def _get_company_id(conn, company: str):
+    """See PLAN.md WP1 - dcf_valuation now has a real company_id FK
+    alongside the legacy `company` TEXT column."""
+    row = conn.execute(text("SELECT company_id FROM company WHERE name = :n"), {"n": company}).fetchone()
+    return row[0] if row else None
+
+
 def save_to_db(engine, company, base_year, wacc_info, dcf_result, equity_value, share_price_implied) -> None:
     with engine.begin() as conn:
+        company_id = _get_company_id(conn, company)
+        if company_id is None:
+            print(f"  *** no company_id found for '{company}' - not saved (run the loader first)")
+            return
         conn.execute(text("""
             INSERT INTO dcf_valuation
-                (company, base_year, wacc, cost_of_equity, after_tax_cost_of_debt,
+                (company, company_id, base_year, wacc, cost_of_equity, after_tax_cost_of_debt,
                  enterprise_value, equity_value, pct_ev_from_terminal, computed_at)
             VALUES
-                (:company, :base_year, :wacc, :coe, :cod, :ev, :eq, :pct, now())
-            ON CONFLICT (company, base_year)
-            DO UPDATE SET wacc = EXCLUDED.wacc, cost_of_equity = EXCLUDED.cost_of_equity,
+                (:company, :company_id, :base_year, :wacc, :coe, :cod, :ev, :eq, :pct, now())
+            ON CONFLICT (company_id, base_year)
+            DO UPDATE SET company = EXCLUDED.company, wacc = EXCLUDED.wacc, cost_of_equity = EXCLUDED.cost_of_equity,
                           after_tax_cost_of_debt = EXCLUDED.after_tax_cost_of_debt,
                           enterprise_value = EXCLUDED.enterprise_value,
                           equity_value = EXCLUDED.equity_value,
                           pct_ev_from_terminal = EXCLUDED.pct_ev_from_terminal, computed_at = now()
         """), {
-            "company": company, "base_year": base_year, "wacc": float(wacc_info["wacc"]),
+            "company": company, "company_id": company_id, "base_year": base_year, "wacc": float(wacc_info["wacc"]),
             "coe": float(wacc_info["cost_of_equity"]), "cod": float(wacc_info["after_tax_cost_of_debt"]),
             "ev": float(dcf_result["enterprise_value"]), "eq": float(equity_value),
             "pct": float(dcf_result["pct_of_ev_from_terminal"]),

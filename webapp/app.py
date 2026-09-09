@@ -85,47 +85,53 @@ def last_updated(_engine):
 # (Phases 4-6), not just the Phase 2 ratio browser this file started as -
 # see this module's own docstring: every phase after Phase 2 was meant to
 # "add its output to" this app rather than stay isolated in Excel/DB, and
-# that hadn't actually happened until now. Each loader is `company` TEXT
-# keyed (these tables key on the company NAME, not company_id, unlike
-# `ratio` - matches how 19_valuation.py/21_three_statement_model.py/
-# 22_dcf.py write them) and returns an EMPTY frame rather than raising
-# when nothing's been computed for that company yet - every render_*
-# below treats empty as "not computed", not an error.
+# that hadn't actually happened until now.
+#
+# company_id-keyed as of PLAN.md WP1 (previously `company` TEXT, matching
+# how 19_valuation.py/21_three_statement_model.py/22_dcf.py/23_market_risk.py/
+# 24_credit.py used to write them - all five now also write company_id
+# alongside the legacy name column). Signature changed from company_name
+# to company_id deliberately, per WP1's own wording, "so a name can no
+# longer be passed by accident" - the same accent-drift/rename failure
+# mode `ratio`'s company_id key was already immune to. Still returns an
+# EMPTY frame rather than raising when nothing's been computed for that
+# company yet - every render_* below treats empty as "not computed", not
+# an error.
 
 @st.cache_data(ttl=3600)
-def load_comps(_engine, company_name: str):
+def load_comps(_engine, company_id: int):
     return pd.read_sql(text(
-        "SELECT * FROM valuation WHERE company = :c ORDER BY year DESC LIMIT 1"
-    ), _engine, params={"c": company_name})
+        "SELECT * FROM valuation WHERE company_id = :cid ORDER BY year DESC LIMIT 1"
+    ), _engine, params={"cid": company_id})
 
 
 @st.cache_data(ttl=3600)
-def load_three_statement(_engine, company_name: str):
+def load_three_statement(_engine, company_id: int):
     return pd.read_sql(text(
-        "SELECT * FROM three_statement_projection WHERE company = :c "
+        "SELECT * FROM three_statement_projection WHERE company_id = :cid "
         "ORDER BY base_year DESC, forecast_year ASC"
-    ), _engine, params={"c": company_name})
+    ), _engine, params={"cid": company_id})
 
 
 @st.cache_data(ttl=3600)
-def load_dcf(_engine, company_name: str):
+def load_dcf(_engine, company_id: int):
     return pd.read_sql(text(
-        "SELECT * FROM dcf_valuation WHERE company = :c ORDER BY base_year DESC LIMIT 1"
-    ), _engine, params={"c": company_name})
+        "SELECT * FROM dcf_valuation WHERE company_id = :cid ORDER BY base_year DESC LIMIT 1"
+    ), _engine, params={"cid": company_id})
 
 
 @st.cache_data(ttl=3600)
-def load_market_risk(_engine, company_name: str):
+def load_market_risk(_engine, company_id: int):
     return pd.read_sql(text(
-        "SELECT * FROM market_risk WHERE company = :c ORDER BY computed_at DESC LIMIT 1"
-    ), _engine, params={"c": company_name})
+        "SELECT * FROM market_risk WHERE company_id = :cid ORDER BY computed_at DESC LIMIT 1"
+    ), _engine, params={"cid": company_id})
 
 
 @st.cache_data(ttl=3600)
-def load_credit_profile(_engine, company_name: str):
+def load_credit_profile(_engine, company_id: int):
     return pd.read_sql(text(
-        "SELECT * FROM credit_profile WHERE company = :c ORDER BY year ASC"
-    ), _engine, params={"c": company_name})
+        "SELECT * FROM credit_profile WHERE company_id = :cid ORDER BY year ASC"
+    ), _engine, params={"cid": company_id})
 
 
 @st.cache_data(ttl=3600)
@@ -504,19 +510,19 @@ with tab_forensics:
     render_forensics(engine, selected_name)
 
 with tab_comps:
-    render_comps(load_comps(engine, selected_name))
+    render_comps(load_comps(engine, int(selected_row["company_id"])))
 
 with tab_3stmt:
-    render_three_statement(load_three_statement(engine, selected_name))
+    render_three_statement(load_three_statement(engine, int(selected_row["company_id"])))
 
 with tab_dcf:
-    render_dcf(load_dcf(engine, selected_name))
+    render_dcf(load_dcf(engine, int(selected_row["company_id"])))
 
 with tab_market_risk:
-    render_market_risk(load_market_risk(engine, selected_name))
+    render_market_risk(load_market_risk(engine, int(selected_row["company_id"])))
 
 with tab_credit:
-    render_credit_profile(load_credit_profile(engine, selected_name))
+    render_credit_profile(load_credit_profile(engine, int(selected_row["company_id"])))
 
 with tab_backtest:
     render_backtest(load_backtest(engine, int(selected_row["company_id"])))
