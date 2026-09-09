@@ -182,6 +182,24 @@ One thing explicitly NOT automated (per NOTES.md's original reasoning,
 correct then and still correct now): classification of new extension
 tags. The workflow should surface unmapped concepts and stop, never
 guess - this is the one step needing human judgment.
+
+**A real gap found the hard way, not in this phase's own review but
+during a later sanity check:** `--mode analyze` never actually called
+`step_ratios()` - it went straight to forensics/forecast/backtest,
+silently assuming the `ratio` table was already fresh. `fact_value`
+rarely changes without a new filing, so this went unnoticed for a long
+time - but a CODE fix to `11_ratio_engine.py`'s ratio logic (like the
+D&A/revenue/gross-profit fixes earlier in this same phase's history)
+would never reach the live `ratio` table via the automated weekly run
+either, only via a manual `--mode ratios`/`--mode full`. Confirmed
+concretely: after fixing 4 companies' ratio computation, the live
+dashboard still showed the OLD values until `11_ratio_engine.py` was
+run by hand - `--mode analyze` would have run right past the fix every
+Monday, forever, without ever picking it up. Fixed by adding
+`step_ratios()` as `--mode analyze`'s first step - it only reads
+`fact_value` and writes the DB (+ a local Excel side-artifact CI doesn't
+need), the same "DB connectivity only" constraint the three steps
+already there satisfy.
 **Serves:** both (a live "last updated: [date]" on the public site is a
 concrete, checkable automation claim - not an assertion to take on faith).
 
