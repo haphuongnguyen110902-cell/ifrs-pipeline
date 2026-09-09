@@ -891,6 +891,60 @@ retail/industrials - skip banks/insurers/payment processors until their own
 concepts are mapped), or both. That decision, not the measurement, is the
 next thing to take back to the user before touching WP7 or the live DB.
 
+**✅ FOLLOW-UP (2026-09-10): classification fixed, gate math revisited -
+still pending human confirmation.** Two real course corrections, both
+recorded in git history rather than summarized away:
+
+1. `scripts/28_claude_classify.py` was built exactly as ROADMAP.md's
+   long-deferred item specified - then the user caught, correctly, that
+   calling it requires a billed `ANTHROPIC_API_KEY`, which conflicts with
+   this project's own free-tools principle (the same one SCOPE.md already
+   used to reject paid identifier vendors). The script is kept in the repo
+   as optional infrastructure for a future point where an automated,
+   unattended run at much larger scale might justify the cost, but it was
+   **not run**.
+2. Instead, the actual classification was done directly in the Claude Code
+   session that was already building this feature - zero incremental
+   cost, same underlying judgment. All 827 real review tags (not a sample)
+   were read and classified, written to
+   `data/mappings/CLAUDE_REVIEW_extensions.yaml` with confidence + reasoning
+   per entry, tagged `classification_source: claude-session-suggested`
+   (deliberately not `claude-api-suggested`, so the provenance record
+   itself shows no paid call happened). `13_batch_prep.py` was also run for
+   real (not `--dry-run`) against the sample, adding the 475 legitimately
+   auto-classified standard tags straight to `ifrs_concepts_v0.yaml`
+   (642 → 1190 concepts) - unchanged, always-safe behavior this tool
+   already had.
+
+**Revised classification-coverage number:** 475 deterministic-auto +
+641 Claude-session **high-confidence** proposals = 1116/1302 (85.7%) of
+all new tags found across the 40-company sample - above the gate's own
+~80% bar, versus 36.5% before this pass. Genuine judgment calls were
+involved, not just confirming existing hints - e.g. Thales's and
+Unilever's presentation role titled with a "comprehensive income"/
+"résultat global" keyword turned out to mix real P&L lines with genuine
+OCI lines under one combined statement, and several "CashFlowHedging"-
+named tags turned out to be OCI/equity reserve lines about hedge-
+accounting classification, not the cash flow statement - both are cases
+where a blind keyword match would have been actively wrong, not just low-
+confidence.
+
+**This number is NOT yet a clean gate pass**, for two honest reasons: (a)
+it counts Claude's own "high confidence" self-assessment, not a human's -
+the whole point of writing these to a review file rather than the trusted
+mapping is that a person still has to open
+`CLAUDE_REVIEW_extensions.yaml` and check them, especially the 14 marked
+`low`; (b) it is one 40-company sample from 5 countries, not the ~150-300
+company range WP7 ultimately targets, and the sector-coverage gap this
+pass closed (banks, a payment processor) will recur with every genuinely
+new sector WP7's later stages reach (insurers, real estate/REITs,
+transport - none of which the current 11-company universe or this
+40-company sample fully cover either). **Next step: the user reviews
+`CLAUDE_REVIEW_extensions.yaml` by hand and runs
+`12_apply_review.py` against it** - only after that human sign-off does
+the gate's classification number become a real, verified figure rather
+than an LLM's estimate of its own accuracy.
+
 ---
 
 # WP7 — Breadth, staged
