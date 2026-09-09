@@ -158,6 +158,31 @@ THIN_MARGIN_THRESHOLD = 5.0
 
 # ---------------------------------------------------------------- fetch
 
+_MONTH_NAMES = ["", "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"]
+
+
+def fetch_off_calendar_fye(engine, company_filter=None) -> dict:
+    """{company_name: "Month Day"} for every company whose
+    fiscal_year_end_month isn't 12 - sourced from company.fiscal_year_end_month/day
+    (populated by migration_002_company_metadata.sql from filing.fiscal_year_end,
+    backfilled from companies.yaml where the filing itself didn't have it -
+    see 09_batch_load.py's get_or_create_company()). Replaces the hardcoded
+    pernod_companies list compute_flags() used to carry (PLAN.md WP3c)."""
+    where = "AND name = :company" if company_filter else ""
+    query = f"""
+        SELECT name, fiscal_year_end_month, fiscal_year_end_day FROM company
+        WHERE fiscal_year_end_month IS NOT NULL AND fiscal_year_end_month != 12
+        {where}
+    """
+    params = {"company": company_filter} if company_filter else {}
+    rows = pd.read_sql(text(query), engine, params=params)
+    return {
+        r["name"]: f"{_MONTH_NAMES[int(r['fiscal_year_end_month'])]} {int(r['fiscal_year_end_day'])}"
+        for _, r in rows.iterrows()
+    }
+
+
 def fetch_ratios(engine, company_filter=None) -> pd.DataFrame:
     """Fetch computed ratios from the DB ratio table."""
     where = "WHERE c.name = :company" if company_filter else ""
@@ -203,12 +228,27 @@ def safe_year_col(co: pd.DataFrame, year: int, col: str) -> pd.Series:
     return co[co["year"] == year][col]
 
 
-def compute_flags(wide: pd.DataFrame) -> pd.DataFrame:
+def compute_flags(wide: pd.DataFrame, off_calendar_fye: dict = None) -> pd.DataFrame:
     """
     Scan the ratio table for each company/year and produce a flags table.
     Returns one row per flag triggered, with company, year, flag_id, value,
     severity, and human-readable description.
+
+    off_calendar_fye: optional {company_name: "Month Day"} for companies
+    whose fiscal year doesn't end December 31 (e.g. {"Pernod Ricard":
+    "June 30"}) - see fetch_off_calendar_fye() below, sourced from
+    company.fiscal_year_end_month/day (PLAN.md WP3c). Replaces what used
+    to be a hardcoded `pernod_companies = ["Pernod Ricard"]` list - this
+    function no longer has ANY company name baked in; it fires the same
+    PERNOD_FYE_WARNING flag_id (kept as-is rather than renamed, matching
+    this project's own established precedent of keeping a
+    now-not-quite-accurate name over churning every downstream reader -
+    see net_debt_ebitda_proxy in 11_ratio_engine.py/24_credit.py) for
+    WHICHEVER company the caller says is off-calendar. Defaults to None
+    (no flags of this kind) so every existing caller/test that doesn't
+    pass it keeps working unchanged.
     """
+    off_calendar_fye = off_calendar_fye or {}
     rows = []
 
     for company in wide["company"].unique():
@@ -336,10 +376,9 @@ def compute_flags(wide: pd.DataFrame) -> pd.DataFrame:
             # use YoY change in gross_margin as a signal instead
             pass
 
-    # --- Pernod Ricard FYE warning (company-level, not per-year) ---
-    pernod_companies = ["Pernod Ricard"]
+    # --- off-calendar FYE warning (company-level, not per-year) ---
     for company in wide["company"].unique():
-        if company in pernod_companies:
+        if company in off_calendar_fye:
             years = sorted(wide[wide["company"] == company]["year"].unique())
             if years:
                 rows.append({
@@ -349,7 +388,7 @@ def compute_flags(wide: pd.DataFrame) -> pd.DataFrame:
                     "label": FLAGS["PERNOD_FYE_WARNING"]["label"],
                     "severity": FLAGS["PERNOD_FYE_WARNING"]["severity"],
                     "value": None,
-                    "detail": "Fiscal year ends June 30 — not December 31",
+                    "detail": f"Fiscal year ends {off_calendar_fye[company]} — not December 31",
                     "what_to_check": FLAGS["PERNOD_FYE_WARNING"]["what_to_check"],
                 })
 
@@ -568,7 +607,8 @@ if __name__ == "__main__":
           f"{wide['year'].nunique()} years...")
 
     # compute flags from ratios
-    flags = compute_flags(wide)
+    off_calendar_fye = fetch_off_calendar_fye(engine, company_filter=args.company)
+    flags = compute_flags(wide, off_calendar_fye)
 
     # add revenue growth flags from raw facts
     rev_growth = fetch_revenue_growth(engine, company_filter=args.company)

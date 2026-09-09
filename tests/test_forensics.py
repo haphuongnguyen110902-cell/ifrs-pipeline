@@ -65,6 +65,45 @@ def test_thin_denominator_does_not_false_positive_on_normal_data(forensics):
     assert (flags["flag_id"] == "THIN_DENOMINATOR").sum() == 0
 
 
+class TestOffCalendarFyeIsDataDrivenNotHardcoded:
+    """PLAN.md WP3c: compute_flags() used to carry a literal
+    `pernod_companies = ["Pernod Ricard"]` list. It now takes an
+    off_calendar_fye dict instead, sourced from company.fiscal_year_end_
+    month/day - these tests prove the function itself no longer has ANY
+    company name baked in, using a company that is deliberately NOT
+    Pernod Ricard."""
+
+    def test_fires_for_whichever_company_the_caller_names_off_calendar(self, forensics):
+        wide = pd.DataFrame([
+            {"company": "SomeOtherCo", "year": 2024, "operating_margin": 15.0,
+             "cash_conversion": 100.0, "net_debt_ebitda_proxy": 1.0, "tax_rate": 25.0},
+        ])
+        flags = forensics.compute_flags(wide, off_calendar_fye={"SomeOtherCo": "March 31"})
+        fye = flags[flags["flag_id"] == "PERNOD_FYE_WARNING"]
+        assert len(fye) == 1
+        assert fye.iloc[0]["company"] == "SomeOtherCo"
+        assert "March 31" in fye.iloc[0]["detail"]
+
+    def test_pernod_ricard_by_name_alone_triggers_nothing_without_the_dict_entry(self, forensics):
+        """The exact hardcode this replaced would have fired on the name
+        alone - confirms that's gone: naming a company "Pernod Ricard" in
+        the data is no longer sufficient by itself."""
+        wide = pd.DataFrame([
+            {"company": "Pernod Ricard", "year": 2024, "operating_margin": 15.0,
+             "cash_conversion": 100.0, "net_debt_ebitda_proxy": 1.0, "tax_rate": 25.0},
+        ])
+        flags = forensics.compute_flags(wide)  # no off_calendar_fye passed
+        assert (flags["flag_id"] == "PERNOD_FYE_WARNING").sum() == 0 if not flags.empty else True
+
+    def test_a_company_not_in_the_dict_gets_no_warning(self, forensics):
+        wide = pd.DataFrame([
+            {"company": "CalendarYearCo", "year": 2024, "operating_margin": 15.0,
+             "cash_conversion": 100.0, "net_debt_ebitda_proxy": 1.0, "tax_rate": 25.0},
+        ])
+        flags = forensics.compute_flags(wide, off_calendar_fye={"SomeOtherCo": "March 31"})
+        assert (flags["flag_id"] == "PERNOD_FYE_WARNING").sum() == 0 if not flags.empty else True
+
+
 class TestCashConversionDropDowngrade:
     """A YoY cash-conversion drop that lands on (or comes from) a
     thin-denominator year overstates real deterioration - severity must
@@ -204,7 +243,8 @@ class TestPersistence:
         forensics.ensure_forensics_table(db_engine)
         ratio_df = forensics.fetch_ratios(db_engine)
         wide = forensics.pivot_ratios(ratio_df)
-        flags = forensics.compute_flags(wide)
+        off_calendar_fye = forensics.fetch_off_calendar_fye(db_engine)
+        flags = forensics.compute_flags(wide, off_calendar_fye)
         rev_growth = forensics.fetch_revenue_growth(db_engine)
         if not rev_growth.empty:
             flags = forensics.add_revenue_flags(flags, rev_growth)
@@ -256,3 +296,15 @@ class TestPersistence:
         }])
         n_saved = forensics.save_to_db(db_engine, fake_flags)
         assert n_saved == 0
+
+    def test_fetch_off_calendar_fye_finds_the_real_pernod_ricard_case(self, forensics, db_engine):
+        """Live check that migration_002 + 09_batch_load.py's companies.yaml
+        backfill actually left Pernod Ricard's company.fiscal_year_end_month/
+        day populated - if this ever regresses to NULL, the PERNOD_FYE_WARNING
+        flag silently stops firing for the one real off-calendar company in
+        the universe, with no error to notice it by."""
+        result = forensics.fetch_off_calendar_fye(db_engine)
+        assert result.get("Pernod Ricard") == "June 30", (
+            f"expected Pernod Ricard's fiscal_year_end_month/day to resolve to "
+            f"'June 30', got {result.get('Pernod Ricard')!r} - full result: {result}"
+        )

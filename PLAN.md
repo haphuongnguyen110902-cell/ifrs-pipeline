@@ -303,7 +303,7 @@ flag for one release.
 
 ---
 
-# WP3 — Extend the `company` table (one migration, three additions)
+# WP3 — Extend the `company` table (one migration, three additions) ✅ DONE
 
 **Objective:** move the last hardcoded per-company constants into the database.
 
@@ -364,6 +364,94 @@ rule mapping a filing to a calendar year, not per-company notes.
 company name. Grep-based, crude, effective.
 
 **Risk:** low (purely additive). **Effort:** 1 session.
+
+**What actually happened, all three sub-parts, plus two real bugs found:**
+
+**3a (sector_std) — verified live, not assumed:** queried yfinance's own
+`sector` field for all 11 `TICKER_MAP` tickers before writing any code.
+Real result: **Consumer Defensive (5: L'Oreal, Danone, Pernod Ricard,
+Essity, Puig Brands), Consumer Cyclical (3: LVMH, Kering, Moncler),
+Healthcare (2: EssilorLuxottica, Amplifon), Energy (1: Shell, correctly
+alone)** — three real peer groups where the old 9-distinct-free-text-strings
+scheme had zero. `company.sector` is untouched (still the detail text
+shown in the company header/sidebar) — deliberately did NOT do the
+literal "rename to `sector_detail`" this WP originally specified, per
+ground rule #4 (additive over destructive): renaming would have broken
+every existing reader of `company.sector` (the sidebar filter,
+`09_batch_load.py`, `load_historical.py`) with no transition period.
+Added `sector_std`/`sector_source` alongside instead, populated via a new
+`populate_sector_std(engine, force=False)` in `19_valuation.py` (using
+`TICKER_MAP` for the ticker — the same pre-WP4 source this script already
+depends on). `19_valuation.py`'s `comps["sector"]` (and therefore
+`valuation.sector`, `ev_ebitda_sector_median`, `n_peers_in_sector`,
+`implied_ev_from_peers`, `premium_vs_peers_pct`) now derive from
+`sector_std`, not the free text — verified live: L'Oreal's Trading Comps
+tab now reads *"Sector peer comparison (5 peers in Consumer Defensive):
+peer median EV/EBITDA 11.6x implies an EV of €95.5bn — this company trades
+at a +113% premium to that"* where it used to say *"Fewer than 2 sector
+peers."* 3 new tests in `tests/test_valuation.py` (new file — this script
+had none before).
+
+**3b (ticker/ISIN/LEI columns)** — added exactly as specified
+(`ticker`, `ticker_exchange`, `isin`, `ticker_source`), empty, for WP4 to
+populate. `lei` confirmed already present (`sql/schema.sql:6`).
+
+**3c (fiscal_year_end) — two real bugs found running this, not assumed:**
+1. Confirmed via a live query before writing any migration: `filing.
+   fiscal_year_end` already exists (as this WP's own correction already
+   noted) — but the backfill query
+   (`sql/migration_002_company_metadata.sql`) that derives
+   `company.fiscal_year_end_month/day` from it came back **NULL for
+   Pernod Ricard specifically**, the one company this whole sub-part
+   exists for. Traced to the real root cause: `load_historical.py`
+   deliberately excludes Pernod Ricard (its own comment says so — the FYE
+   mismatch this WP is trying to fix), and `09_batch_load.py`'s
+   `get_or_create_filing()` never sets `filing.fiscal_year_end` or
+   `filing_date` at all on the single-filing path — every OTHER company
+   happens to have a `load_historical.py`-loaded row to draw a real value
+   from, Pernod Ricard doesn't.
+2. Fixed via the exact same "data existed in `companies.yaml`, never
+   wired through" pattern as V2.6's sector/country fix — `companies.yaml`
+   already had `fiscal_year_end: "June 30"` for Pernod Ricard since V0,
+   documentation only, nothing ever read it. `09_batch_load.py`'s
+   `get_or_create_company()` now accepts a `fiscal_year_end` string,
+   parses it (`_parse_fiscal_year_end()`), and backfills
+   `company.fiscal_year_end_month/day` via the same COALESCE-never-
+   overwrite-a-real-value pattern already used for sector/country.
+   Applied live (without needing to re-run the full, zip-dependent batch
+   load): `company.fiscal_year_end_month/day` for Pernod Ricard is now
+   `(6, 30)`, correctly derived from the human-verified source.
+3. `15_forensics.py`'s `pernod_companies = ["Pernod Ricard"]` hardcode
+   (deferred from WP2) is now closed: `compute_flags()` takes an
+   `off_calendar_fye: dict` parameter instead, and a new
+   `fetch_off_calendar_fye(engine)` builds it from
+   `company.fiscal_year_end_month/day`. The function has zero company
+   names baked in now — verified with tests that fire the flag for a
+   company deliberately named something other than "Pernod Ricard", and
+   confirm naming a company "Pernod Ricard" in test data alone (with no
+   dict entry) triggers nothing. Live run still produces the identical
+   62-flag count (26/12/24), with `PERNOD_FYE_WARNING` now correctly
+   generated from data rather than a hardcoded name match.
+4. **Deviated from "grep-based, crude, effective" verification** in favor
+   of the functional genericity tests described above — a literal
+   "no script contains the string 'Pernod Ricard'" grep would also flag
+   `TICKER_MAP`/`download_historical.py`'s per-company config dicts
+   (explicitly WP4's job to replace, not this WP's) and plain comments,
+   producing false failures unrelated to the actual hardcode this WP
+   closes.
+
+**Baseline regression note:** re-running `19_valuation.py` legitimately
+changed `valuation.market_cap_eur` (live market data moved since WP0's
+snapshot) and every peer-comparison column (the intended effect of 3a) —
+`tests/baseline/valuation.csv` was regenerated to reflect this; the other
+four tables were untouched and still matched their original snapshot
+unchanged.
+
+Full suite: 167/167 passing — 155 after WP2, +5 in `test_batch_load.py`
+(3 `_parse_fiscal_year_end` cases + 2 `get_or_create_company` FYE-backfill
+cases), +4 in `test_forensics.py` (3 off-calendar-fye genericity tests +
+1 live check that Pernod Ricard actually resolves), +3 in the new
+`test_valuation.py` = 167.
 
 ---
 
@@ -559,7 +647,7 @@ This is the Asset Management deliverable. Do not build it on 11 companies in
 WP0 safety net          0.5 session   ← DONE
 WP1 company_id          1.5           ← DONE
 WP2 forensics persist   1.0           ← DONE
-WP3 company columns     1.0
+WP3 company columns     1.0           ← DONE
 WP4 entity resolution   2.0           ← the real wall before breadth
 WP5 thin screener       1.0
 WP6 Phase 10 one-pager  2.0           ← priority #1 payoff, portfolio artifact
@@ -572,4 +660,4 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: WP3** (WP0, WP1 and WP2 are done — see above).
+**Immediate next action: WP4** (WP0, WP1, WP2 and WP3 are done — see above).
