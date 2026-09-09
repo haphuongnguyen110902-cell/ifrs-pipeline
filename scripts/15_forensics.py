@@ -26,8 +26,23 @@ Flags computed:
 Output:
   - Terminal: summary table of all flags
   - Excel: data/raw/forensics_report.xlsx with detail + flag explanation
-  (no DB table - flags are recomputed from the `ratio` table each run,
-  cheap enough at this dataset size that persisting a copy isn't needed)
+  - DB: forensics_flag table (see sql/schema_forensics.sql), one row per
+    flag actually triggered. Added in PLAN.md WP2 - flags used to be
+    recomputed from the `ratio` table on every run and never persisted
+    ("cheap enough at this dataset size" was true, but it coupled
+    webapp/app.py to importlib-loading this script per page render, and
+    made a screener query like "every company with >= 2 HIGH flags"
+    impossible with nothing stored).
+
+    save_to_db() DELETES the existing rows for whichever companies are in
+    scope for this run before inserting the freshly computed set, rather
+    than upserting - unlike a ratio value that persists across runs
+    unless replaced, a forensics flag can legitimately stop triggering
+    (e.g. a ratio-engine bugfix corrects the underlying number), and an
+    upsert-only write would leave that now-wrong flag sitting in the
+    table forever with nothing to overwrite it. Delete-then-insert scoped
+    to the run's own companies means a `--company` filtered run never
+    touches other companies' rows.
 
 Usage:
     python scripts/15_forensics.py
@@ -43,6 +58,8 @@ from pathlib import Path
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+
+FORENSICS_SCHEMA = Path(__file__).parent.parent / "sql" / "schema_forensics.sql"
 
 
 # ---------------------------------------------------------------- flag definitions
@@ -403,6 +420,70 @@ def add_revenue_flags(flags: pd.DataFrame, rev_growth: pd.DataFrame) -> pd.DataF
     return flags
 
 
+# ---------------------------------------------------------------- persistence
+
+def ensure_forensics_table(engine):
+    ddl = FORENSICS_SCHEMA.read_text(encoding="utf-8")
+    with engine.begin() as conn:
+        conn.execute(text(ddl))
+
+
+def _company_id_map(conn) -> dict:
+    """company name -> company_id. forensics_flag was born with a real
+    company_id FK (see sql/schema_forensics.sql) - no legacy TEXT column
+    to carry forward here, unlike the five WP1-migrated tables."""
+    rows = conn.execute(text("SELECT company_id, name FROM company")).fetchall()
+    return {name: cid for cid, name in rows}
+
+
+def save_to_db(engine, flags: pd.DataFrame) -> int:
+    """Delete-then-insert, scoped to the companies present in `flags` -
+    see this module's docstring for why an upsert alone isn't enough (a
+    flag that stops triggering needs to actually disappear, not just
+    never get updated)."""
+    if flags.empty:
+        return 0
+
+    with engine.begin() as conn:
+        company_ids = _company_id_map(conn)
+
+        resolved_ids = []
+        for company in flags["company"].unique():
+            company_id = company_ids.get(company)
+            if company_id is None:
+                print(f"  *** no company_id found for '{company}' - its flags were not saved (run the loader first)")
+                continue
+            resolved_ids.append(company_id)
+
+        if not resolved_ids:
+            return 0
+
+        conn.execute(
+            text("DELETE FROM forensics_flag WHERE company_id = ANY(:ids)"),
+            {"ids": resolved_ids},
+        )
+
+        rows_written = 0
+        for _, r in flags.iterrows():
+            company_id = company_ids.get(r["company"])
+            if company_id is None:
+                continue  # already warned above
+            conn.execute(text("""
+                INSERT INTO forensics_flag
+                    (company_id, year, flag_id, label, severity, value, detail, what_to_check, computed_at)
+                VALUES
+                    (:company_id, :year, :flag_id, :label, :severity, :value, :detail, :what_to_check, now())
+            """), {
+                "company_id": company_id, "year": int(r["year"]), "flag_id": r["flag_id"],
+                "label": r["label"], "severity": r["severity"],
+                "value": float(r["value"]) if pd.notna(r.get("value")) else None,
+                "detail": r["detail"], "what_to_check": r["what_to_check"],
+            })
+            rows_written += 1
+
+    return rows_written
+
+
 # ---------------------------------------------------------------- output
 
 SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
@@ -474,6 +555,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     engine = create_engine(db_url)
+    ensure_forensics_table(engine)
 
     print("Fetching ratios from database...")
     ratio_df = fetch_ratios(engine, company_filter=args.company)
@@ -498,6 +580,9 @@ if __name__ == "__main__":
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     save_excel(flags, args.out)
+
+    n_saved = save_to_db(engine, flags)
+    print(f"\nSaved {n_saved} flags to forensics_flag table.")
 
     # summary counts
     print(f"\n{'─'*40}")

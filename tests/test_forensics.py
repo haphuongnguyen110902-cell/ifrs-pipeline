@@ -7,9 +7,22 @@ Losing any of these silently (e.g. a future refactor that drops the
 severity-downgrade logic) would mean a real earnings-quality signal gets
 mis-reported as more (or less) severe than it actually is - not a
 cosmetic regression.
+
+The TestPersistence class at the end is a deliberate, narrow exception
+to this file otherwise being fully DB-free (see PLAN.md WP2 and
+tests/test_baseline_regression.py's docstring for the same pattern) -
+it needs a live DATABASE_URL to mean anything, so it's skipped, not
+failed, when one isn't set.
 """
+import os
+
 import pandas as pd
 import pytest
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, text
+
+load_dotenv()
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
 @pytest.fixture(scope="module")
@@ -166,3 +179,80 @@ class TestHighLeverageDowngrade:
         lev = flags[flags["flag_id"] == "HIGH_LEVERAGE"]
         assert len(lev) == 1
         assert lev.iloc[0]["severity"] == "high"
+
+
+@pytest.fixture(scope="module")
+def db_engine():
+    return create_engine(DATABASE_URL) if DATABASE_URL else None
+
+
+@pytest.mark.skipif(not DATABASE_URL, reason="needs a live DATABASE_URL - see module docstring")
+class TestPersistence:
+    """save_to_db() (PLAN.md WP2) against the live DB - table creation,
+    row counts, the delete-then-insert-not-upsert behavior, and the
+    skip-with-a-warning path for an unresolvable company name."""
+
+    def test_ensure_forensics_table_is_idempotent(self, forensics, db_engine):
+        forensics.ensure_forensics_table(db_engine)
+        forensics.ensure_forensics_table(db_engine)  # must not raise the second time
+
+    def test_save_to_db_matches_the_documented_flag_count(self, forensics, db_engine):
+        """README documents 62 flags (26 high / 12 medium / 24 low) across
+        the 11-company universe - the same number this test locks in, so a
+        future ratio-engine change that silently shifts flag counts is
+        caught here rather than only noticed by re-reading the README."""
+        forensics.ensure_forensics_table(db_engine)
+        ratio_df = forensics.fetch_ratios(db_engine)
+        wide = forensics.pivot_ratios(ratio_df)
+        flags = forensics.compute_flags(wide)
+        rev_growth = forensics.fetch_revenue_growth(db_engine)
+        if not rev_growth.empty:
+            flags = forensics.add_revenue_flags(flags, rev_growth)
+
+        n_saved = forensics.save_to_db(db_engine, flags)
+        assert n_saved == len(flags)
+
+        with db_engine.connect() as conn:
+            total = conn.execute(text("SELECT COUNT(*) FROM forensics_flag")).scalar()
+            by_severity = dict(conn.execute(text(
+                "SELECT severity, COUNT(*) FROM forensics_flag GROUP BY severity"
+            )).fetchall())
+            null_company_id = conn.execute(text(
+                "SELECT COUNT(*) FROM forensics_flag WHERE company_id IS NULL"
+            )).scalar()
+
+        assert total == 62, f"expected 62 flags (see README), got {total}"
+        assert by_severity == {"high": 26, "medium": 12, "low": 24}
+        assert null_company_id == 0
+
+    def test_rerunning_save_to_db_is_idempotent_not_additive(self, forensics, db_engine):
+        """Delete-then-insert, not upsert (see save_to_db's docstring) -
+        running it twice must leave the SAME row count, not double it."""
+        ratio_df = forensics.fetch_ratios(db_engine)
+        wide = forensics.pivot_ratios(ratio_df)
+        flags = forensics.compute_flags(wide)
+
+        forensics.save_to_db(db_engine, flags)
+        with db_engine.connect() as conn:
+            first_count = conn.execute(text("SELECT COUNT(*) FROM forensics_flag")).scalar()
+
+        forensics.save_to_db(db_engine, flags)
+        with db_engine.connect() as conn:
+            second_count = conn.execute(text("SELECT COUNT(*) FROM forensics_flag")).scalar()
+
+        assert first_count == second_count
+
+    def test_unresolvable_company_name_is_skipped_not_written_as_null(self, forensics, db_engine):
+        """A flag for a company with no matching company.name row must be
+        silently dropped with a warning (see save_to_db's docstring),
+        never written with a NULL company_id - the table's own NOT NULL
+        constraint would reject it anyway, but the function should never
+        attempt to."""
+        fake_flags = pd.DataFrame([{
+            "company": "Not A Real Company In The DB",
+            "year": 2024, "flag_id": "TAX_RATE_ANOMALY", "label": "Tax Rate Anomaly",
+            "severity": "medium", "value": 5.0, "detail": "test row",
+            "what_to_check": "n/a",
+        }])
+        n_saved = forensics.save_to_db(db_engine, fake_flags)
+        assert n_saved == 0

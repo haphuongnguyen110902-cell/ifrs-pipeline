@@ -198,7 +198,7 @@ null-guard. **Effort:** 1–1.5 sessions.
 
 ---
 
-# WP2 — Persist forensics flags
+# WP2 — Persist forensics flags ✅ DONE
 
 **Objective:** `15_forensics.py` writes to a `forensics_flag` table.
 
@@ -250,6 +250,56 @@ flag for one release.
 **Risk:** low. **Effort:** 0.5–1 session.
 
 **Unblocks:** the screener.
+
+**What actually happened:**
+- `sql/schema_forensics.sql` created with exactly the row shape specified
+  above, born with a real `company_id` FK from the start — no legacy TEXT
+  column to carry forward, since this table postdates WP1.
+- `save_to_db()` does a **delete-then-insert scoped to the companies in
+  the current run**, not an upsert — a deliberate design decision beyond
+  what this WP originally specified: a forensics flag can legitimately
+  *stop* triggering (e.g. a future ratio-engine fix corrects an input),
+  and an upsert alone would leave that now-wrong flag sitting in the
+  table forever with no incoming row to overwrite it. Verified this is
+  the actual behavior with a dedicated test
+  (`test_rerunning_save_to_db_is_idempotent_not_additive`).
+- `webapp/app.py`'s `render_forensics()` now takes a pre-fetched
+  DataFrame from a new `load_forensics(engine, company_id)` loader (same
+  `company_id`-keyed pattern WP1 established for the other five tabs)
+  instead of `importlib`-loading `15_forensics.py` and recomputing —
+  the dynamic import is gone entirely, as specified.
+- **The `pernod_companies = ["Pernod Ricard"]` hardcode fix from this
+  WP's original scope was deliberately NOT done here.** It depends on a
+  `company`-level fiscal-year-end field that doesn't exist yet — only
+  `filing.fiscal_year_end` does, per-filing — and that field is WP3c's
+  job, not WP2's. Fixing it now would mean guessing at WP3c's eventual
+  column name/shape. Left as-is, still flagged as a known landmine for
+  WP3c to actually close.
+- **Real, pre-existing bug found while verifying, unrelated to this WP's
+  scope:** running `python scripts/15_forensics.py` normally on Windows
+  crashes with `UnicodeEncodeError` — the emoji in `print_summary()`
+  can't encode to the default `cp1252` console codepage, and the crash
+  happens *before* `save_to_db()` ever runs. Verified with
+  `PYTHONIOENCODING=utf-8` as a workaround (not a fix) to actually get
+  the DB-writing step to execute for verification. Not fixed here — it
+  predates this WP and touches a different part of the script (output
+  formatting, not persistence) — flagged as a separate follow-up task
+  instead, since fixing it here would mix concerns per this plan's own
+  ground rule #1.
+- Verification performed: flag count matched the README's documented 62
+  (26 high / 12 medium / 24 low, 10 companies) exactly on the first live
+  run; re-ran a second time and got the identical count (idempotent, not
+  additive); confirmed zero NULL `company_id` rows. 4 new tests in
+  `tests/test_forensics.py`'s new `TestPersistence` class (DB-skip-guarded,
+  same pattern as `test_baseline_regression.py`): table creation is
+  idempotent, the documented flag count, delete-then-insert (not
+  additive) on a second run, and an unresolvable company name is
+  skipped rather than written with a NULL. Clicked through the live app's
+  Forensics tab for Amplifon (HIGH_LEVERAGE flags) and EssilorLuxottica
+  (confirmed the 2020 THIN_DENOMINATOR + downgraded-to-low 2021
+  CASH_CONVERSION_DROP still render exactly as documented) — both now
+  reading from the persisted table, zero console/server errors. Full
+  suite: 155/155 passing.
 
 ---
 
@@ -508,7 +558,7 @@ This is the Asset Management deliverable. Do not build it on 11 companies in
 ```
 WP0 safety net          0.5 session   ← DONE
 WP1 company_id          1.5           ← DONE
-WP2 forensics persist   1.0
+WP2 forensics persist   1.0           ← DONE
 WP3 company columns     1.0
 WP4 entity resolution   2.0           ← the real wall before breadth
 WP5 thin screener       1.0
@@ -522,4 +572,4 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: WP2** (WP0 and WP1 are done — see above).
+**Immediate next action: WP3** (WP0, WP1 and WP2 are done — see above).
