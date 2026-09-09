@@ -31,6 +31,7 @@ Run locally (from the repo root, so paths match Streamlit Cloud):
     streamlit run webapp/app.py
 """
 import os
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -38,6 +39,8 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
 st.set_page_config(page_title="IFRS Pipeline", page_icon="📊", layout="wide")
+
+SCREENER_SCHEMA = Path(__file__).parent / ".." / "sql" / "schema_screener.sql"
 
 
 @st.cache_resource
@@ -63,6 +66,25 @@ def load_companies(_engine):
     return pd.read_sql(text(
         "SELECT company_id, name, country, sector FROM company ORDER BY name"
     ), _engine)
+
+
+@st.cache_resource
+def ensure_screener_view(_engine):
+    """Creates/replaces company_latest_metrics (PLAN.md WP5, see
+    sql/schema_screener.sql) - idempotent (CREATE OR REPLACE VIEW), and
+    cached with st.cache_resource (not cache_data) since it's a one-time
+    side effect against the DB, not data to reuse across reruns."""
+    ddl = SCREENER_SCHEMA.read_text(encoding="utf-8")
+    with _engine.begin() as conn:
+        conn.execute(text(ddl))
+    return True
+
+
+@st.cache_data(ttl=3600)
+def load_screener(_engine):
+    """One query for the whole universe (PLAN.md WP5's own requirement -
+    the landing page must not do one query per company)."""
+    return pd.read_sql(text("SELECT * FROM company_latest_metrics ORDER BY name"), _engine)
 
 
 @st.cache_data(ttl=3600)
@@ -246,7 +268,7 @@ def render_forensics(flags: pd.DataFrame):
                 st.caption(f"What to check: {f['what_to_check']}")
 
 
-def render_comps(df: pd.DataFrame):
+def render_comps(df: pd.DataFrame, n_companies: int = 11):
     if df.empty:
         st.info("No trading comps computed yet for this company (see 19_valuation.py) - "
                 "usually because a required field (gross margin, DSO/DIO/DPO...) isn't "
@@ -286,7 +308,7 @@ def render_comps(df: pd.DataFrame):
             f"to that."
         )
     else:
-        st.caption(f"Fewer than 2 sector peers in this 11-company universe ({n_peers} found) - "
+        st.caption(f"Fewer than 2 sector peers in this {n_companies}-company universe ({n_peers} found) - "
                    "no meaningful implied valuation from peers (see 19_valuation.py's "
                    "'median of one' guard).")
 
@@ -464,7 +486,10 @@ def render_precedents(df: pd.DataFrame):
 # ---------------------------------------------------------------- app
 
 engine = get_engine()
+ensure_screener_view(engine)
 companies = load_companies(engine)
+screener = load_screener(engine)
+n_companies_total = len(companies)
 
 st.title("📊 IFRS Pipeline")
 st.caption(f"Automated fundamentals for European listed companies · last data refresh: {last_updated(engine)}")
@@ -472,25 +497,66 @@ st.caption(f"Automated fundamentals for European listed companies · last data r
 with st.sidebar:
     st.header("Filter")
     countries = sorted(c for c in companies["country"].dropna().unique())
-    sectors = sorted(s for s in companies["sector"].dropna().unique())
-    selected_countries = st.multiselect("Country", countries, default=countries)
-    selected_sectors = st.multiselect("Sector", sectors, default=sectors)
+    sectors_std = sorted(s for s in screener["sector_std"].dropna().unique())
+    # Default to NOTHING pre-selected (PLAN.md WP5) - at 300 companies,
+    # pre-checking every value produces 30+ sidebar chips on load, which
+    # is noise, not a useful default. An empty selection is treated as
+    # "no filter" below (still shows everything), rather than "filter to
+    # nothing" - a blank landing page on first load would be a worse
+    # default than today's, not a fix.
+    selected_countries = st.multiselect("Country", countries, default=[])
+    selected_sectors_std = st.multiselect("Sector", sectors_std, default=[])
 
-filtered = companies[
-    companies["country"].isin(selected_countries) & companies["sector"].isin(selected_sectors)
-]
 
-st.subheader(f"{len(filtered)} companies")
-st.dataframe(filtered[["name", "country", "sector"]], width="stretch", hide_index=True)
+# NOTE: each mask must stay a boolean Series even when its filter is
+# empty - a real bug caught running this live, not assumed: when BOTH
+# filters are empty (the very first page load, before WP5's new empty-
+# default is touched at all), `True & True` collapses to a plain Python
+# bool rather than a Series, and `screener[True]` raises KeyError(True)
+# (pandas tries to look up a column literally named True). pd.Series(True,
+# index=...) keeps it a real elementwise mask in every case.
+country_mask = (screener["country"].isin(selected_countries) if selected_countries
+                 else pd.Series(True, index=screener.index))
+sector_mask = (screener["sector_std"].isin(selected_sectors_std) if selected_sectors_std
+               else pd.Series(True, index=screener.index))
+screener_filtered = screener[country_mask & sector_mask].reset_index(drop=True)
 
-if filtered.empty:
+st.subheader(f"{len(screener_filtered)} of {n_companies_total} companies")
+
+if screener_filtered.empty:
     st.warning("No companies match the current filter.")
     st.stop()
 
-selected_name = st.selectbox("View company detail", filtered["name"].tolist())
-selected_row = filtered[filtered["name"] == selected_name].iloc[0]
+display_screener = pd.DataFrame({
+    "Company": screener_filtered["name"],
+    "Country": screener_filtered["country"],
+    "Sector": screener_filtered["sector_std"],
+    "Op. Margin": screener_filtered["operating_margin"].map(lambda v: f"{v:.1f}%" if pd.notna(v) else "n/a"),
+    "ROIC": screener_filtered["roic"].map(lambda v: f"{v:.1f}%" if pd.notna(v) else "n/a"),
+    "EV/EBITDA": screener_filtered["ev_ebitda"].map(lambda v: f"{v:.1f}x" if pd.notna(v) else "n/a"),
+    "Net Debt/EBITDA": screener_filtered["net_debt_ebitda"].map(lambda v: f"{v:.1f}x" if pd.notna(v) else "n/a"),
+    "Credit Band": screener_filtered["credit_band"].fillna("n/a"),
+    "High Flags": screener_filtered["high_flag_count"],
+})
 
-st.markdown(f"## {selected_name}")
+# on_select/selection_mode: click a row -> that company's detail loads
+# below (PLAN.md WP5's own "click a row" spec), native to Streamlit
+# 1.35+ (this app runs 1.63) - no custom JS needed.
+selection_event = st.dataframe(
+    display_screener, width="stretch", hide_index=True,
+    on_select="rerun", selection_mode="single-row",
+)
+
+selected_positions = selection_event.selection.rows if selection_event and selection_event.selection else []
+# Default to the first row so the detail view below always shows
+# something useful rather than an empty "click a row" placeholder on
+# first load - same "show something by default" reasoning as the empty
+# filter-selection handling above.
+selected_position = selected_positions[0] if selected_positions else 0
+selected_company_id = int(screener_filtered.iloc[selected_position]["company_id"])
+selected_row = companies[companies["company_id"] == selected_company_id].iloc[0]
+
+st.markdown(f"## {selected_row['name']}")
 st.caption(f"{selected_row['country']} · {selected_row['sector']}")
 
 (tab_ratios, tab_forensics, tab_comps, tab_3stmt, tab_dcf,
@@ -507,7 +573,7 @@ with tab_forensics:
     render_forensics(load_forensics(engine, int(selected_row["company_id"])))
 
 with tab_comps:
-    render_comps(load_comps(engine, int(selected_row["company_id"])))
+    render_comps(load_comps(engine, int(selected_row["company_id"])), n_companies=n_companies_total)
 
 with tab_3stmt:
     render_three_statement(load_three_statement(engine, int(selected_row["company_id"])))
