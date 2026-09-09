@@ -100,7 +100,15 @@ def render_ratio_table(ratios: pd.DataFrame):
     if ratios.empty:
         st.info("No ratios computed yet for this company.")
         return
-    pivot = ratios.pivot_table(index="display_label", columns="year", values="value", aggfunc="first")
+    # dropna=False: pivot_table's default (True) silently DROPS any ratio
+    # that's all-NaN for this company - found by actually clicking through
+    # the live app (Amplifon showed 5 of its 12 ratios with no indication
+    # 7 were missing, not zero). A ratio with no matching XBRL tag for this
+    # company should show as "n/a" (format_ratio_value already handles
+    # pd.isna -> "n/a" per cell below), never disappear silently - see
+    # CLAUDE.md's "prefer an explicit not available state" principle.
+    pivot = ratios.pivot_table(index="display_label", columns="year", values="value",
+                                aggfunc="first", dropna=False)
     pivot = pivot.sort_index(axis=1)
     # object dtype from the start - pivot's columns are float64 (raw
     # numeric ratio values), and pandas rejects assigning formatted
