@@ -176,7 +176,18 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r = wide[["company", "company_id", "year"]].copy()
 
     # --- revenue ---
-    rev = get_col(wide, "revenue").abs()
+    # Found via a real run (22_dcf.py's fetch_base_year failing for 6 of 11
+    # companies with "missing required inputs", most of it unrelated to
+    # D&A): get_col(wide, "revenue") was checking ONLY the bare "revenue"
+    # tag, with no fallback - unlike almost every other concept in this
+    # function. Kering, Pernod Ricard and Amplifon never use that tag at
+    # all, in ANY year - they exclusively tag "revenue_from_contracts_with_
+    # customers" (the IFRS 15-specific contract-revenue concept), which is
+    # the same top-line revenue figure, just a different taxonomy element.
+    # Unlike the D&A tag situation, this isn't ambiguous - it's the
+    # identical concept under IFRS 15's own naming - so it's safe to add
+    # as a fallback rather than leave flagged.
+    rev = get_best(wide, "revenue", "revenue_from_contracts_with_customers").abs()
 
     # --- operating profit (EBIT) ---
     # Priority: standard IFRS tag > L'Oreal extension > Essity > LVMH > Shell
@@ -196,7 +207,21 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["_ebit"] = ebit
 
     # --- gross margin ---
-    gp = get_col(wide, "gross_profit")
+    # Gross Profit = Revenue - Cost of Sales is a textbook accounting
+    # identity, not a judgment call like the D&A tag ambiguity - safe to
+    # derive whichever of the two a company doesn't explicitly tag, AS
+    # LONG AS the other one is actually present (never invents a number
+    # from nothing). Found via a real run: Danone tags cost_of_sales but
+    # never a distinct gross_profit subtotal (its income statement jumps
+    # straight from Cost of Sales to Operating Profit); Essity does the
+    # reverse - tags gross_profit but never cost_of_sales. Companies that
+    # tag NEITHER (Amplifon, Shell - "by nature" P&L presentation, no
+    # COGS/gross-profit split exists in their statements at all) correctly
+    # stay NaN here - there's nothing to derive from.
+    gp_tag = get_col(wide, "gross_profit")
+    cogs_tag = get_col(wide, "cost_of_sales").abs()
+    gp = gp_tag.combine_first(rev - cogs_tag)
+    cogs = cogs_tag.combine_first(rev - gp_tag)
     r["gross_margin"] = safe_div(gp, rev, scale=100)
 
     # --- net margin ---
@@ -220,7 +245,9 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
         "trade_and_other_current_payables",                     # broader fallback
         "other_current_payables",                               # weakest fallback
     )
-    cogs = get_col(wide, "cost_of_sales").abs()
+    # `cogs` already computed above (tagged cost_of_sales, or derived from
+    # Revenue - Gross Profit when a company tags gross_profit but never
+    # cost_of_sales directly - see that section's comment, e.g. Essity).
 
     r["dso"] = safe_div(receivables, rev, scale=365)
     r["dio"] = safe_div(inventory, cogs, scale=365)

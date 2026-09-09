@@ -295,6 +295,49 @@ company's reinvestment roughly offsets depreciation) and both
 A real fix for those 5 companies needs a human to read each filing's
 cash-flow statement and confirm the right tag - not a pattern-matched
 guess.
+
+**Follow-up: the 6-of-11 "missing required inputs" gap flagged above is
+now fixed for 4 of them.** Root causes traced to `11_ratio_engine.py`,
+not `22_dcf.py` itself:
+- `get_col(wide, "revenue")` checked ONLY the bare "revenue" tag, no
+  fallback - unlike almost every other concept in that file. Kering,
+  Pernod Ricard and Amplifon never use it, in ANY year - they exclusively
+  tag "revenue_from_contracts_with_customers" (IFRS 15's contract-revenue
+  concept, the same top-line figure under a different taxonomy element,
+  not an ambiguous case like the D&A tags). Added as a fallback.
+- Gross Profit = Revenue - Cost of Sales is a textbook accounting
+  identity, not a judgment call - safe to derive whichever of the two a
+  company doesn't explicitly tag, as long as the other is present. Danone
+  tags cost_of_sales but never a distinct gross_profit subtotal; Essity
+  does the reverse. Both now derive the missing one instead of going NaN.
+- Fixed a real bug this surfaced, not just a gap: `fetch_base_year()`
+  took `idxmax()` on `year` unconditionally - Pernod Ricard's numerically
+  latest year (2025) was completely empty (every ratio NaN, likely tied
+  to its June 30 fiscal year end), while 2024 had a full, real set of
+  ratios. Extracted `select_base_year_row()` to pick the latest year that
+  actually has data, falling back to the old behavior only when no year
+  does.
+- **A second real bug found immediately after, by not trusting a
+  plausible-looking number:** the first live DCF run for Essity (SEK
+  reporter, the first non-EUR company to ever reach this stage) printed
+  a "EUR 884bn" Enterprise Value - actually its real figure IN SEK,
+  silently mislabeled as EUR. `22_dcf.py` combined `fetch_base_year()`'s
+  native-currency financials with an already-EUR-converted live market
+  cap for the WACC weights, without ever converting the financials
+  themselves - both the capital-structure weights AND the discounted
+  cash flows were wrong. Fixed with `convert_base_to_eur()`, using
+  `18_fx_convert.py`'s stored historical rates (average for flow items,
+  closing for balance-sheet items - same IAS 21 split `19_valuation.py`
+  already established, not a new convention). Re-running Essity's DCF
+  after the fix: EUR 884bn -> EUR 43bn, the right order of magnitude.
+  Trading comps now cover all 11 companies too (was 8), not just the 4
+  fixed here - Kering and Amplifon's revenue fix was enough on its own.
+
+Amplifon and Shell still correctly fail - both tag NEITHER gross_profit
+nor cost_of_sales at all ("by nature" P&L presentation, no COGS/gross-
+profit split exists in their statements), so nothing can be derived.
+Same "explicit not available, never guess" principle as the D&A gap
+above, not an oversight.
 **Serves:** Dauphine.
 
 ### Phase 7 — Market risk & return module (`22_market_risk.py`)

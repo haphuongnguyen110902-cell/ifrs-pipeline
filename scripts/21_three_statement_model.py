@@ -96,6 +96,26 @@ DIVIDEND_CONCEPTS = (
 )
 
 
+def select_base_year_row(ratios: pd.DataFrame):
+    """Pick the latest year that actually HAS data, not just the
+    numerically latest year - found via a real case: Pernod Ricard's
+    "latest" year (2025) was completely empty (every ratio NaN - likely
+    an incomplete/early-stage filing given its June 30 fiscal year end,
+    see PERNOD_FYE_WARNING in 15_forensics.py), while 2024 had a full,
+    real set of ratios. Blindly taking idxmax() on `year` silently picked
+    the empty year and reported EVERYTHING as "missing", masking that a
+    perfectly good prior year was sitting right there. Falls back to the
+    old idxmax() behavior (and an honest "missing required inputs" error
+    from the caller) only if NO year has both _revenue and _ebit - a
+    company missing those in EVERY year has a real data gap, not a stale-
+    year problem, and should still surface that error rather than being
+    silently rescued by picking some other empty year."""
+    candidates = ratios.sort_values("year", ascending=False)
+    has_data = candidates[candidates["_revenue"].notna() & candidates["_ebit"].notna()]
+    latest_idx = has_data.index[0] if not has_data.empty else ratios["year"].idxmax()
+    return ratios.loc[latest_idx]
+
+
 def fetch_base_year(engine, company: str) -> dict:
     """Everything needed to project forward, from the company's latest
     actual fiscal year: growth rate (from history), margins, working
@@ -107,8 +127,7 @@ def fetch_base_year(engine, company: str) -> dict:
     if ratios.empty:
         return {}
 
-    latest_idx = ratios["year"].idxmax()
-    latest = ratios.loc[latest_idx]
+    latest = select_base_year_row(ratios)
     latest_year = int(latest["year"])
 
     capex = r11.get_best(wide, *CAPEX_CONCEPTS)

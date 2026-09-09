@@ -158,3 +158,48 @@ def test_default_growth_rate_falls_back_with_insufficient_history(tsm):
     base = {"history_years": [2023], "history_revenue": [100]}
     growth = tsm.default_growth_rate(base)
     assert growth == 0.03  # documented fallback, not a crash
+
+
+class TestSelectBaseYearRow:
+    """Real bug found via a live run: Pernod Ricard's numerically latest
+    year (2025) was completely empty (every ratio NaN - likely an
+    incomplete filing given its June 30 fiscal year end), while 2024 had
+    a full, real set of ratios. fetch_base_year() used to blindly take
+    idxmax() on `year` and silently report EVERYTHING as "missing" -
+    select_base_year_row() picks the latest year that actually has data
+    instead."""
+
+    def test_skips_an_empty_latest_year_for_a_populated_prior_year(self, tsm):
+        import pandas as pd
+        ratios = pd.DataFrame([
+            {"year": 2023, "_revenue": 1000.0, "_ebit": 100.0},
+            {"year": 2024, "_revenue": 1100.0, "_ebit": 120.0},
+            {"year": 2025, "_revenue": None, "_ebit": None},  # the Pernod Ricard case
+        ])
+        row = tsm.select_base_year_row(ratios)
+        assert row["year"] == 2024
+
+    def test_normal_case_still_picks_the_true_latest_year(self, tsm):
+        """Guards against over-firing: a company with real data in its
+        latest year must still get that year, not an older one."""
+        import pandas as pd
+        ratios = pd.DataFrame([
+            {"year": 2023, "_revenue": 1000.0, "_ebit": 100.0},
+            {"year": 2024, "_revenue": 1100.0, "_ebit": 120.0},
+        ])
+        row = tsm.select_base_year_row(ratios)
+        assert row["year"] == 2024
+
+    def test_falls_back_to_latest_year_when_no_year_has_data(self, tsm):
+        """A company missing _revenue/_ebit in EVERY year has a real data
+        gap, not a stale-year problem - falls back to the old idxmax()
+        behavior so the caller's "missing required inputs" error still
+        surfaces honestly, rather than this function silently picking an
+        arbitrary equally-empty year."""
+        import pandas as pd
+        ratios = pd.DataFrame([
+            {"year": 2023, "_revenue": None, "_ebit": None},
+            {"year": 2024, "_revenue": None, "_ebit": None},
+        ])
+        row = tsm.select_base_year_row(ratios)
+        assert row["year"] == 2024  # still the numerically latest, per old behavior

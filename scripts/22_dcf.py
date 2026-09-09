@@ -77,12 +77,57 @@ _val_spec = importlib.util.spec_from_file_location("valuation_19", _THIS_DIR / "
 val19 = importlib.util.module_from_spec(_val_spec)
 _val_spec.loader.exec_module(val19)
 
+_fx_spec = importlib.util.spec_from_file_location("fx_convert_18", _THIS_DIR / "18_fx_convert.py")
+fx18 = importlib.util.module_from_spec(_fx_spec)
+_fx_spec.loader.exec_module(fx18)
+
 DCF_SCHEMA = Path(__file__).parent.parent / "sql" / "schema_dcf.sql"
 
 # Sourced defaults - see module docstring for citations. Both go stale;
 # override via CLI for a fresher estimate.
 DEFAULT_RISK_FREE_RATE = 0.034   # German 10Y Bund, ~Sept 2026
 DEFAULT_ERP = 0.042              # Damodaran mature-market implied ERP, July 2026
+
+
+# ---------------------------------------------------------------- FX (native currency -> EUR)
+
+def convert_base_to_eur(base: dict, currency: str, fx_lookup: dict) -> dict:
+    """This script is the first place in the pipeline that combines a
+    company's OWN reported financials (native reporting currency - SEK
+    for Essity, USD for Shell) with something already in EUR (live
+    market cap, needed for the WACC capital-structure weights). Every
+    absolute monetary field in `base` must be converted to EUR BEFORE
+    that combination happens - found via a real run: Essity's DCF
+    printed a "EUR 884bn" Enterprise Value, actually its real figure IN
+    SEK mislabeled as EUR (Essity's true EV is roughly EUR 20bn). WACC
+    itself was silently corrupted too - averaging an EUR market-cap
+    weight against a native-currency net-debt weight as if they were the
+    same unit. Uses 18_fx_convert.py's stored historical rates (average
+    for P&L/flow items, closing for balance-sheet items - same IAS 21
+    split 19_valuation.py already established), never a live "today"
+    rate for a historical fact.
+
+    `currency` is the quote currency from 19_valuation.py's TICKER_MAP,
+    used as a stand-in for the filing's reporting currency - the same
+    simplification that script's own code already documents and relies
+    on (true for every company in this 11-company universe today).
+
+    Ratios (margins, DSO/DIO/DPO, tax_rate, payout_ratio) are currency-
+    neutral by construction and deliberately left untouched - only
+    absolute monetary fields need conversion."""
+    year = base["base_year"]
+    b = dict(base)
+    for field, rate_type in [
+        ("revenue", "avg"), ("ebit", "avg"), ("capex", "avg"), ("da_total", "avg"),
+        ("net_debt", "closing"), ("receivables", "closing"),
+        ("inventory", "closing"), ("payables", "closing"),
+    ]:
+        b[field] = fx18.to_eur(base[field], currency, year, fx_lookup, rate_type)
+    b["history_revenue"] = [
+        fx18.to_eur(v, currency, y, fx_lookup, "avg")
+        for y, v in zip(base["history_years"], base["history_revenue"])
+    ]
+    return b
 
 
 # ---------------------------------------------------------------- unlevered FCF
@@ -245,18 +290,29 @@ if __name__ == "__main__":
         print("*** No capex figure found in filings - FCFF below uses a generic 3% of "
               "revenue fallback. Treat this DCF as illustrative only for this company.")
 
-    growth = args.growth if args.growth is not None else tsm.default_growth_rate(base)
-    projection = tsm.project(base, args.years, growth, args.interest_rate)
-    fcff_df = compute_fcff(projection, base["tax_rate"])
-
-    print(f"\nUnlevered FCF (FCFF) - NOT the same as Phase 5's levered FCF:")
-    print(fcff_df[["year", "ebit", "da", "delta_wc", "capex", "fcff"]].to_string(index=False))
-
+    # Ticker/currency lookup moved up here (was after the FCFF projection)
+    # because base's native-currency figures must be converted to EUR
+    # BEFORE projecting - see convert_base_to_eur()'s docstring for the
+    # real bug (Essity's DCF silently mixing SEK financials with EUR
+    # market cap) this fixes.
     if args.company not in val19.TICKER_MAP:
         print(f"\nNo ticker mapped for {args.company} in 19_valuation.py's TICKER_MAP - cannot fetch "
               f"market cap/beta. Add it there first.")
         sys.exit(1)
     ticker, quote_ccy = val19.TICKER_MAP[args.company]
+
+    if quote_ccy != "EUR":
+        print(f"\n{args.company} reports in {quote_ccy} - converting base-year financials to EUR "
+              f"using 18_fx_convert.py's stored historical rates before projecting.")
+        fx_lookup = fx18.load_fx_lookup(engine)
+        base = convert_base_to_eur(base, quote_ccy, fx_lookup)
+
+    growth = args.growth if args.growth is not None else tsm.default_growth_rate(base)
+    projection = tsm.project(base, args.years, growth, args.interest_rate)
+    fcff_df = compute_fcff(projection, base["tax_rate"])
+
+    print(f"\nUnlevered FCF (FCFF), in EUR - NOT the same as Phase 5's levered FCF:")
+    print(fcff_df[["year", "ebit", "da", "delta_wc", "capex", "fcff"]].to_string(index=False))
 
     print(f"\nFetching live market data for {ticker}...")
     market = val19.fetch_market_data(ticker)

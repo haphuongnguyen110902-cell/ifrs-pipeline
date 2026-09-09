@@ -13,6 +13,75 @@ def dcf(load_script):
     return load_script("22_dcf.py")
 
 
+class TestConvertBaseToEur:
+    """Real bug found via a live run: Essity (reports in SEK) printed a
+    "EUR 884bn" Enterprise Value - actually its real figure IN SEK,
+    mislabeled as EUR, because base-year financials (native currency)
+    were combined with a live-converted EUR market cap for the WACC
+    weights without ever converting the financials themselves. Essity
+    was the first non-EUR company to reach the DCF stage - the bug had
+    been latent since 22_dcf.py was written, invisible until a base-year
+    fix elsewhere made a SEK-reporting company's DCF actually runnable."""
+
+    @pytest.fixture
+    def fx_lookup(self):
+        return {("SEK", 2024): {"avg_rate": 11.0, "closing_rate": 11.2}}
+
+    @pytest.fixture
+    def base(self):
+        return {
+            "base_year": 2024, "revenue": 11000.0, "ebit": 1100.0,
+            "net_debt": 3360.0, "capex": 550.0, "da_total": 440.0,
+            "receivables": 1120.0, "inventory": 896.0, "payables": 672.0,
+            "gross_margin": 40.0, "operating_margin": 10.0, "tax_rate": 25.0,
+            "dso": 45.0, "dio": 60.0, "dpo": 40.0, "payout_ratio": 0.5,
+            "history_years": [2023, 2024], "history_revenue": [9900.0, 11000.0],
+        }
+
+    def test_flow_items_use_average_rate(self, dcf, base, fx_lookup):
+        result = dcf.convert_base_to_eur(base, "SEK", fx_lookup)
+        assert result["revenue"] == pytest.approx(11000.0 / 11.0)
+        assert result["ebit"] == pytest.approx(1100.0 / 11.0)
+        assert result["capex"] == pytest.approx(550.0 / 11.0)
+        assert result["da_total"] == pytest.approx(440.0 / 11.0)
+
+    def test_balance_sheet_items_use_closing_rate(self, dcf, base, fx_lookup):
+        result = dcf.convert_base_to_eur(base, "SEK", fx_lookup)
+        assert result["net_debt"] == pytest.approx(3360.0 / 11.2)
+        assert result["receivables"] == pytest.approx(1120.0 / 11.2)
+        assert result["inventory"] == pytest.approx(896.0 / 11.2)
+        assert result["payables"] == pytest.approx(672.0 / 11.2)
+
+    def test_history_revenue_converted_per_year(self, dcf, base):
+        """Each historical year's revenue must use THAT year's own rate,
+        not the base year's - a moving FX rate genuinely changes the
+        EUR-denominated growth rate, which is correct IAS 21 behavior,
+        not something to flatten away."""
+        fx_lookup = {("SEK", 2023): {"avg_rate": 10.5, "closing_rate": 10.6},
+                     ("SEK", 2024): {"avg_rate": 11.0, "closing_rate": 11.2}}
+        result = dcf.convert_base_to_eur(base, "SEK", fx_lookup)
+        assert result["history_revenue"][0] == pytest.approx(9900.0 / 10.5)
+        assert result["history_revenue"][1] == pytest.approx(11000.0 / 11.0)
+
+    def test_ratios_left_untouched(self, dcf, base, fx_lookup):
+        """Margins, day-count ratios, tax rate and payout ratio are
+        currency-neutral by construction - converting them would be
+        wrong, not just unnecessary."""
+        result = dcf.convert_base_to_eur(base, "SEK", fx_lookup)
+        for field in ("gross_margin", "operating_margin", "tax_rate",
+                      "dso", "dio", "dpo", "payout_ratio"):
+            assert result[field] == base[field]
+
+    def test_eur_reporting_company_passes_through_unchanged(self, dcf, base):
+        """Guards the call site, not this function: 22_dcf.py only calls
+        convert_base_to_eur() when quote_ccy != "EUR" - but to_eur()
+        itself is also a pass-through for EUR, so calling it accidentally
+        for a EUR company must never corrupt anything either."""
+        result = dcf.convert_base_to_eur(base, "EUR", {})
+        assert result["revenue"] == base["revenue"]
+        assert result["net_debt"] == base["net_debt"]
+
+
 def test_fcff_is_unlevered_ignores_interest_and_net_income(dcf):
     """The core trap this script exists to avoid: FCFF must be computed
     from EBIT directly, completely ignoring any levered fields (interest

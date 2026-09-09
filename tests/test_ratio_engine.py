@@ -75,6 +75,71 @@ class TestWorkingCapitalRatios:
         assert math.isnan(r["ccc"].iloc[0])
 
 
+class TestRevenueAndGrossProfitFallbacks:
+    """Real bugs found via a live 22_dcf.py/21_three_statement_model.py
+    run: 6 of 11 companies failed fetch_base_year() entirely, most of it
+    unrelated to the D&A gap. Root causes traced to this file's revenue
+    and gross_profit lookups."""
+
+    def test_revenue_from_contracts_with_customers_used_as_fallback(self, r11):
+        """Kering, Pernod Ricard and Amplifon never tag the bare "revenue"
+        concept in ANY year - only "revenue_from_contracts_with_customers"
+        (the IFRS 15-specific tag). Same top-line figure, different
+        taxonomy element - safe to add as a fallback, unlike the D&A tags'
+        genuine ambiguity."""
+        wide = make_wide_row()
+        wide = wide.drop(columns=["revenue"])
+        wide["revenue_from_contracts_with_customers"] = 1000.0
+        r = r11.compute_ratios(wide)
+        assert r["_revenue"].iloc[0] == pytest.approx(1000.0)
+        assert r["gross_margin"].iloc[0] == pytest.approx(40.0)  # 400/1000
+
+    def test_bare_revenue_tag_still_preferred_over_contracts_variant(self, r11):
+        """Priority guard: when both are present, the plain "revenue" tag
+        (higher priority, the original/most common case) must still win."""
+        wide = make_wide_row(revenue=1000.0)
+        wide["revenue_from_contracts_with_customers"] = 999999.0
+        r = r11.compute_ratios(wide)
+        assert r["_revenue"].iloc[0] == pytest.approx(1000.0)
+
+    def test_gross_profit_derived_from_revenue_minus_cost_of_sales_when_untagged(self, r11):
+        """Danone tags cost_of_sales but never a distinct gross_profit
+        subtotal - its income statement goes straight from Cost of Sales
+        to Operating Profit. Gross Profit = Revenue - COGS is a textbook
+        identity, not a guess, so it's safe to derive here."""
+        wide = make_wide_row()
+        wide = wide.drop(columns=["gross_profit"])  # revenue=1000, cost_of_sales=-600 remain
+        r = r11.compute_ratios(wide)
+        assert r["gross_margin"].iloc[0] == pytest.approx(40.0)  # (1000-600)/1000
+
+    def test_cost_of_sales_derived_from_revenue_minus_gross_profit_when_untagged(self, r11):
+        """Essity tags gross_profit but never cost_of_sales directly - the
+        reverse of the Danone case. DIO/DPO need COGS as their
+        denominator, so deriving it here (rather than leaving DIO/DPO NaN
+        for a company that actually discloses enough to compute it) is
+        the same textbook identity, just solved for the other variable."""
+        wide = make_wide_row()
+        wide = wide.drop(columns=["cost_of_sales"])  # revenue=1000, gross_profit=400 remain
+        r = r11.compute_ratios(wide)
+        # cogs = 1000 - 400 = 600, matching the original fixture's cost_of_sales
+        assert r["dio"].iloc[0] == pytest.approx(54.75, abs=0.01)
+        assert r["dpo"].iloc[0] == pytest.approx(36.5, abs=0.01)
+
+    def test_no_derivation_possible_when_neither_tagged_stays_honest_nan(self, r11):
+        """Amplifon and Shell tag NEITHER gross_profit nor cost_of_sales at
+        all - a "by nature" P&L presentation with no COGS/gross-profit
+        split in the statements, not a tagging bug. Nothing to derive
+        from, so gross_margin/dio/dpo must stay NaN, never a fabricated
+        number - see CLAUDE.md's "prefer an explicit not available
+        state" principle."""
+        wide = make_wide_row()
+        wide = wide.drop(columns=["gross_profit", "cost_of_sales"])
+        r = r11.compute_ratios(wide)
+        assert math.isnan(r["gross_margin"].iloc[0])
+        assert math.isnan(r["dio"].iloc[0])
+        assert math.isnan(r["dpo"].iloc[0])
+
+
 class TestAbsoluteValuesForValuation:
     """19_valuation.py reuses these _-prefixed columns instead of
     re-deriving revenue/EBIT/net debt/EBITDA with separate logic - if
