@@ -142,14 +142,31 @@ def fetch_base_year(engine, company: str) -> dict:
         payout_ratio = 0.0
 
     cogs_latest = latest["_revenue"] * (1 - latest["gross_margin"] / 100)
+    capex_final = capex_value if capex_value is not None else latest["_revenue"] * 0.03
+
+    # _da_total is EXACTLY 0.0 (not NaN, so the `missing` check above
+    # doesn't catch it) when none of 11_ratio_engine.py's D&A tag
+    # candidates matched for this company (see that file's comment on
+    # the D&A fix found via a real 22_dcf.py run) - no real company's
+    # total depreciation & amortisation is actually zero, so silently
+    # projecting da=0 forward would understate every year's FCF/FCFF.
+    # Fallback: D&A ~= Capex, the standard "steady-state" assumption
+    # (a mature company's reinvestment roughly offsets what it
+    # depreciates) - more defensible than an arbitrary %-of-revenue
+    # guess, and it's exactly the capex figure already computed above
+    # (itself flagged if IT is a fallback too).
+    da_is_fallback = not latest["_da_total"]
+    da_final = latest["_da_total"] if not da_is_fallback else capex_final
+
     return {
         "company": company, "base_year": latest_year,
         "revenue": latest["_revenue"], "ebit": latest["_ebit"],
-        "net_debt": latest["_net_debt"], "da_total": latest["_da_total"],
+        "net_debt": latest["_net_debt"], "da_total": da_final,
+        "da_total_is_fallback": da_is_fallback,
         "gross_margin": latest["gross_margin"], "operating_margin": latest["operating_margin"],
         "tax_rate": latest["tax_rate"], "dso": latest["dso"], "dio": latest["dio"],
         "dpo": latest["dpo"],
-        "capex": capex_value if capex_value is not None else latest["_revenue"] * 0.03,
+        "capex": capex_final,
         "capex_is_fallback": capex_value is None,
         "payout_ratio": payout_ratio, "payout_ratio_is_fallback": payout_ratio_is_fallback,
         "receivables": latest["_revenue"] * latest["dso"] / 365,
@@ -338,6 +355,10 @@ if __name__ == "__main__":
     if base["capex_is_fallback"]:
         print("*** No capex figure found in filings - using generic 3% of revenue fallback. "
               "Treat FCF/DCF outputs as illustrative only for this company.")
+    if base["da_total_is_fallback"]:
+        print("*** No D&A figure found in filings (no matching tag for this company - see "
+              "11_ratio_engine.py's _da_total comment) - assuming D&A = Capex as a steady-state "
+              "fallback. Treat FCF/DCF/EBITDA outputs as illustrative only for this company.")
     if base["payout_ratio_is_fallback"]:
         print("*** No dividend figure found in filings - assuming 0% payout (100% of FCF "
               "goes to debt paydown/cash buildup). For a real dividend-paying company this "

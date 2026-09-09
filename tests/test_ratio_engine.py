@@ -137,6 +137,44 @@ class TestAbsoluteValuesForValuation:
         assert r["_da_total"].iloc[0] == pytest.approx(40.0)  # 25 + 5 + 10, as before
         assert r["_ebitda"].iloc[0] == pytest.approx(140.0)
 
+    def test_bare_da_expense_concept_used_as_last_resort(self, r11):
+        """A second real bug found via a live 22_dcf.py run on L'Oreal:
+        _da_total silently came out as 0 for 8 of the 11 companies, not
+        just Shell - several filers (Pernod Ricard, Moncler, Puig Brands)
+        use a THIRD tag variant, "adjustments_for_depreciation_and_
+        amortisation_expense" (no "_and_etc" suffix), for their single
+        combined D&A line - neither the granular concepts nor either
+        existing combined-concept candidate matched it. Verified sane
+        (3.9-14.0% of revenue) against each company's live data before
+        adding it as a third, LOWEST-priority candidate."""
+        wide = make_wide_row()
+        wide = wide.drop(columns=[
+            "depreciation_property_plant_and_equipment",
+            "depreciation_rightofuse_assets",
+            "amortisation_intangible_assets_other_than_goodwill",
+        ])
+        wide["adjustments_for_depreciation_and_amortisation_expense"] = 42.0
+        r = r11.compute_ratios(wide)
+        assert r["_da_total"].iloc[0] == pytest.approx(42.0)
+        assert r["_ebitda"].iloc[0] == pytest.approx(100.0 + 42.0)
+
+    def test_and_etc_combined_concept_still_wins_over_bare_variant(self, r11):
+        """Priority guard: when a company has BOTH the "_and_etc" combined
+        concept and the bare variant populated, the "_and_etc" one (higher
+        priority, added first and already battle-tested against Shell)
+        must still win - the bare variant is a last resort, not a
+        replacement for it."""
+        wide = make_wide_row()
+        wide = wide.drop(columns=[
+            "depreciation_property_plant_and_equipment",
+            "depreciation_rightofuse_assets",
+            "amortisation_intangible_assets_other_than_goodwill",
+        ])
+        wide["adjustments_for_depreciation_and_amortisation_expense_and_etc"] = 31290.0
+        wide["adjustments_for_depreciation_and_amortisation_expense"] = 42.0
+        r = r11.compute_ratios(wide)
+        assert r["_da_total"].iloc[0] == pytest.approx(31290.0)
+
 
 class TestExcelSheetNameSanitizer:
     """Found via a real crash: 'DSO (Days Sales O/S)' has a '/', which

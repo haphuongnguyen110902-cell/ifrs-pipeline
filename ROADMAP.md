@@ -217,29 +217,84 @@ uncertain figures.
   `load_historical.py` (idempotent, source zips still present locally).
 **Serves:** Dauphine (Banque d'investissement et de marché).
 
-### Phase 5 — Linked 3-statement projection model
-**Before DCF, not after** - a DCF needs projected Free Cash Flow, and
-"project FCF" done properly means a real linked model: Revenue growth
-assumption → COGS/Opex → EBIT → Tax → Net Income → reinvestment (Capex,
-ΔWorking Capital using the DSO/DIO/DPO already built) → FCF, with a debt
-schedule (revolver draw/paydown, interest expense that feeds BACK into
-the income statement - the "circularity" every IB technical test asks
-about). This is the single most-tested IB technical skill ("build a
-3-statement model") and the current pipeline doesn't have it -
-`07_generate_statements.py` only reformats HISTORICAL data, it doesn't
-project forward with everything linked.
+### Phase 5 — Linked 3-statement projection model ✅ DONE
+`21_three_statement_model.py`: Revenue growth → EBIT (margin-driven) →
+Interest Expense ↔ Debt balance (circularity) → EBT → Tax → Net Income
+→ CFO (using DSO/DIO/DPO-driven ΔWorking Capital) → FCF → dividend
+payout → debt paydown → back to Interest Expense. The circularity
+solver (Excel's iterative-calculation problem, solved here with a
+fixed-point loop) was verified against an INDEPENDENTLY DERIVED
+closed-form algebraic solution, not just checked for "did it converge
+to something" - see the script's module docstring for the derivation.
+
+**Two real issues found and fixed while running this on live data:**
+- `numpy.float64` values (from pandas Series iteration) aren't reliably
+  adapted by psycopg2 as SQL parameters - produced a confusing
+  `InvalidSchemaName: schema "np" does not exist` error (it tried to
+  inline `repr(np.float64(...))` instead of parameterizing the value).
+  Fixed by casting every numeric to native `float()` before binding.
+- A genuine ECONOMIC implausibility (not a math bug - the circularity
+  math was already verified correct): with no dividend assumption,
+  100% of FCF silently piled up as debt paydown/cash forever - L'Oreal's
+  projected net debt reached -29bn EUR net cash after 5 years, which no
+  real dividend-paying company would do. Fixed by computing a
+  `payout_ratio` from the company's own disclosed dividends/net income
+  (63.9% for L'Oreal, not invented), reducing L'Oreal's 2030 net cash
+  projection from -29bn to a much more plausible -3.8bn.
 **Serves:** Dauphine (Banque d'investissement et de marché) primarily -
 this is the concrete deliverable that proves "I can build what they'll
 test me on in an interview or in the program itself."
 
-### Phase 6 — `21_dcf.py`
+**Known remaining simplification:** share buybacks aren't modeled,
+only dividends - a real "cash returned to shareholders" figure would be
+higher than the payout_ratio alone captures, meaning even the current
+-3.8bn/2030 net-cash trajectory somewhat understates how close to zero
+L'Oreal's real net debt would likely stay.
+
+### Phase 6 — `22_dcf.py` ✅ DONE
 WACC build-up (CAPM: risk-free rate + beta from yfinance + equity risk
-premium), FCF pulled from Phase 5's linked model (not a shortcut ratio
-projection), terminal value (Gordon growth), sensitivity table (WACC ×
-terminal growth grid). Cross-check DCF output against Phase 4's trading
-comps and precedent transaction ranges - three methods converging (or
-explaining why they don't) is the actual valuation deliverable, not any
-one method alone.
+premium), unlevered FCFF computed directly from EBIT (deliberately NOT
+Phase 5's "fcf" column - that's levered, discounting it at WACC would
+double-count the cost of debt; see the script's module docstring),
+terminal value (Gordon growth), sensitivity table (WACC × terminal
+growth grid). Cross-check DCF output against Phase 4's trading comps and
+precedent transaction ranges - three methods converging (or explaining
+why they don't) is the actual valuation deliverable, not any one method
+alone.
+
+**A real bug found while running this on live data, bigger than it
+first looked:** the first live run (L'Oreal) showed D&A silently
+computing to exactly 0.0 for every projected year. Tracing it back to
+`11_ratio_engine.py`'s `_da_total` (shared by the EBITDA reconstruction
+in `19_valuation.py`/Phase 4, the D&A projection in
+`21_three_statement_model.py`/Phase 5, and this script) showed
+`_da_total=0` for 8 of the 11 companies, not just the one Shell case
+already fixed - Pernod Ricard, Moncler and Puig Brands use a THIRD D&A
+tag variant ("adjustments_for_depreciation_and_amortisation_expense",
+no "_and_etc" suffix) that nothing matched. Fixed by adding it as a
+third, lowest-priority candidate - verified sane (3.9-14.0% of revenue,
+consistent with each company's known capital intensity) before trusting
+it. That means Phase 4's trading comps EV/EBITDA multiples for those 3
+companies have been understated (EBITDA collapsed to EBIT) since Phase
+4 shipped - worth a follow-up run to confirm how much they move.
+
+L'Oreal, LVMH, Kering, EssilorLuxottica and Essity still show
+`_da_total=0` and are DELIBERATELY left unfixed: each only has AMBIGUOUS
+tags available (bundled with provisions or impairment, split across
+several overlapping concepts, or - L'Oreal's case - no D&A tag at all,
+folded into one lump "non-cash charges elimination" extension concept).
+Guessing which tag is the clean total risks quietly corrupting
+EBITDA/FCFF for those companies. Per this roadmap's own Phase 3 rule
+("surface unmapped concepts and stop, never guess"), the honest fix
+instead is a `da_total_is_fallback` flag (same pattern as the existing
+`capex_is_fallback`) - when no real D&A tag matches, `da_total` falls
+back to `capex` (the standard steady-state assumption that a mature
+company's reinvestment roughly offsets depreciation) and both
+`21_three_statement_model.py` and `22_dcf.py` print an explicit
+"illustrative only" warning rather than silently treating the 0 as real.
+A real fix for those 5 companies needs a human to read each filing's
+cash-flow statement and confirm the right tag - not a pattern-matched
+guess.
 **Serves:** Dauphine.
 
 ### Phase 7 — Market risk & return module (`22_market_risk.py`)

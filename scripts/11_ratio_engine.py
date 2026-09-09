@@ -314,10 +314,33 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     amort = get_col(wide, "amortisation_intangible_assets_other_than_goodwill").fillna(0)
     granular_da_sum = da_ppe + da_rou + amort
 
+    # Found via a real run (22_dcf.py on L'Oreal): _da_total was silently
+    # coming out as 0 for 8 of the 11 companies (L'Oreal, LVMH, Kering,
+    # EssilorLuxottica, Pernod Ricard, Essity, Moncler, Puig Brands), not
+    # just Shell - the "combined vs. granular" split above only covers
+    # two disclosure styles, but filers also use OTHER extension tags
+    # for the same combined D&A line. Added
+    # "adjustments_for_depreciation_and_amortisation_expense" (no
+    # "_and_etc" suffix) as a third, LOWER-priority candidate - verified
+    # sane (3.9-14.0% of revenue, in line with each company's known
+    # capital intensity) for Pernod Ricard, Moncler and Puig Brands.
+    # Deliberately NOT extended to cover L'Oreal, LVMH, Kering,
+    # EssilorLuxottica or Essity even though they also show _da_total=0:
+    # each has only AMBIGUOUS tags available (bundled with provisions,
+    # impairment, or split across several overlapping concepts - e.g.
+    # Essity has both the "_and_etc" and bare variants POPULATED with
+    # different values, LVMH's only candidates are "...provisions_and_
+    # adjustments_for_depreciation..." or ROU-leases-only). Guessing
+    # which one is the clean total risks quietly corrupting EBITDA/FCFF
+    # for those companies - the da_total_is_fallback flag below (not a
+    # guess) is the honest fix for them; a real fix needs a human to
+    # read each filing's cash-flow statement and confirm which tag is
+    # the true total, not an agent pattern-matching tag names.
     da_combined = get_best(
         wide,
         "adjustments_for_depreciation_and_amortisation_expense_and_etc",
         "depreciation_amortisation_and_impairment_loss_reversal_of_etc",
+        "adjustments_for_depreciation_and_amortisation_expense",
     )
     r["_da_total"] = da_combined.where(da_combined.notna(), granular_da_sum)
     r["_ebitda"] = ebit + r["_da_total"]
