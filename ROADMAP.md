@@ -491,6 +491,14 @@ Only once Phases 4–10 give the universe real analytical depth: scale to
 more companies/countries (this is where the Claude API auto-classifier,
 deliberately deferred until now, finally has real unmapped tags to earn
 its keep) and enrich the Phase 2 dashboard with everything built since.
+
+**See [`SCOPE.md`](SCOPE.md) for this phase's scoping decision record** —
+why the universe is defined as "EU/EEA + UK ESEF/UKSEF issuers" rather than
+an index, the measured `filings.xbrl.org` coverage gaps (no Germany,
+Ireland, Switzerland), the four schema/architecture prerequisites that must
+land before loading more companies (join-key unification, ticker-mapping
+automation, a standardised sector taxonomy, persisted forensics), and the
+staged rollout (11 → ~40 → 150 → 300) this phase should follow.
 **Serves:** both.
 
 ### Phase 12 — Open-source the mapping layer + write up the journey
