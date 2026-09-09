@@ -82,7 +82,7 @@ this test for WP1 if you want the extra confidence.
 
 ---
 
-# WP1 — Migrate the five TEXT-keyed tables to `company_id`
+# WP1 — Migrate the five TEXT-keyed tables to `company_id` ✅ DONE
 
 **Objective:** every analysis table joins to `company` by integer FK.
 
@@ -148,6 +148,53 @@ carries everything.
 null-guard. **Effort:** 1–1.5 sessions.
 
 **Unblocks:** the screener (cross-table joins), and all of breadth.
+
+**What actually happened, and one bug found running it:**
+- The guard was checked read-only *before* writing the migration: all 11
+  companies matched cleanly across all five tables by name, zero mismatches
+  (no accent drift, no missing rows) — so the backfill ran clean on the
+  first try.
+- **Real bug found running this, not assumed:** `sql/migration_001_company_id.sql`'s
+  first draft claimed to be idempotent (`IF NOT EXISTS` everywhere) but
+  wasn't — PostgreSQL's `ADD CONSTRAINT` has no `IF NOT EXISTS` form, so
+  running the file a second time (the plan's own required idempotency
+  check) failed with `DuplicateObject`. Caught because the check was
+  actually run, not assumed to pass from the `IF NOT EXISTS` on the column
+  additions alone. Fixed by wrapping each `ADD CONSTRAINT` in a `DO` block
+  that checks `pg_constraint` first; re-ran a third time with no error and
+  [`tests/test_baseline_regression.py`](tests/test_baseline_regression.py)
+  still green.
+- Deliberately diverged from this WP's own "replace `UNIQUE(company,...)`"
+  wording: the old constraint is kept alongside the new
+  `UNIQUE(company_id, ...)` rather than dropped, per the plan's own ground
+  rule #4 (additive over destructive) — that's what makes the documented
+  rollback ("drop the added columns/constraints; `company` TEXT still
+  carries everything") actually true.
+- All five writer scripts (`19_valuation.py`, `22_dcf.py`,
+  `23_market_risk.py`, `24_credit.py`, `21_three_statement_model.py`) now
+  resolve `company_id` before every write, skip-with-a-printed-warning
+  (never write a NULL) if a company name has no match, and `ON CONFLICT`
+  on `company_id` instead of `company` TEXT. Verified by actually calling
+  each modified `save_to_db()` against the live DB with real data (not
+  just reading the diff) — all five wrote successfully through the new
+  path with zero value drift afterward.
+- `webapp/app.py`'s five Phase 4-6 loaders (`load_comps`, `load_three_statement`,
+  `load_dcf`, `load_market_risk`, `load_credit_profile`) now take
+  `company_id: int` instead of `company_name: str`, matching how
+  `load_ratios`/`load_backtest` already worked.
+- Clicked through all five migrated tabs for **three** companies live
+  (not just one): EssilorLuxottica (the accented-name edge case named in
+  this WP), Shell (non-EUR reporter — confirmed its correctly-empty DCF
+  tab still renders as "not computed" rather than erroring, since Shell
+  is one of the two companies with no DCF by design), and Kering (confirmed
+  its FY2021-2023-only data window still shows correctly). Zero console
+  errors, zero server errors.
+- 20 new regression tests (5 in `tests/test_migration_company_id.py`'s
+  non-null/FK checks, plus a third check — that `company_id` and the
+  legacy `company` TEXT column agree on every row — not originally
+  specified but added since a mismatch there would be worse than a NULL,
+  it would silently look right). Full suite: 151/151 passing
+  (131 original + 5 baseline regression + 15 migration checks).
 
 ---
 
@@ -460,7 +507,7 @@ This is the Asset Management deliverable. Do not build it on 11 companies in
 
 ```
 WP0 safety net          0.5 session   ← DONE
-WP1 company_id          1.5           ← riskiest, do it while the DB is small
+WP1 company_id          1.5           ← DONE
 WP2 forensics persist   1.0
 WP3 company columns     1.0
 WP4 entity resolution   2.0           ← the real wall before breadth
@@ -475,4 +522,4 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: WP1** (WP0 is done — see above).
+**Immediate next action: WP2** (WP0 and WP1 are done — see above).

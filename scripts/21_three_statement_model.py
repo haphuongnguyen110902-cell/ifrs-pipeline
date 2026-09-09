@@ -292,21 +292,32 @@ def ensure_model_table(engine):
         conn.execute(text(ddl))
 
 
+def _get_company_id(conn, company: str):
+    """See PLAN.md WP1 - three_statement_projection now has a real
+    company_id FK alongside the legacy `company` TEXT column."""
+    row = conn.execute(text("SELECT company_id FROM company WHERE name = :n"), {"n": company}).fetchone()
+    return row[0] if row else None
+
+
 def save_to_db(engine, company: str, base: dict, growth: float, interest_rate: float,
                 projection: pd.DataFrame) -> int:
     rows_written = 0
     with engine.begin() as conn:
+        company_id = _get_company_id(conn, company)
+        if company_id is None:
+            print(f"  *** no company_id found for '{company}' - not saved (run the loader first)")
+            return 0
         for _, r in projection.iterrows():
             conn.execute(text("""
                 INSERT INTO three_statement_projection
-                    (company, base_year, forecast_year, growth_assumption, interest_rate_assumption,
+                    (company, company_id, base_year, forecast_year, growth_assumption, interest_rate_assumption,
                      revenue, ebit, interest_expense, net_income, dividends, payout_ratio_assumption,
                      fcf, net_debt_end, computed_at)
                 VALUES
-                    (:company, :base_year, :year, :growth, :ir, :rev, :ebit, :ie, :ni, :div, :payout,
+                    (:company, :company_id, :base_year, :year, :growth, :ir, :rev, :ebit, :ie, :ni, :div, :payout,
                      :fcf, :nd, now())
-                ON CONFLICT (company, base_year, forecast_year)
-                DO UPDATE SET growth_assumption = EXCLUDED.growth_assumption,
+                ON CONFLICT (company_id, base_year, forecast_year)
+                DO UPDATE SET company = EXCLUDED.company, growth_assumption = EXCLUDED.growth_assumption,
                               interest_rate_assumption = EXCLUDED.interest_rate_assumption,
                               revenue = EXCLUDED.revenue, ebit = EXCLUDED.ebit,
                               interest_expense = EXCLUDED.interest_expense,
@@ -315,7 +326,7 @@ def save_to_db(engine, company: str, base: dict, growth: float, interest_rate: f
                               fcf = EXCLUDED.fcf,
                               net_debt_end = EXCLUDED.net_debt_end, computed_at = now()
             """), {
-                "company": company, "base_year": base["base_year"], "year": int(r["year"]),
+                "company": company, "company_id": company_id, "base_year": base["base_year"], "year": int(r["year"]),
                 "growth": float(growth), "ir": float(interest_rate), "rev": float(r["revenue"]),
                 "ebit": float(r["ebit"]), "ie": float(r["interest_expense"]),
                 "ni": float(r["net_income"]), "div": float(r["dividends"]),

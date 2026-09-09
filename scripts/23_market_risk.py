@@ -214,20 +214,31 @@ def ensure_market_risk_table(engine):
         conn.execute(text(ddl))
 
 
+def _get_company_id(conn, company: str):
+    """See PLAN.md WP1 - market_risk now has a real company_id FK
+    alongside the legacy `company` TEXT column."""
+    row = conn.execute(text("SELECT company_id FROM company WHERE name = :n"), {"n": company}).fetchone()
+    return row[0] if row else None
+
+
 def save_to_db(engine, company: str, ticker: str, benchmark: str, result: dict) -> None:
     with engine.begin() as conn:
+        company_id = _get_company_id(conn, company)
+        if company_id is None:
+            print(f"  *** no company_id found for '{company}' - not saved (run the loader first)")
+            return
         conn.execute(text("""
             INSERT INTO market_risk
-                (company, ticker, benchmark, period_start, period_end, n_observations,
+                (company, company_id, ticker, benchmark, period_start, period_end, n_observations,
                  annualized_volatility, benchmark_volatility, sharpe_ratio, beta,
                  correlation, rolling_corr_mean, rolling_corr_min, rolling_corr_max,
                  max_drawdown, computed_at)
             VALUES
-                (:company, :ticker, :benchmark, :pstart, :pend, :n,
+                (:company, :company_id, :ticker, :benchmark, :pstart, :pend, :n,
                  :vol, :bvol, :sharpe, :beta, :corr, :rc_mean, :rc_min, :rc_max,
                  :mdd, now())
-            ON CONFLICT (company, benchmark)
-            DO UPDATE SET ticker = EXCLUDED.ticker, period_start = EXCLUDED.period_start,
+            ON CONFLICT (company_id, benchmark)
+            DO UPDATE SET company = EXCLUDED.company, ticker = EXCLUDED.ticker, period_start = EXCLUDED.period_start,
                           period_end = EXCLUDED.period_end, n_observations = EXCLUDED.n_observations,
                           annualized_volatility = EXCLUDED.annualized_volatility,
                           benchmark_volatility = EXCLUDED.benchmark_volatility,
@@ -238,7 +249,7 @@ def save_to_db(engine, company: str, ticker: str, benchmark: str, result: dict) 
                           rolling_corr_max = EXCLUDED.rolling_corr_max,
                           max_drawdown = EXCLUDED.max_drawdown, computed_at = now()
         """), {
-            "company": company, "ticker": ticker, "benchmark": benchmark,
+            "company": company, "company_id": company_id, "ticker": ticker, "benchmark": benchmark,
             "pstart": result["period_start"], "pend": result["period_end"],
             "n": result["n_observations"], "vol": result["annualized_volatility"],
             "bvol": result["benchmark_volatility"], "sharpe": result["sharpe_ratio"],

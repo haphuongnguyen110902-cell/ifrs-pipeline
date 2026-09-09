@@ -366,24 +366,46 @@ def ensure_valuation_table(engine):
         conn.execute(text(ddl))
 
 
+def _company_id_map(conn) -> dict:
+    """company name -> company_id, fetched once per run.
+
+    Added for the WP1 migration (see PLAN.md) - `valuation` now has a real
+    company_id FK alongside the legacy `company` TEXT column. Looked up by
+    name here rather than joined in SQL because comps is a plain DataFrame
+    built upstream, not itself a query result.
+    """
+    rows = conn.execute(text("SELECT company_id, name FROM company")).fetchall()
+    return {name: cid for cid, name in rows}
+
+
 def save_to_db(engine, comps: pd.DataFrame) -> int:
     rows_written = 0
     with engine.begin() as conn:
+        company_ids = _company_id_map(conn)
         for _, r in comps.iterrows():
             if "ticker" not in r or pd.isna(r.get("ev_eur")):
                 continue
+            company_id = company_ids.get(r["company"])
+            if company_id is None:
+                # Same "never guess, skip and say why" convention as the
+                # missing-ticker case above - a company with no row in
+                # `company` yet (e.g. 09_batch_load.py hasn't run for it)
+                # should not silently write a NULL company_id, which the
+                # NOT NULL constraint added in WP1 would reject anyway.
+                print(f"  *** no company_id found for '{r['company']}' - skipped (run the loader first)")
+                continue
             conn.execute(text("""
                 INSERT INTO valuation
-                    (company, sector, year, ticker, market_cap_eur, net_debt_eur, ev_eur,
+                    (company, company_id, sector, year, ticker, market_cap_eur, net_debt_eur, ev_eur,
                      revenue_eur, ebitda_eur, net_income_eur, ev_ebitda, ev_sales, pe,
                      ev_ebitda_sector_median, n_peers_in_sector, implied_ev_from_peers,
                      premium_vs_peers_pct, fwd_ev_ebitda, fwd_ev_sales, computed_at)
                 VALUES
-                    (:company, :sector, :year, :ticker, :mc, :nd, :ev, :rev, :ebitda, :ni,
+                    (:company, :company_id, :sector, :year, :ticker, :mc, :nd, :ev, :rev, :ebitda, :ni,
                      :evebitda, :evsales, :pe, :sectmed, :npeers, :impliedev, :premium,
                      :fwdevebitda, :fwdevsales, now())
-                ON CONFLICT (company, year)
-                DO UPDATE SET ticker = EXCLUDED.ticker, sector = EXCLUDED.sector,
+                ON CONFLICT (company_id, year)
+                DO UPDATE SET company = EXCLUDED.company, ticker = EXCLUDED.ticker, sector = EXCLUDED.sector,
                               market_cap_eur = EXCLUDED.market_cap_eur,
                               net_debt_eur = EXCLUDED.net_debt_eur, ev_eur = EXCLUDED.ev_eur,
                               revenue_eur = EXCLUDED.revenue_eur, ebitda_eur = EXCLUDED.ebitda_eur,
@@ -396,7 +418,7 @@ def save_to_db(engine, comps: pd.DataFrame) -> int:
                               fwd_ev_ebitda = EXCLUDED.fwd_ev_ebitda, fwd_ev_sales = EXCLUDED.fwd_ev_sales,
                               computed_at = now()
             """), {
-                "company": r["company"], "sector": r.get("sector"), "year": int(r["year"]),
+                "company": r["company"], "company_id": company_id, "sector": r.get("sector"), "year": int(r["year"]),
                 "ticker": r["ticker"], "mc": r["market_cap_eur"], "nd": r["net_debt_eur"],
                 "ev": r["ev_eur"], "rev": r["revenue_eur"], "ebitda": r["ebitda_eur"],
                 "ni": r["net_income_eur"], "evebitda": r["ev_ebitda"], "evsales": r["ev_sales"],
