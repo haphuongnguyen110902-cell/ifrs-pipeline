@@ -397,11 +397,35 @@ and frequency stated, instead of trusted from an opaque number.
 "Investissements et marchés financiers" and "Introduction à
 l'économétrie de la finance" coursework.
 
-### Phase 8 — `24_credit.py`
-Net Debt/EBITDA trajectory → simple credit-profile classification.
-Most of the underlying data already exists (`net_debt_ebitda_proxy` from
-V2) - this is mostly a classification/trend layer on top of what's
-already computed, so cost is low relative to value.
+### Phase 8 — `24_credit.py` ✅ DONE
+Net Debt/EBITDA trajectory → simple credit-profile classification (fixed
+sector-agnostic bands: net cash / very low / low / moderate / elevated /
+high / very high leverage) plus a YoY trend label (improving/stable/
+deteriorating).
+
+**A real bug found while building this, not the "mostly reuse
+net_debt_ebitda_proxy" shortcut originally planned:** `11_ratio_engine.py`
+already has a column literally named `net_debt_ebitda_proxy` - reusing
+it would have been the obvious low-cost path this phase was scoped
+around. It's actually Net Debt / EBIT, not Net Debt / EBITDA - its own
+display label ("Net Debt vs Op. Profit") says so honestly, only the
+COLUMN NAME is misleading. Real-world credit thresholds are calibrated
+to EBITDA; EBIT understates EBITDA by the D&A add-back, so reusing that
+column would have systematically OVERSTATED every company's leverage.
+Computes Net Debt / `_ebitda` directly instead. Every row where
+`_da_total == 0` (no D&A tag matched - see Phase 6's D&A investigation)
+is flagged `is_da_fallback` and shown with an explicit "EBITDA=EBIT,
+overstated" warning, both in the CLI output and the dashboard - the
+same "never silently treat a fallback as real" principle as
+`da_total_is_fallback` elsewhere, applied here because THIS script is
+exactly where that upstream gap would have caused a second, compounding
+wrong number if left unflagged.
+
+19 new regression tests on the pure classification logic (`classify_band`,
+`classify_trend`, `build_credit_profile` - factored out from the DB-
+fetching wrapper the same way `select_base_year_row()` was, specifically
+so it's unit-testable without a database connection). Wired into the
+dashboard as a new "Credit Profile" tab.
 **Serves:** Dauphine (credit/markets angle) + Controlling (counterparty
 risk is a real controlling concern).
 

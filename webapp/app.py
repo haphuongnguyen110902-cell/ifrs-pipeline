@@ -122,6 +122,13 @@ def load_market_risk(_engine, company_name: str):
 
 
 @st.cache_data(ttl=3600)
+def load_credit_profile(_engine, company_name: str):
+    return pd.read_sql(text(
+        "SELECT * FROM credit_profile WHERE company = :c ORDER BY year ASC"
+    ), _engine, params={"c": company_name})
+
+
+@st.cache_data(ttl=3600)
 def load_backtest(_engine, company_id: int):
     return pd.read_sql(text(
         "SELECT ratio_name, method, n_folds, mae, rmse, bias, mape, is_winner, confidence "
@@ -364,6 +371,43 @@ def render_market_risk(df: pd.DataFrame):
                f"broader European market, not just in absolute terms.")
 
 
+def render_credit_profile(df: pd.DataFrame):
+    if df.empty:
+        st.info("No credit profile computed yet for this company (see 24_credit.py).")
+        return
+
+    st.caption("Net Debt / EBITDA trajectory - NOT the same as the Ratios tab's "
+               "\"Net Debt vs Op. Profit\" (that's Net Debt / EBIT, despite its column name "
+               "elsewhere; see 24_credit.py's module docstring for why reusing it would have "
+               "overstated leverage here). Bands are a fixed, sector-agnostic heuristic, not a "
+               "real agency rating - see the script's docstring.")
+
+    latest = df.iloc[-1]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Latest Net Debt/EBITDA",
+              f"{latest['net_debt_ebitda']:.2f}x" if pd.notna(latest["net_debt_ebitda"]) else "n/a")
+    c2.metric("Band", latest["band"])
+    c3.metric("Trend", latest["trend"])
+
+    display = df.copy()
+    display["net_debt_ebitda"] = display["net_debt_ebitda"].apply(
+        lambda v: f"{v:.2f}x" if pd.notna(v) else "n/a")
+    display["net_debt"] = display["net_debt"].apply(format_eur)
+    display["ebitda"] = display["ebitda"].apply(format_eur)
+    display["is_da_fallback"] = display["is_da_fallback"].map(
+        {True: "⚠ EBITDA=EBIT (overstated)", False: ""})
+    display = display[["year", "net_debt", "ebitda", "net_debt_ebitda", "band", "trend", "is_da_fallback"]].rename(
+        columns={"year": "Year", "net_debt": "Net Debt", "ebitda": "EBITDA",
+                 "net_debt_ebitda": "Net Debt/EBITDA", "band": "Band", "trend": "Trend",
+                 "is_da_fallback": ""})
+    st.dataframe(display, width="stretch", hide_index=True)
+
+    if df["is_da_fallback"].any():
+        st.caption("⚠ Years marked above have no D&A tag matched for this company - EBITDA "
+                   "silently equals EBIT for those years, so leverage is likely overstated. "
+                   "See 11_ratio_engine.py's D&A fallback notes.")
+
+
 def render_backtest(df: pd.DataFrame):
     if df.empty:
         st.info("No forecast backtest computed yet for this company (see 17_backtest.py).")
@@ -447,9 +491,9 @@ st.markdown(f"## {selected_name}")
 st.caption(f"{selected_row['country']} · {selected_row['sector']}")
 
 (tab_ratios, tab_forensics, tab_comps, tab_3stmt, tab_dcf,
- tab_market_risk, tab_backtest, tab_precedents) = st.tabs([
+ tab_market_risk, tab_credit, tab_backtest, tab_precedents) = st.tabs([
     "Ratios", "Forensics flags", "Trading Comps", "3-Statement Model",
-    "DCF Valuation", "Market Risk", "Forecast Backtest", "Precedent Transactions",
+    "DCF Valuation", "Market Risk", "Credit Profile", "Forecast Backtest", "Precedent Transactions",
 ])
 
 with tab_ratios:
@@ -470,6 +514,9 @@ with tab_dcf:
 
 with tab_market_risk:
     render_market_risk(load_market_risk(engine, selected_name))
+
+with tab_credit:
+    render_credit_profile(load_credit_profile(engine, selected_name))
 
 with tab_backtest:
     render_backtest(load_backtest(engine, int(selected_row["company_id"])))
