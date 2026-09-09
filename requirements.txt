@@ -9,3 +9,4 @@ streamlit==1.63.0
 yfinance==1.7.0
 openpyxl==3.1.5
 reportlab==5.0.1
+anthropic==1.4.0

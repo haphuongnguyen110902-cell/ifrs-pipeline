@@ -121,30 +121,16 @@ def slugify(name):
     return key[:60] + "_etc" if len(key) > 60 else key
 
 
-if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--mapping", default="data/mappings/ifrs_concepts_v0.yaml")
-    ap.add_argument("--raw-dir", default="data/raw")
-    ap.add_argument("--review-out", default="data/mappings/REVIEW_extensions.yaml")
-    ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--only", nargs="+", help="Only process these zip filenames")
-    args = ap.parse_args()
-
-    with open(args.mapping, encoding="utf-8") as f:
-        existing = yaml.safe_load(f)
-    existing_tags = set()
-    for stmt, concepts in existing.items():
-        for name, info in concepts.items():
-            existing_tags.update(info["xbrl_tags"])
-    print(f"Existing mapping: {len(existing_tags)} tags\n")
-
-    raw_dir = Path(args.raw_dir)
-    if args.only:
-        zips = [raw_dir / z for z in args.only if (raw_dir / z).exists()]
-    else:
-        zips = sorted(raw_dir.glob("*.zip"))
-
-    # pool results across all companies
+def scan_zips(zips, existing_tags):
+    """Scan every filing in `zips`, classifying every numeric fact not
+    already in `existing_tags`. Returns (all_auto, all_review, per_company) -
+    pooled across all companies, same shape __main__ below always used
+    inline. Factored out so other scripts can reuse the exact same
+    classification pass via importlib (this project's established
+    cross-script reuse pattern - see CLAUDE.md) instead of duplicating this
+    loop - e.g. 28_claude_classify.py, which needs `all_review` (the tags
+    that couldn't be classified deterministically) as its own input, without
+    writing anything to the shared mapping file itself."""
     all_auto = {}       # tag -> entry (standard or clearly classifiable extension)
     all_review = {}     # tag -> entry + which companies use it
     per_company = []
@@ -209,6 +195,34 @@ if __name__ == "__main__":
         c.close()
         per_company.append((company, auto_n, review_n))
         print(f"  auto={auto_n}  review={review_n}  already_known={skip_n}")
+
+    return all_auto, all_review, per_company
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--mapping", default="data/mappings/ifrs_concepts_v0.yaml")
+    ap.add_argument("--raw-dir", default="data/raw")
+    ap.add_argument("--review-out", default="data/mappings/REVIEW_extensions.yaml")
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--only", nargs="+", help="Only process these zip filenames")
+    args = ap.parse_args()
+
+    with open(args.mapping, encoding="utf-8") as f:
+        existing = yaml.safe_load(f)
+    existing_tags = set()
+    for stmt, concepts in existing.items():
+        for name, info in concepts.items():
+            existing_tags.update(info["xbrl_tags"])
+    print(f"Existing mapping: {len(existing_tags)} tags\n")
+
+    raw_dir = Path(args.raw_dir)
+    if args.only:
+        zips = [raw_dir / z for z in args.only if (raw_dir / z).exists()]
+    else:
+        zips = sorted(raw_dir.glob("*.zip"))
+
+    all_auto, all_review, per_company = scan_zips(zips, existing_tags)
 
     print(f"\n{'='*60}")
     print(f"TOTAL across all companies:")

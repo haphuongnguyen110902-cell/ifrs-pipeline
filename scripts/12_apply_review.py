@@ -46,10 +46,20 @@ for entry in entries:
     key = entry["suggested_key"]
     while key in existing[stmt]:
         key += "_x"
-    existing[stmt][key] = {
+    mapping_entry = {
         "display_label": entry["display_label"],
         "xbrl_tags": [entry["xbrl_tag"]],
     }
+    # Provenance: additive field, only present when the review entry carries
+    # one (e.g. 28_claude_classify.py's "claude-api-suggested") - a plain
+    # hand-filled REVIEW_extensions.yaml entry has none, so existing entries'
+    # shape is untouched. Per CLAUDE.md's AI-usage rules ("the underlying
+    # source fact and reasoning must remain inspectable"), this keeps every
+    # concept permanently traceable to whether a human or Claude proposed
+    # its classification, even after a human has reviewed and applied it.
+    if entry.get("classification_source"):
+        mapping_entry["classification_source"] = entry["classification_source"]
+    existing[stmt][key] = mapping_entry
     added += 1
 
 with open(args.mapping, "w", encoding="utf-8") as f:
