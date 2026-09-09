@@ -358,19 +358,46 @@ Same "explicit not available, never guess" principle as the D&A gap
 above, not an oversight.
 **Serves:** Dauphine.
 
-### Phase 7 — Market risk & return module (`22_market_risk.py`)
-Currently the ENTIRE pipeline is fundamentals-only - zero analysis of
-actual stock price behavior. Using yfinance price history (same source
-already used for market cap): volatility, Sharpe ratio, max drawdown,
-beta vs. a benchmark (CAC 40 / STOXX 600), rolling correlation. This is
-not optional polish for the Asset Management track - it's the most
-basic vocabulary of that discipline, and right now the project has none
-of it despite Asset Management being an explicit goal.
+### Phase 7 — Market risk & return module (`23_market_risk.py`) ✅ DONE
+Before this phase the ENTIRE pipeline was fundamentals-only - zero
+analysis of actual stock price behavior. Using yfinance price history
+(same source already used for market cap): volatility, Sharpe ratio,
+max drawdown, beta vs. a benchmark, rolling correlation. This was not
+optional polish for the Asset Management track - it's the most basic
+vocabulary of that discipline, and the project had none of it despite
+Asset Management being an explicit goal. 11/11 companies covered (this
+layer only needs price history, not XBRL tag completeness, so it
+doesn't inherit the fundamentals side's per-company data gaps). Wired
+into the dashboard as a new "Market Risk" tab; 14 new regression tests.
+
+**Renumbered from the originally-planned `22_market_risk.py`** - `22`
+was already taken by `22_dcf.py` (Phase 6) by the time this phase was
+written up; `23_credit.py`/`24_scenario.py` below are bumped to
+`24`/`25` for the same reason, found while actually starting this phase
+rather than left to collide later.
+
+**Benchmark: STOXX Europe 600 (`^STOXX` on Yahoo Finance), not CAC 40** -
+this universe spans France, Italy, Spain, Sweden and the UK; a
+France-only index would be the wrong comparison for Essity, Shell,
+Amplifon, Puig Brands and Moncler. One consistent pan-European benchmark
+for all 11 companies, not a per-country one - same "one universe-wide
+comparison" principle as the single EUR conversion used everywhere else
+in this project.
+
+**Beta computed from raw price history, not read from yfinance's own
+`info.get("beta")`** (which `22_dcf.py` already uses for the DCF WACC) -
+deliberately different from that script, and for a real reason: Yahoo's
+own beta is an opaque black box (unstated benchmark, unstated lookback,
+unstated frequency), fine as a quick WACC input but not something this
+project would claim as its own analysis. Regressing the company's own
+daily returns against `^STOXX`'s is the actual "market risk" contribution
+Phase 7 exists to add - computed transparently, with the exact window
+and frequency stated, instead of trusted from an opaque number.
 **Serves:** Dauphine (Gestion d'Actifs) specifically - directly maps to
 "Investissements et marchés financiers" and "Introduction à
 l'économétrie de la finance" coursework.
 
-### Phase 8 — `23_credit.py`
+### Phase 8 — `24_credit.py`
 Net Debt/EBITDA trajectory → simple credit-profile classification.
 Most of the underlying data already exists (`net_debt_ebitda_proxy` from
 V2) - this is mostly a classification/trend layer on top of what's
@@ -378,7 +405,7 @@ already computed, so cost is low relative to value.
 **Serves:** Dauphine (credit/markets angle) + Controlling (counterparty
 risk is a real controlling concern).
 
-### Phase 9 — `24_scenario.py`
+### Phase 9 — `25_scenario.py`
 Perturb an input (margin -2pp, SEK -10%, etc.) and recompute downstream
 ratios/leverage/valuation. This is the actual day-to-day tool of FP&A
 (budget variance, sensitivity analysis) - the single most
