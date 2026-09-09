@@ -1,13 +1,17 @@
 # IFRS/XBRL Financial Analysis Pipeline
 
-**Live demo:** [ifrs-pipeline dashboard](https://haphuongnguyen110902-cell-ifrs-pipeline-webappapp-iwnn9s.streamlit.app/) — filter by country/sector, browse ratios and earnings-quality flags for 11 European listed companies.
+[![Tests](https://github.com/haphuongnguyen110902-cell/ifrs-pipeline/actions/workflows/tests.yml/badge.svg)](https://github.com/haphuongnguyen110902-cell/ifrs-pipeline/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 
-Automated pipeline for parsing, normalising, and analysing IFRS/XBRL financial filings from European listed companies.
+**Live demo:** [ifrs-pipeline dashboard](https://haphuongnguyen110902-cell-ifrs-pipeline-webappapp-iwnn9s.streamlit.app/) — filter by country/sector, browse ratios, earnings-quality flags, trading comps, a linked 3-statement model, and a DCF valuation for 11 European listed companies.
+
+An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind of output a financial analyst actually produces: normalised fundamentals with full provenance, ratio and earnings-quality analysis, forecasting validated by rolling-origin backtest, trading comps and precedent transactions, a linked 3-statement projection with a circularity-solved debt schedule, and a DCF valuation — cross-checked against each other, not presented as isolated calculators. Every non-trivial bug found while building it (data-loss incidents, currency-mixing errors, silent zero-as-real-data cases) is documented where it was fixed, with the regression test that now locks it in — see [`ROADMAP.md`](ROADMAP.md) for that build log in full.
 
 ## What it does
 
 - **Parses** ESEF/XBRL packages directly from ESMA-regulated filings using Arelle's Python API
-- **Normalises** raw XBRL tags to standardised IFRS concepts via a 640+-tag semantic mapping layer
+- **Normalises** raw XBRL tags to standardised IFRS concepts via a 714-tag semantic mapping layer
 - **Stores** facts in PostgreSQL (Neon) with full provenance — every number traceable back to its original XBRL tag and filing
 - **Validates** data against accounting identities and published annual reports
 - **Loads historical depth** — up to 9 years per company (2017–2025), one filing row per company/year, not just the latest annual report
@@ -15,33 +19,37 @@ Automated pipeline for parsing, normalising, and analysing IFRS/XBRL financial f
 - **Flags earnings-quality issues** — rule-based forensics (leverage spikes, cash-conversion deterioration, thin-denominator distortion) with automatic severity downgrades when a flag's own baseline is itself distorted
 - **Forecasts** each ratio (CAGR + linear regression) and **backtests** both methods with rolling-origin cross-validation to pick a winner per company/ratio, with a confidence label based on how many folds actually support the pick
 - **Converts currencies** per IAS 21 (ECB average rate for P&L, closing rate for balance sheet), auto-detecting which currencies are actually in use
-- **Builds trading comps** (EV/EBITDA, EV/Sales, P/E) in EUR, combining historical filing data with live market data
+- **Builds trading comps** (EV/EBITDA, EV/Sales, P/E) in EUR with sector-peer benchmarking and implied valuation, plus a small set of hand-verified precedent transactions
+- **Projects a linked 3-statement model** — revenue growth → EBIT → interest expense ↔ debt balance (the "circularity" every IB technical test asks about, solved with a fixed-point loop and verified against an independently-derived closed-form solution) → net income → FCF → dividends → debt paydown
+- **Values companies by DCF** — WACC built up via CAPM (live beta, sourced risk-free rate/ERP), unlevered FCFF discounted with a Gordon-growth terminal value, WACC × terminal-growth sensitivity table, cross-checked against the trading comps above
 - **Auto-classifies** new companies using the IFRS taxonomy's own presentation linkbase — standard tags require zero manual work
 - **Orchestrates** the full pipeline end-to-end with `run_pipeline.py --mode full`, or just the analysis layer with `--mode analyze`
-- **Serves** a public Streamlit dashboard (`webapp/app.py`) — filter by country/sector, browse ratios and forensics flags per company
+- **Serves** a public Streamlit dashboard (`webapp/app.py`) with 7 tabs per company — ratios, forensics flags, trading comps, the 3-statement model, DCF valuation, forecast backtest results, and precedent transactions
 - **Refreshes automatically** every Monday via GitHub Actions (`--mode analyze`, no local files needed — see [Automation](#automation))
-- **Tests itself** — 51 pytest regression tests covering every bug found and fixed during development, run on every push via CI
+- **Tests itself** — 87 pytest regression tests covering every bug found and fixed during development, run on every push via CI
 
-## Current status — V2 complete, dashboard live, automation running weekly
+## Current status — V2 complete, valuation layer (DCF/comps/3-statement) live, automation running weekly
 
 | | |
 |---|---|
 | Companies | 11 European listed companies (consumer, luxury, energy, hygiene) |
 | Countries | France, Italy, Spain, Sweden, United Kingdom |
-| Concepts mapped | 642 XBRL tags across income statement, balance sheet, cash flow |
+| Concepts mapped | 714 XBRL tags across income statement, balance sheet, cash flow |
 | Facts in database | 13,997 across all companies and years |
 | Years covered | 2017–2025 (varies by company; up to 9 years for some) |
-| Ratios computed | 10: margins, ROIC, ROE, cash conversion, DSO/DIO/DPO/CCC, tax rate, leverage |
+| Ratios computed | 12: margins, ROIC, ROE, cash conversion, DSO/DIO/DPO/CCC, tax rate, leverage |
+| Trading comps | 11/11 companies (EV/EBITDA, EV/Sales, P/E, sector peer benchmarking) |
+| 3-statement model / DCF | 9/11 companies — the other 2 report costs "by nature" with no COGS/gross-profit split in their filings at all, so no fabricated number is shown for them (see [Known limitations](#known-limitations)) |
 | Regression tests (data) | 5/5 pass — verified against L'Oréal's published 2024 annual report |
-| Regression tests (code) | 51 pytest tests, run on every push via GitHub Actions CI |
+| Regression tests (code) | 87 pytest tests, run on every push via GitHub Actions CI |
 | Forensics flags | 62 across 10 companies (26 high / 12 medium / 24 low severity) |
-| Backtest coverage | 66/70 company-ratio pairs have enough rolling folds to pick a method |
+| Backtest coverage | 78/82 company-ratio pairs have enough rolling folds to pick a method |
 | Unmapped facts | 0 — all non-dimensional facts fully mapped |
-| Dashboard | Live and public (see link above), refreshed weekly by CI |
+| Dashboard | Live and public (see link above), 7 tabs per company, refreshed weekly by CI |
 
 **Companies:** L'Oréal, LVMH, Kering, EssilorLuxottica, Puig Brands, Danone, Pernod Ricard, Essity, Moncler, Shell, Amplifon
 
-See [`ROADMAP.md`](ROADMAP.md) for what's done, in progress, and next — that file is the single source of truth for project direction.
+See [`ROADMAP.md`](ROADMAP.md) for the phase-by-phase engineering log behind this — what's done, in progress, and next, plus every real bug found along the way and how it was fixed.
 
 ## Sample output — comps table (2024)
 
@@ -78,23 +86,33 @@ unwinding, not real 2021 deterioration.
 ```
 ESEF filing (.zip)                    ECB FX rates          yfinance (live)
       ↓                                     ↓                     ↓
-Arelle parser  →  raw facts        18_fx_convert.py      19_valuation.py
+Arelle parser  →  raw facts        18_fx_convert.py      19_valuation.py / 22_dcf.py
       ↓                                     ↓                     ↓
-Semantic mapping (642 tags)  →  normalised IFRS concepts        (EUR)
+Semantic mapping (714 tags)  →  normalised IFRS concepts        (EUR)
       ↓
 PostgreSQL / Neon  ←─── single source of truth
       ↓         ↓         ↓          ↓            ↓           ↓
 Statements   Ratios   Validation  Forensics   Forecast    Backtest
  (Excel)  (DB+Excel)   (5/5)     (DB+Excel)  (DB+Excel)  (DB+Excel)
-                                        ↑ all read from the `ratio` table,
-                                          not from fact_value directly
-                                        ↓
-                              webapp/app.py (Streamlit) → public dashboard
+                    ↓ (`ratio` table - everything below reads from here,
+                      not from fact_value directly)
+        ┌───────────┼──────────────────┬──────────────────┐
+        ↓           ↓                  ↓                  ↓
+  Trading comps  3-statement    DCF valuation      Precedent
+  (19_valuation)  model (21_*)      (22_dcf)      transactions (20_*)
+        └───────────┴──────────────────┴──────────────────┘
+                                  ↓
+                    webapp/app.py (Streamlit) → public dashboard
+                    (7 tabs per company - ratios, forensics, comps,
+                     3-statement, DCF, backtest, precedents)
 ```
 
 `run_pipeline.py --mode full` runs the left-to-right chain once end to
-end; `--mode analyze` re-runs just forensics → forecast → backtest
+end; `--mode analyze` re-runs ratios → forensics → forecast → backtest
 without re-parsing anything, for fast iteration on the analysis layer.
+The valuation layer (comps/3-statement/DCF/precedents) is currently run
+by hand, not yet part of either pipeline mode - see
+[Known limitations](#known-limitations).
 
 Two independent CI workflows sit on top of this:
 - **`.github/workflows/tests.yml`** — runs `pytest tests/` on every push, no database needed (every test uses synthetic data)
@@ -105,8 +123,16 @@ Two independent CI workflows sit on top of this:
 The pipeline refreshes itself weekly with no manual intervention:
 
 1. Every Monday 06:00 UTC, GitHub Actions triggers `pipeline.yml`
-2. It runs `run_pipeline.py --mode analyze` — forensics → forecast → backtest, reading straight from the already-populated Neon database
+2. It runs `run_pipeline.py --mode analyze` — ratios → forensics → forecast → backtest, reading straight from the already-populated Neon database
 3. Results write back to the database; the dashboard (which queries live) reflects the refresh automatically
+
+**A real gap found and fixed, not a hypothetical:** `--mode analyze` used
+to skip straight to forensics/forecast/backtest, silently assuming the
+`ratio` table was already fresh. That meant a CODE fix to the ratio
+engine would never reach production via the automated weekly run, only
+a manual `--mode ratios`/`--mode full` - exactly the situation a real
+session hit. `step_ratios()` is now the first thing `--mode analyze`
+does.
 
 **Why `--mode analyze` specifically, not `--mode full`:** `data/raw/*` is
 gitignored on purpose (raw XBRL filings are large binaries that don't
@@ -188,10 +214,14 @@ python scripts/16_forecasting.py
 python scripts/17_backtest.py
 python scripts/18_fx_convert.py
 python scripts/19_valuation.py
+python scripts/20_precedents.py
+python scripts/21_three_statement_model.py --company "COMPANY NAME"
+python scripts/22_dcf.py --company "COMPANY NAME"
 
 # or all at once:
 python run_pipeline.py --mode full      # everything, first run
-python run_pipeline.py --mode analyze   # forensics+forecast+backtest only, fast re-run
+python run_pipeline.py --mode analyze   # ratios+forensics+forecast+backtest, fast re-run
+                                         # (valuation layer above still run separately, per company)
 
 # run the test suite
 python -m pytest tests/ -v
@@ -217,10 +247,13 @@ streamlit run webapp/app.py
 | `16_forecasting.py` | CAGR + linear regression forecasts per ratio |
 | `17_backtest.py` | Rolling-origin backtest of both forecasting methods |
 | `18_fx_convert.py` | ECB average/closing FX rates per IAS 21 |
-| `19_valuation.py` | Trading comps (EV/EBITDA, EV/Sales, P/E) in EUR |
+| `19_valuation.py` | Trading comps (EV/EBITDA, EV/Sales, P/E) in EUR, sector peer benchmarking |
+| `20_precedents.py` | Curated precedent M&A transactions vs. current trading comps |
+| `21_three_statement_model.py` | Linked 3-statement projection with circularity-solved debt schedule |
+| `22_dcf.py` | DCF valuation (CAPM WACC, unlevered FCFF, Gordon-growth terminal value) |
 | `run_pipeline.py` | Orchestrates the above (`--mode full` / `--mode analyze` / others) |
-| `webapp/app.py` | Public Streamlit dashboard — filter by country/sector, browse ratios + forensics |
-| `tests/` | pytest regression suite (51 tests) — see each file's docstring for the real bug it locks in |
+| `webapp/app.py` | Public Streamlit dashboard — 7 tabs per company (ratios, forensics, comps, 3-statement, DCF, backtest, precedents) |
+| `tests/` | pytest regression suite (87 tests) — see each file's docstring for the real bug it locks in |
 
 ## Known limitations
 
@@ -228,10 +261,12 @@ streamlit run webapp/app.py
 - Sign conventions partially handled
 - Canonical concept layer missing — adjusted operating profit definitions not yet unified across companies
 - Forensics thresholds (thin-margin, extreme cash-conversion, leverage) are fixed, sector-agnostic numbers, sanity-checked against the current 11-company dataset but not statistically derived — will need to become sector-relative once the universe is larger and more diverse
-- `19_valuation.py`'s yfinance calls are written against the documented API but still untested against a live call as of this writing — see the script's own docstring
 - `compute_flags()` in `15_forensics.py` assumes a ratio column exists if ANY company in the filtered input has it — true for the full 11-company universe, but a single-company filter (as `webapp/app.py` uses) can hit a company with zero rows for some ratio_name. Guarded with `safe_year_col()` where found so far; a new flag added later that reads a prior-year value the same unsafe way could reintroduce this class of bug
 - Pernod Ricard's June 30 fiscal year end doesn't align with the calendar-year FX rates and comps snapshots used elsewhere (flagged explicitly at query time, not silently ignored)
-- `pipeline.yml`'s scheduled run only executes `--mode analyze` (see Automation above) — `full`/`load`/`historical` still require manually running on a machine that has the raw filing `.zip` files
+- `pipeline.yml`'s scheduled run executes `--mode analyze`, which now includes ratios (see Automation above) — `full`/`load`/`historical` still require manually running on a machine that has the raw filing `.zip` files
+- Amplifon and Shell have no `gross_profit` or `cost_of_sales` tagged at all (a "by nature" P&L presentation with no COGS/gross-profit split in their statements) — 3-statement model, DCF, DIO and DPO are correctly left unavailable for them rather than derived from a guess. Every other company either tags one directly or derives it from the other via the textbook Revenue − COGS identity (see `11_ratio_engine.py`)
+- Beta is a raw live yfinance value per company, not unlevered/relevered by each peer's own capital structure before averaging — fine when comparing companies with similar leverage, understated rigor for a company like Shell whose leverage differs meaningfully from its DCF peer set
+- The comps/3-statement/DCF/precedents layer (`19`/`20`/`21`/`22_*.py`) is run by hand, not yet wired into `run_pipeline.py`'s `--mode analyze` or the weekly cron — see the note under [Architecture](#architecture)
 
 ## Roadmap
 
