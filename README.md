@@ -22,13 +22,16 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 - **Builds trading comps** (EV/EBITDA, EV/Sales, P/E) in EUR with sector-peer benchmarking and implied valuation, plus a small set of hand-verified precedent transactions
 - **Projects a linked 3-statement model** — revenue growth → EBIT → interest expense ↔ debt balance (the "circularity" every IB technical test asks about, solved with a fixed-point loop and verified against an independently-derived closed-form solution) → net income → FCF → dividends → debt paydown
 - **Values companies by DCF** — WACC built up via CAPM (live beta, sourced risk-free rate/ERP), unlevered FCFF discounted with a Gordon-growth terminal value, WACC × terminal-growth sensitivity table, cross-checked against the trading comps above
+- **Measures market risk** — annualized volatility, Sharpe ratio, max drawdown, and beta/correlation vs. STOXX Europe 600 computed directly from daily price history (not read from a third-party number)
+- **Classifies credit profile** — Net Debt/EBITDA trajectory bucketed into sector-agnostic leverage bands with a YoY trend label, computed from true EBITDA (not the differently-named `net_debt_ebitda_proxy` ratio, which is actually Net Debt/EBIT — see `24_credit.py`)
+- **Runs scenario/sensitivity analysis** — perturb revenue, margin, growth, cost of debt, or capex (any combination) and see the resulting shift in FCFF, Enterprise Value and leverage band, with WACC held constant so the delta is attributable to the operating shock alone
 - **Auto-classifies** new companies using the IFRS taxonomy's own presentation linkbase — standard tags require zero manual work
 - **Orchestrates** the full pipeline end-to-end with `run_pipeline.py --mode full`, or just the analysis layer with `--mode analyze`
-- **Serves** a public Streamlit dashboard (`webapp/app.py`) with 7 tabs per company — ratios, forensics flags, trading comps, the 3-statement model, DCF valuation, forecast backtest results, and precedent transactions
+- **Serves** a public Streamlit dashboard (`webapp/app.py`) with 9 tabs per company — ratios, forensics flags, trading comps, the 3-statement model, DCF valuation, market risk, credit profile, forecast backtest results, and precedent transactions
 - **Refreshes automatically** every Monday via GitHub Actions (`--mode analyze`, no local files needed — see [Automation](#automation))
-- **Tests itself** — 87 pytest regression tests covering every bug found and fixed during development, run on every push via CI
+- **Tests itself** — 131 pytest regression tests covering every bug found and fixed during development, run on every push via CI
 
-## Current status — V2 complete, valuation layer (DCF/comps/3-statement) live, automation running weekly
+## Current status — V2 complete, valuation + market risk + credit layer live, automation running weekly
 
 | | |
 |---|---|
@@ -40,12 +43,14 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Ratios computed | 12: margins, ROIC, ROE, cash conversion, DSO/DIO/DPO/CCC, tax rate, leverage |
 | Trading comps | 11/11 companies (EV/EBITDA, EV/Sales, P/E, sector peer benchmarking) |
 | 3-statement model / DCF | 9/11 companies — the other 2 report costs "by nature" with no COGS/gross-profit split in their filings at all, so no fabricated number is shown for them (see [Known limitations](#known-limitations)) |
+| Market risk (volatility, Sharpe, beta, drawdown) | 11/11 companies — price-history-only, doesn't inherit the fundamentals side's data gaps |
+| Credit profile (Net Debt/true EBITDA trajectory) | computed for every company/year with both net debt and EBITDA available; years with no D&A tag matched are flagged, not hidden |
 | Regression tests (data) | 5/5 pass — verified against L'Oréal's published 2024 annual report |
-| Regression tests (code) | 87 pytest tests, run on every push via GitHub Actions CI |
+| Regression tests (code) | 131 pytest tests, run on every push via GitHub Actions CI |
 | Forensics flags | 62 across 10 companies (26 high / 12 medium / 24 low severity) |
 | Backtest coverage | 78/82 company-ratio pairs have enough rolling folds to pick a method |
 | Unmapped facts | 0 — all non-dimensional facts fully mapped |
-| Dashboard | Live and public (see link above), 7 tabs per company, refreshed weekly by CI |
+| Dashboard | Live and public (see link above), 9 tabs per company, refreshed weekly by CI |
 
 **Companies:** L'Oréal, LVMH, Kering, EssilorLuxottica, Puig Brands, Danone, Pernod Ricard, Essity, Moncler, Shell, Amplifon
 
@@ -96,23 +101,29 @@ Statements   Ratios   Validation  Forensics   Forecast    Backtest
  (Excel)  (DB+Excel)   (5/5)     (DB+Excel)  (DB+Excel)  (DB+Excel)
                     ↓ (`ratio` table - everything below reads from here,
                       not from fact_value directly)
-        ┌───────────┼──────────────────┬──────────────────┐
-        ↓           ↓                  ↓                  ↓
-  Trading comps  3-statement    DCF valuation      Precedent
-  (19_valuation)  model (21_*)      (22_dcf)      transactions (20_*)
-        └───────────┴──────────────────┴──────────────────┘
+        ┌───────────┼──────────────────┬──────────────────┬──────────────┬─────────────┐
+        ↓           ↓                  ↓                  ↓              ↓             ↓
+  Trading comps  3-statement    DCF valuation      Precedent      Market risk   Credit profile
+  (19_valuation)  model (21_*)      (22_dcf)      transactions   (23_market_risk, (24_credit -
+                                                       (20_*)      price history   true EBITDA,
+                                                                   only - no       NOT the
+                                                                   `ratio` table   differently-named
+                                                                   dependency)     net_debt_ebitda_
+                                                                                   proxy ratio)
+        └───────────┴──────────────────┴──────────────────┴──────────────┴─────────────┘
                                   ↓
                     webapp/app.py (Streamlit) → public dashboard
-                    (7 tabs per company - ratios, forensics, comps,
-                     3-statement, DCF, backtest, precedents)
+                    (9 tabs per company - ratios, forensics, comps,
+                     3-statement, DCF, market risk, credit profile,
+                     backtest, precedents)
 ```
 
 `run_pipeline.py --mode full` runs the left-to-right chain once end to
 end; `--mode analyze` re-runs ratios → forensics → forecast → backtest
 without re-parsing anything, for fast iteration on the analysis layer.
-The valuation layer (comps/3-statement/DCF/precedents) is currently run
-by hand, not yet part of either pipeline mode - see
-[Known limitations](#known-limitations).
+The valuation/market-risk/credit layer (comps/3-statement/DCF/precedents/
+market risk/credit profile) is currently run by hand, not yet part of
+either pipeline mode - see [Known limitations](#known-limitations).
 
 Two independent CI workflows sit on top of this:
 - **`.github/workflows/tests.yml`** — runs `pytest tests/` on every push, no database needed (every test uses synthetic data)
@@ -217,6 +228,9 @@ python scripts/19_valuation.py
 python scripts/20_precedents.py
 python scripts/21_three_statement_model.py --company "COMPANY NAME"
 python scripts/22_dcf.py --company "COMPANY NAME"
+python scripts/23_market_risk.py --company "COMPANY NAME"
+python scripts/24_credit.py --company "COMPANY NAME"
+python scripts/25_scenario.py --company "COMPANY NAME" --margin-shock -2
 
 # or all at once:
 python run_pipeline.py --mode full      # everything, first run
@@ -251,6 +265,9 @@ streamlit run webapp/app.py
 | `20_precedents.py` | Curated precedent M&A transactions vs. current trading comps |
 | `21_three_statement_model.py` | Linked 3-statement projection with circularity-solved debt schedule |
 | `22_dcf.py` | DCF valuation (CAPM WACC, unlevered FCFF, Gordon-growth terminal value) |
+| `23_market_risk.py` | Volatility, Sharpe ratio, max drawdown, beta/correlation vs. STOXX Europe 600 |
+| `24_credit.py` | Net Debt/true-EBITDA trajectory → leverage band + trend classification |
+| `25_scenario.py` | Perturb revenue/margin/growth/cost of debt/capex, recompute FCFF/EV/leverage vs. base case |
 | `run_pipeline.py` | Orchestrates the above (`--mode full` / `--mode analyze` / others) |
 | `webapp/app.py` | Public Streamlit dashboard — 7 tabs per company (ratios, forensics, comps, 3-statement, DCF, backtest, precedents) |
 | `tests/` | pytest regression suite (87 tests) — see each file's docstring for the real bug it locks in |
@@ -266,7 +283,8 @@ streamlit run webapp/app.py
 - `pipeline.yml`'s scheduled run executes `--mode analyze`, which now includes ratios (see Automation above) — `full`/`load`/`historical` still require manually running on a machine that has the raw filing `.zip` files
 - Amplifon and Shell have no `gross_profit` or `cost_of_sales` tagged at all (a "by nature" P&L presentation with no COGS/gross-profit split in their statements) — 3-statement model, DCF, DIO and DPO are correctly left unavailable for them rather than derived from a guess. Every other company either tags one directly or derives it from the other via the textbook Revenue − COGS identity (see `11_ratio_engine.py`)
 - Beta is a raw live yfinance value per company, not unlevered/relevered by each peer's own capital structure before averaging — fine when comparing companies with similar leverage, understated rigor for a company like Shell whose leverage differs meaningfully from its DCF peer set
-- The comps/3-statement/DCF/precedents layer (`19`/`20`/`21`/`22_*.py`) is run by hand, not yet wired into `run_pipeline.py`'s `--mode analyze` or the weekly cron — see the note under [Architecture](#architecture)
+- The comps/3-statement/DCF/precedents/market-risk/credit layer (`19`-`24_*.py`) is run by hand, not yet wired into `run_pipeline.py`'s `--mode analyze` or the weekly cron — see the note under [Architecture](#architecture)
+- `net_debt_ebitda_proxy` (in `11_ratio_engine.py`/the Ratios tab, display label "Net Debt vs Op. Profit") is Net Debt / EBIT despite its name — a real naming inconsistency found while building `24_credit.py`, which computes true Net Debt/EBITDA separately rather than reusing that column. Not renamed here because other code already depends on the existing name; worth a rename pass on its own
 
 ## Roadmap
 

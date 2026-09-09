@@ -115,6 +115,20 @@ def load_dcf(_engine, company_name: str):
 
 
 @st.cache_data(ttl=3600)
+def load_market_risk(_engine, company_name: str):
+    return pd.read_sql(text(
+        "SELECT * FROM market_risk WHERE company = :c ORDER BY computed_at DESC LIMIT 1"
+    ), _engine, params={"c": company_name})
+
+
+@st.cache_data(ttl=3600)
+def load_credit_profile(_engine, company_name: str):
+    return pd.read_sql(text(
+        "SELECT * FROM credit_profile WHERE company = :c ORDER BY year ASC"
+    ), _engine, params={"c": company_name})
+
+
+@st.cache_data(ttl=3600)
 def load_backtest(_engine, company_id: int):
     return pd.read_sql(text(
         "SELECT ratio_name, method, n_folds, mae, rmse, bias, mape, is_winner, confidence "
@@ -330,6 +344,70 @@ def render_dcf(df: pd.DataFrame):
                "range. Cross-check against the Comps tab's EV for the same company.")
 
 
+def render_market_risk(df: pd.DataFrame):
+    if df.empty:
+        st.info("No market risk metrics computed yet for this company (see 23_market_risk.py).")
+        return
+    r = df.iloc[0]
+    st.caption(f"{r['period_start']} to {r['period_end']} ({int(r['n_observations'])} aligned "
+               f"trading days) vs {r['benchmark']} (STOXX Europe 600) - beta and correlation are "
+               f"computed directly from daily price history, not read from a third-party number. "
+               f"See 23_market_risk.py's module docstring for the full method.")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Annualized Volatility", format_pct_fraction(r["annualized_volatility"]))
+    c2.metric("Sharpe Ratio", f"{r['sharpe_ratio']:.2f}" if pd.notna(r["sharpe_ratio"]) else "n/a")
+    c3.metric("Max Drawdown", format_pct_fraction(r["max_drawdown"]))
+
+    c4, c5, c6 = st.columns(3)
+    c4.metric("Beta", f"{r['beta']:.2f}" if pd.notna(r["beta"]) else "n/a")
+    c5.metric("Correlation", f"{r['correlation']:.2f}" if pd.notna(r["correlation"]) else "n/a")
+    c6.metric("60d Rolling Correlation (avg)",
+              f"{r['rolling_corr_mean']:.2f}" if pd.notna(r["rolling_corr_mean"]) else "n/a")
+
+    st.caption(f"Benchmark's own annualized volatility over the same window: "
+               f"{format_pct_fraction(r['benchmark_volatility'])} - compare against this "
+               f"company's volatility above to see if it's more or less volatile than the "
+               f"broader European market, not just in absolute terms.")
+
+
+def render_credit_profile(df: pd.DataFrame):
+    if df.empty:
+        st.info("No credit profile computed yet for this company (see 24_credit.py).")
+        return
+
+    st.caption("Net Debt / EBITDA trajectory - NOT the same as the Ratios tab's "
+               "\"Net Debt vs Op. Profit\" (that's Net Debt / EBIT, despite its column name "
+               "elsewhere; see 24_credit.py's module docstring for why reusing it would have "
+               "overstated leverage here). Bands are a fixed, sector-agnostic heuristic, not a "
+               "real agency rating - see the script's docstring.")
+
+    latest = df.iloc[-1]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Latest Net Debt/EBITDA",
+              f"{latest['net_debt_ebitda']:.2f}x" if pd.notna(latest["net_debt_ebitda"]) else "n/a")
+    c2.metric("Band", latest["band"])
+    c3.metric("Trend", latest["trend"])
+
+    display = df.copy()
+    display["net_debt_ebitda"] = display["net_debt_ebitda"].apply(
+        lambda v: f"{v:.2f}x" if pd.notna(v) else "n/a")
+    display["net_debt"] = display["net_debt"].apply(format_eur)
+    display["ebitda"] = display["ebitda"].apply(format_eur)
+    display["is_da_fallback"] = display["is_da_fallback"].map(
+        {True: "⚠ EBITDA=EBIT (overstated)", False: ""})
+    display = display[["year", "net_debt", "ebitda", "net_debt_ebitda", "band", "trend", "is_da_fallback"]].rename(
+        columns={"year": "Year", "net_debt": "Net Debt", "ebitda": "EBITDA",
+                 "net_debt_ebitda": "Net Debt/EBITDA", "band": "Band", "trend": "Trend",
+                 "is_da_fallback": ""})
+    st.dataframe(display, width="stretch", hide_index=True)
+
+    if df["is_da_fallback"].any():
+        st.caption("⚠ Years marked above have no D&A tag matched for this company - EBITDA "
+                   "silently equals EBIT for those years, so leverage is likely overstated. "
+                   "See 11_ratio_engine.py's D&A fallback notes.")
+
+
 def render_backtest(df: pd.DataFrame):
     if df.empty:
         st.info("No forecast backtest computed yet for this company (see 17_backtest.py).")
@@ -412,10 +490,10 @@ selected_row = filtered[filtered["name"] == selected_name].iloc[0]
 st.markdown(f"## {selected_name}")
 st.caption(f"{selected_row['country']} · {selected_row['sector']}")
 
-(tab_ratios, tab_forensics, tab_comps, tab_3stmt,
- tab_dcf, tab_backtest, tab_precedents) = st.tabs([
+(tab_ratios, tab_forensics, tab_comps, tab_3stmt, tab_dcf,
+ tab_market_risk, tab_credit, tab_backtest, tab_precedents) = st.tabs([
     "Ratios", "Forensics flags", "Trading Comps", "3-Statement Model",
-    "DCF Valuation", "Forecast Backtest", "Precedent Transactions",
+    "DCF Valuation", "Market Risk", "Credit Profile", "Forecast Backtest", "Precedent Transactions",
 ])
 
 with tab_ratios:
@@ -433,6 +511,12 @@ with tab_3stmt:
 
 with tab_dcf:
     render_dcf(load_dcf(engine, selected_name))
+
+with tab_market_risk:
+    render_market_risk(load_market_risk(engine, selected_name))
+
+with tab_credit:
+    render_credit_profile(load_credit_profile(engine, selected_name))
 
 with tab_backtest:
     render_backtest(load_backtest(engine, int(selected_row["company_id"])))
