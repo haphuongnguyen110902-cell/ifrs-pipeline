@@ -91,6 +91,51 @@ def test_no_metadata_given_does_not_issue_a_pointless_update(b09):
     assert "UPDATE" not in kinds
 
 
+class TestFiscalYearEndParsing:
+    """_parse_fiscal_year_end() (PLAN.md WP3c) turns companies.yaml's
+    human-written "Month Day" string into (month, day) - the real case
+    this was built for: Pernod Ricard's "June 30", which companies.yaml
+    had documented since V0 but nothing ever read (same "data existed,
+    never wired through" pattern as V2.6's sector/country fix)."""
+
+    def test_parses_the_real_pernod_ricard_case(self, b09):
+        assert b09._parse_fiscal_year_end("June 30") == (6, 30)
+
+    def test_none_input_returns_none_none(self, b09):
+        """Every OTHER company in companies.yaml simply has no
+        fiscal_year_end key at all - config.get() returns None, which
+        must mean "unknown", not crash."""
+        assert b09._parse_fiscal_year_end(None) == (None, None)
+
+    def test_malformed_string_returns_none_none_not_a_crash(self, b09):
+        assert b09._parse_fiscal_year_end("not a date") == (None, None)
+
+
+def test_new_company_with_fiscal_year_end_is_inserted_with_it(b09):
+    cur = FakeCursor()
+    b09.get_or_create_company(cur, "Pernod Ricard", fiscal_year_end="June 30")
+    insert_params = [p for kind, p in cur.calls if kind == "INSERT"][0]
+    assert insert_params == ("Pernod Ricard", None, None, 6, 30)
+
+
+def test_existing_company_gets_fiscal_year_end_backfilled_via_update(b09):
+    """The real bug this closes: get_or_create_filing() never sets
+    filing.fiscal_year_end for a company loaded only through
+    09_batch_load.py's single-filing path (not load_historical.py, which
+    deliberately excludes Pernod Ricard) - found live: Pernod Ricard's
+    company.fiscal_year_end_month/day came back NULL after
+    migration_002's filing-derived backfill, because its one filing row
+    has fiscal_year_end = NULL. This UPDATE path is what actually fixes
+    it, from the same companies.yaml source V2.6 already trusts for
+    sector/country."""
+    cur = FakeCursor()
+    b09.get_or_create_company(cur, "TestCo")
+    cur.calls.clear()
+    b09.get_or_create_company(cur, "TestCo", fiscal_year_end="June 30")
+    kinds = [c[0] for c in cur.calls]
+    assert kinds == ["SELECT", "UPDATE"]
+
+
 def test_clear_company_facts_never_touches_historical_filings(b09):
     """Regression test for a REAL data-loss incident: an earlier,
     unscoped version of clear_company_facts() deleted ALL of a company's

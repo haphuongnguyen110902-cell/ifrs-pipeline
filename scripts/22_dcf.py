@@ -306,11 +306,20 @@ if __name__ == "__main__":
     # BEFORE projecting - see convert_base_to_eur()'s docstring for the
     # real bug (Essity's DCF silently mixing SEK financials with EUR
     # market cap) this fixes.
-    if args.company not in val19.TICKER_MAP:
-        print(f"\nNo ticker mapped for {args.company} in 19_valuation.py's TICKER_MAP - cannot fetch "
-              f"market cap/beta. Add it there first.")
+    # PLAN.md WP4: prefer TICKER_MAP (hand-verified) but fall back to the
+    # DB-resolved ticker (26_entity_resolution.py) for anything not in it
+    # - see 19_valuation.py's resolve_ticker_currency() docstring.
+    with engine.connect() as _conn:
+        db_row = _conn.execute(text(
+            "SELECT ticker, ticker_currency FROM company WHERE name = :n"
+        ), {"n": args.company}).fetchone()
+    db_ticker, db_currency = (db_row.ticker, db_row.ticker_currency) if db_row else (None, None)
+    ticker, quote_ccy = val19.resolve_ticker_currency(args.company, db_ticker, db_currency)
+    if not ticker:
+        print(f"\nNo ticker mapped for {args.company} (checked 19_valuation.py's TICKER_MAP and "
+              f"company.ticker) - cannot fetch market cap/beta. Run scripts/26_entity_resolution.py "
+              f"or add it to TICKER_MAP first.")
         sys.exit(1)
-    ticker, quote_ccy = val19.TICKER_MAP[args.company]
 
     if quote_ccy != "EUR":
         print(f"\n{args.company} reports in {quote_ccy} - converting base-year financials to EUR "

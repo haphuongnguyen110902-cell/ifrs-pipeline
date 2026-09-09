@@ -27,6 +27,7 @@ import ast
 import os
 import sys
 import zipfile
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -96,22 +97,56 @@ def load_mapping(path: str) -> dict:
 
 # ---------------------------------------------------------------- database
 
-def get_or_create_company(cur, name, sector=None, country=None):
+def _parse_fiscal_year_end(fye_str):
+    """Parses companies.yaml's human-written `fiscal_year_end: "June 30"`
+    into (month, day). Returns (None, None) if fye_str is falsy or doesn't
+    parse - never raises, since a malformed/missing value should just mean
+    "we don't know", not crash the whole load."""
+    if not fye_str:
+        return None, None
+    try:
+        # a leap year (2024) is appended so "February 29" parses too, and
+        # to avoid Python's day-without-year deprecation warning (the year
+        # itself is discarded below, never stored or used)
+        parsed = datetime.strptime(f"{fye_str} 2024", "%B %d %Y")
+        return parsed.month, parsed.day
+    except ValueError:
+        print(f"  *** could not parse fiscal_year_end '{fye_str}' as 'Month Day' - left unset")
+        return None, None
+
+
+def get_or_create_company(cur, name, sector=None, country=None, fiscal_year_end=None):
+    """fiscal_year_end (WP3c, PLAN.md): a human-written "Month Day" string
+    from companies.yaml, e.g. "June 30" - the SAME source companies.yaml
+    has always had for Pernod Ricard, just never wired through until now
+    (same "data existed, never wired through" pattern as V2.6's sector/
+    country fix - see ROADMAP.md). This is a company-level DEFAULT,
+    filled in only when the filing-derived company.fiscal_year_end_month/
+    day (see sql/migration_002_company_metadata.sql, backfilled from
+    filing.fiscal_year_end) doesn't already have it - never overwrites a
+    real filing-derived value with a human-typed one."""
+    fye_month, fye_day = _parse_fiscal_year_end(fiscal_year_end)
+
     cur.execute("SELECT company_id FROM company WHERE name = %s", (name,))
     row = cur.fetchone()
     if row:
-        # backfill sector/country on an existing row if we now have values
-        # and the row doesn't (e.g. company created before this metadata
-        # existed) - never overwrite an existing non-null value with None.
-        if sector or country:
+        # backfill sector/country/fiscal_year_end on an existing row if we
+        # now have values and the row doesn't (e.g. company created before
+        # this metadata existed) - never overwrite an existing non-null
+        # value with None.
+        if sector or country or fye_month:
             cur.execute(
                 "UPDATE company SET sector = COALESCE(%s, sector), "
-                "country = COALESCE(%s, country) WHERE company_id = %s",
-                (sector, country, row[0]))
+                "country = COALESCE(%s, country), "
+                "fiscal_year_end_month = COALESCE(fiscal_year_end_month, %s), "
+                "fiscal_year_end_day = COALESCE(fiscal_year_end_day, %s) "
+                "WHERE company_id = %s",
+                (sector, country, fye_month, fye_day, row[0]))
         return row[0]
     cur.execute(
-        "INSERT INTO company (name, sector, country) VALUES (%s, %s, %s) RETURNING company_id",
-        (name, sector, country))
+        "INSERT INTO company (name, sector, country, fiscal_year_end_month, fiscal_year_end_day) "
+        "VALUES (%s, %s, %s, %s, %s) RETURNING company_id",
+        (name, sector, country, fye_month, fye_day))
     return cur.fetchone()[0]
 
 
@@ -304,7 +339,8 @@ if __name__ == "__main__":
                 company_id = get_or_create_company(
                     cur, company,
                     sector=config[stem].get("sector"),
-                    country=config[stem].get("country"))
+                    country=config[stem].get("country"),
+                    fiscal_year_end=config[stem].get("fiscal_year_end"))
                 filing_id = get_or_create_filing(cur, company_id, str(zip_path))
 
                 if args.reset_facts:

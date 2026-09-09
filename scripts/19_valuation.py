@@ -184,8 +184,17 @@ def fetch_latest_fundamentals(engine, company_filter=None) -> pd.DataFrame:
     latest = df.loc[latest_idx].reset_index(drop=True)
 
     # sector comes from the `company` table (wired through in V2.6) -
-    # single source of truth rather than duplicating it in this script
-    sectors = pd.read_sql(text("SELECT name AS company, sector FROM company"), engine)
+    # single source of truth rather than duplicating it in this script.
+    # sector_std (PLAN.md WP3a) is a separate, machine-assigned, coarser
+    # grouping (see populate_sector_std()) - `sector` itself is left
+    # completely alone (still the detail-level free text shown in the
+    # company header/sidebar filter elsewhere), we just ALSO pull the
+    # standardized field peer-grouping actually needs below.
+    # ticker/ticker_currency (PLAN.md WP4): the DB-resolved fallback for
+    # any company not in TICKER_MAP - see resolve_ticker_currency() below.
+    sectors = pd.read_sql(
+        text("SELECT name AS company, sector AS sector_detail, sector_std, "
+             "ticker AS db_ticker, ticker_currency AS db_ticker_currency FROM company"), engine)
     return latest.merge(sectors, on="company", how="left")
 
 
@@ -201,16 +210,82 @@ def fetch_fundamentals_history(engine, company_filter=None) -> pd.DataFrame:
     return df.sort_values(["company", "year"])
 
 
+# ---------------------------------------------------------------- sector_std
+
+def populate_sector_std(engine, force: bool = False) -> int:
+    """Backfills company.sector_std from yfinance's own `sector` field
+    (PLAN.md WP3a), using TICKER_MAP for the ticker - the same pre-WP4
+    source of truth this script already relies on for market data.
+
+    WHY THIS FIELD EXISTS: company.sector is free text - 9 distinct
+    strings across the current 11 companies (see PLAN.md WP3a) - and
+    add_peer_stats()/add_implied_valuation() group peers on it, which is
+    why the live app used to print "Fewer than 2 sector peers" for
+    almost every company. yfinance's sector field is coarser and
+    consistent: verified live, it collapses the current 11 into
+    Consumer Defensive (5), Consumer Cyclical (3), Healthcare (2) and
+    Energy (1, correctly alone) - three real peer groups where there
+    used to be none.
+
+    Only fills companies with a NULL sector_std, unless force=True -
+    cheap to skip re-querying yfinance for companies already resolved.
+    Never guesses: a ticker with no sector in its yfinance info is left
+    NULL, not defaulted to something plausible-looking.
+    """
+    with engine.begin() as conn:
+        if force:
+            targets = list(TICKER_MAP.keys())
+        else:
+            rows = conn.execute(text(
+                "SELECT name FROM company WHERE sector_std IS NULL"
+            )).fetchall()
+            targets = [r[0] for r in rows if r[0] in TICKER_MAP]
+
+        n_updated = 0
+        for company in targets:
+            ticker, _ = TICKER_MAP[company]
+            try:
+                sector_std = yf.Ticker(ticker).info.get("sector")
+            except Exception as e:
+                print(f"  *** yfinance sector lookup failed for {company} ({ticker}): {e}")
+                continue
+            if not sector_std:
+                print(f"  *** yfinance returned no sector for {company} ({ticker}) - left NULL, not guessed")
+                continue
+            conn.execute(text(
+                "UPDATE company SET sector_std = :s, sector_source = 'yfinance' WHERE name = :n"
+            ), {"s": sector_std, "n": company})
+            n_updated += 1
+
+    return n_updated
+
+
+def resolve_ticker_currency(company: str, db_ticker=None, db_currency=None):
+    """PLAN.md WP4: prefers TICKER_MAP (hand-verified, currently correct
+    for the 11-company universe - see PLAN.md WP4's own verification
+    requirement) when the company is in it; falls back to the DB-resolved
+    ticker/currency (26_entity_resolution.py) for anything TICKER_MAP
+    doesn't have, e.g. a company added after WP4 landed. Deliberately NOT
+    the other way around: TICKER_MAP stays authoritative for companies
+    it already covers until the resolver's real match rate is proven
+    reliable enough to retire it (see PLAN.md WP4's gate)."""
+    if company in TICKER_MAP:
+        return TICKER_MAP[company]
+    if db_ticker:
+        return db_ticker, db_currency
+    return None, None
+
+
 # ---------------------------------------------------------------- comps
 
 def build_comps(fundamentals: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
     rows = []
     for _, f in fundamentals.iterrows():
         company = f["company"]
-        if company not in TICKER_MAP:
+        ticker, quote_ccy = resolve_ticker_currency(company, f.get("db_ticker"), f.get("db_ticker_currency"))
+        if not ticker:
             rows.append({"company": company, "year": f["year"], "note": "no ticker mapped - skipped"})
             continue
-        ticker, quote_ccy = TICKER_MAP[company]
 
         try:
             market = fetch_market_data(ticker)
@@ -238,7 +313,16 @@ def build_comps(fundamentals: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
         ev_eur = market_cap_eur + net_debt_eur
 
         rows.append({
-            "company": company, "sector": f.get("sector"), "year": year, "ticker": ticker,
+            # "sector" here is deliberately the STANDARDIZED sector_std,
+            # not the free-text detail (see fetch_latest_fundamentals and
+            # PLAN.md WP3a) - this is what add_peer_stats()/
+            # add_implied_valuation() group on below, and it's what gets
+            # persisted to valuation.sector, so the peer count shown to a
+            # user and the field actually used to compute it always agree.
+            # sector_detail is carried alongside for anyone who wants the
+            # original, more precise per-company text.
+            "company": company, "sector": f.get("sector_std"), "sector_detail": f.get("sector_detail"),
+            "year": year, "ticker": ticker, "quote_ccy": quote_ccy,
             "market_cap_eur": market_cap_eur, "net_debt_eur": net_debt_eur,
             "ev_eur": ev_eur, "revenue_eur": revenue_eur, "ebitda_eur": ebitda_eur,
             "net_income_eur": net_income_eur,
@@ -337,7 +421,10 @@ def compute_forward_multiples(comps: pd.DataFrame, history: pd.DataFrame, fx_loo
             fwd_ev_sales.append(None)
             continue
 
-        ticker, quote_ccy = TICKER_MAP.get(company, (None, "EUR"))
+        # quote_ccy was already resolved once in build_comps() (PLAN.md
+        # WP4: TICKER_MAP-or-DB-fallback via resolve_ticker_currency) -
+        # read it back from this row rather than re-deriving it here.
+        quote_ccy = row.get("quote_ccy", "EUR")
         if quote_ccy == "EUR":
             rev_eur, ebitda_eur = rev_fc[next_year], ebitda_fc[next_year]
         else:
@@ -453,6 +540,11 @@ if __name__ == "__main__":
         print("DATABASE_URL not found. Check your .env file.")
         sys.exit(1)
     engine = create_engine(db_url)
+
+    print("Backfilling standardized sector (sector_std) for peer grouping...")
+    n_sector = populate_sector_std(engine)
+    if n_sector:
+        print(f"  resolved sector_std for {n_sector} companies via yfinance")
 
     print("Fetching fundamentals (most recent complete fiscal year per company)...")
     fundamentals = fetch_latest_fundamentals(engine, args.company)

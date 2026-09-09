@@ -214,32 +214,29 @@ def render_ratio_table(ratios: pd.DataFrame):
     st.dataframe(display, width="stretch")
 
 
-def render_forensics(engine, company_name: str):
-    """Flags are recomputed live from the ratio table rather than read
-    from a stored table - 15_forensics.py doesn't persist to the DB (see
-    its own docstring), and recomputing is cheap at this dataset size."""
-    import importlib.util
-    from pathlib import Path
+@st.cache_data(ttl=3600)
+def load_forensics(_engine, company_id: int):
+    """Reads the persisted forensics_flag table (PLAN.md WP2) instead of
+    importlib-loading 15_forensics.py and recomputing on every render -
+    that used to couple the web layer to scripts/'s directory layout and
+    made a "every company with >= 2 HIGH flags" screener query impossible
+    with nothing stored. Same company_id-keyed pattern as the other
+    Phase 4-6 loaders above."""
+    return pd.read_sql(text(
+        "SELECT year, flag_id, label, severity, value, detail, what_to_check "
+        "FROM forensics_flag WHERE company_id = :cid ORDER BY year DESC"
+    ), _engine, params={"cid": company_id})
 
-    spec = importlib.util.spec_from_file_location(
-        "forensics_15", Path(__file__).parent.parent / "scripts" / "15_forensics.py")
-    forensics = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(forensics)
 
-    ratios = forensics.fetch_ratios(engine, company_filter=company_name)
-    if ratios.empty:
-        st.info("No forensics flags - not enough ratio history yet.")
-        return
-    wide = forensics.pivot_ratios(ratios)
-    flags = forensics.compute_flags(wide)
+def render_forensics(flags: pd.DataFrame):
     if flags.empty:
-        st.success("No flags - nothing unusual detected in this company's ratio history.")
+        st.success("No flags - nothing unusual detected in this company's ratio history "
+                    "(or not enough ratio history yet to compute any).")
         return
 
     severity_order = {"high": 0, "medium": 1, "low": 2}
-    flags = flags.sort_values(
-        by=["year"], key=lambda s: s, ascending=False
-    ).assign(_sev=flags["severity"].map(severity_order)).sort_values(["_sev", "year"], ascending=[True, False])
+    flags = flags.assign(_sev=flags["severity"].map(severity_order)).sort_values(
+        ["_sev", "year"], ascending=[True, False])
 
     icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}
     for _, f in flags.iterrows():
@@ -507,7 +504,7 @@ with tab_ratios:
     render_ratio_table(ratios)
 
 with tab_forensics:
-    render_forensics(engine, selected_name)
+    render_forensics(load_forensics(engine, int(selected_row["company_id"])))
 
 with tab_comps:
     render_comps(load_comps(engine, int(selected_row["company_id"])))

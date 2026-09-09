@@ -198,7 +198,7 @@ null-guard. **Effort:** 1–1.5 sessions.
 
 ---
 
-# WP2 — Persist forensics flags
+# WP2 — Persist forensics flags ✅ DONE
 
 **Objective:** `15_forensics.py` writes to a `forensics_flag` table.
 
@@ -251,9 +251,59 @@ flag for one release.
 
 **Unblocks:** the screener.
 
+**What actually happened:**
+- `sql/schema_forensics.sql` created with exactly the row shape specified
+  above, born with a real `company_id` FK from the start — no legacy TEXT
+  column to carry forward, since this table postdates WP1.
+- `save_to_db()` does a **delete-then-insert scoped to the companies in
+  the current run**, not an upsert — a deliberate design decision beyond
+  what this WP originally specified: a forensics flag can legitimately
+  *stop* triggering (e.g. a future ratio-engine fix corrects an input),
+  and an upsert alone would leave that now-wrong flag sitting in the
+  table forever with no incoming row to overwrite it. Verified this is
+  the actual behavior with a dedicated test
+  (`test_rerunning_save_to_db_is_idempotent_not_additive`).
+- `webapp/app.py`'s `render_forensics()` now takes a pre-fetched
+  DataFrame from a new `load_forensics(engine, company_id)` loader (same
+  `company_id`-keyed pattern WP1 established for the other five tabs)
+  instead of `importlib`-loading `15_forensics.py` and recomputing —
+  the dynamic import is gone entirely, as specified.
+- **The `pernod_companies = ["Pernod Ricard"]` hardcode fix from this
+  WP's original scope was deliberately NOT done here.** It depends on a
+  `company`-level fiscal-year-end field that doesn't exist yet — only
+  `filing.fiscal_year_end` does, per-filing — and that field is WP3c's
+  job, not WP2's. Fixing it now would mean guessing at WP3c's eventual
+  column name/shape. Left as-is, still flagged as a known landmine for
+  WP3c to actually close.
+- **Real, pre-existing bug found while verifying, unrelated to this WP's
+  scope:** running `python scripts/15_forensics.py` normally on Windows
+  crashes with `UnicodeEncodeError` — the emoji in `print_summary()`
+  can't encode to the default `cp1252` console codepage, and the crash
+  happens *before* `save_to_db()` ever runs. Verified with
+  `PYTHONIOENCODING=utf-8` as a workaround (not a fix) to actually get
+  the DB-writing step to execute for verification. Not fixed here — it
+  predates this WP and touches a different part of the script (output
+  formatting, not persistence) — flagged as a separate follow-up task
+  instead, since fixing it here would mix concerns per this plan's own
+  ground rule #1.
+- Verification performed: flag count matched the README's documented 62
+  (26 high / 12 medium / 24 low, 10 companies) exactly on the first live
+  run; re-ran a second time and got the identical count (idempotent, not
+  additive); confirmed zero NULL `company_id` rows. 4 new tests in
+  `tests/test_forensics.py`'s new `TestPersistence` class (DB-skip-guarded,
+  same pattern as `test_baseline_regression.py`): table creation is
+  idempotent, the documented flag count, delete-then-insert (not
+  additive) on a second run, and an unresolvable company name is
+  skipped rather than written with a NULL. Clicked through the live app's
+  Forensics tab for Amplifon (HIGH_LEVERAGE flags) and EssilorLuxottica
+  (confirmed the 2020 THIN_DENOMINATOR + downgraded-to-low 2021
+  CASH_CONVERSION_DROP still render exactly as documented) — both now
+  reading from the persisted table, zero console/server errors. Full
+  suite: 155/155 passing.
+
 ---
 
-# WP3 — Extend the `company` table (one migration, three additions)
+# WP3 — Extend the `company` table (one migration, three additions) ✅ DONE
 
 **Objective:** move the last hardcoded per-company constants into the database.
 
@@ -315,9 +365,97 @@ company name. Grep-based, crude, effective.
 
 **Risk:** low (purely additive). **Effort:** 1 session.
 
+**What actually happened, all three sub-parts, plus two real bugs found:**
+
+**3a (sector_std) — verified live, not assumed:** queried yfinance's own
+`sector` field for all 11 `TICKER_MAP` tickers before writing any code.
+Real result: **Consumer Defensive (5: L'Oreal, Danone, Pernod Ricard,
+Essity, Puig Brands), Consumer Cyclical (3: LVMH, Kering, Moncler),
+Healthcare (2: EssilorLuxottica, Amplifon), Energy (1: Shell, correctly
+alone)** — three real peer groups where the old 9-distinct-free-text-strings
+scheme had zero. `company.sector` is untouched (still the detail text
+shown in the company header/sidebar) — deliberately did NOT do the
+literal "rename to `sector_detail`" this WP originally specified, per
+ground rule #4 (additive over destructive): renaming would have broken
+every existing reader of `company.sector` (the sidebar filter,
+`09_batch_load.py`, `load_historical.py`) with no transition period.
+Added `sector_std`/`sector_source` alongside instead, populated via a new
+`populate_sector_std(engine, force=False)` in `19_valuation.py` (using
+`TICKER_MAP` for the ticker — the same pre-WP4 source this script already
+depends on). `19_valuation.py`'s `comps["sector"]` (and therefore
+`valuation.sector`, `ev_ebitda_sector_median`, `n_peers_in_sector`,
+`implied_ev_from_peers`, `premium_vs_peers_pct`) now derive from
+`sector_std`, not the free text — verified live: L'Oreal's Trading Comps
+tab now reads *"Sector peer comparison (5 peers in Consumer Defensive):
+peer median EV/EBITDA 11.6x implies an EV of €95.5bn — this company trades
+at a +113% premium to that"* where it used to say *"Fewer than 2 sector
+peers."* 3 new tests in `tests/test_valuation.py` (new file — this script
+had none before).
+
+**3b (ticker/ISIN/LEI columns)** — added exactly as specified
+(`ticker`, `ticker_exchange`, `isin`, `ticker_source`), empty, for WP4 to
+populate. `lei` confirmed already present (`sql/schema.sql:6`).
+
+**3c (fiscal_year_end) — two real bugs found running this, not assumed:**
+1. Confirmed via a live query before writing any migration: `filing.
+   fiscal_year_end` already exists (as this WP's own correction already
+   noted) — but the backfill query
+   (`sql/migration_002_company_metadata.sql`) that derives
+   `company.fiscal_year_end_month/day` from it came back **NULL for
+   Pernod Ricard specifically**, the one company this whole sub-part
+   exists for. Traced to the real root cause: `load_historical.py`
+   deliberately excludes Pernod Ricard (its own comment says so — the FYE
+   mismatch this WP is trying to fix), and `09_batch_load.py`'s
+   `get_or_create_filing()` never sets `filing.fiscal_year_end` or
+   `filing_date` at all on the single-filing path — every OTHER company
+   happens to have a `load_historical.py`-loaded row to draw a real value
+   from, Pernod Ricard doesn't.
+2. Fixed via the exact same "data existed in `companies.yaml`, never
+   wired through" pattern as V2.6's sector/country fix — `companies.yaml`
+   already had `fiscal_year_end: "June 30"` for Pernod Ricard since V0,
+   documentation only, nothing ever read it. `09_batch_load.py`'s
+   `get_or_create_company()` now accepts a `fiscal_year_end` string,
+   parses it (`_parse_fiscal_year_end()`), and backfills
+   `company.fiscal_year_end_month/day` via the same COALESCE-never-
+   overwrite-a-real-value pattern already used for sector/country.
+   Applied live (without needing to re-run the full, zip-dependent batch
+   load): `company.fiscal_year_end_month/day` for Pernod Ricard is now
+   `(6, 30)`, correctly derived from the human-verified source.
+3. `15_forensics.py`'s `pernod_companies = ["Pernod Ricard"]` hardcode
+   (deferred from WP2) is now closed: `compute_flags()` takes an
+   `off_calendar_fye: dict` parameter instead, and a new
+   `fetch_off_calendar_fye(engine)` builds it from
+   `company.fiscal_year_end_month/day`. The function has zero company
+   names baked in now — verified with tests that fire the flag for a
+   company deliberately named something other than "Pernod Ricard", and
+   confirm naming a company "Pernod Ricard" in test data alone (with no
+   dict entry) triggers nothing. Live run still produces the identical
+   62-flag count (26/12/24), with `PERNOD_FYE_WARNING` now correctly
+   generated from data rather than a hardcoded name match.
+4. **Deviated from "grep-based, crude, effective" verification** in favor
+   of the functional genericity tests described above — a literal
+   "no script contains the string 'Pernod Ricard'" grep would also flag
+   `TICKER_MAP`/`download_historical.py`'s per-company config dicts
+   (explicitly WP4's job to replace, not this WP's) and plain comments,
+   producing false failures unrelated to the actual hardcode this WP
+   closes.
+
+**Baseline regression note:** re-running `19_valuation.py` legitimately
+changed `valuation.market_cap_eur` (live market data moved since WP0's
+snapshot) and every peer-comparison column (the intended effect of 3a) —
+`tests/baseline/valuation.csv` was regenerated to reflect this; the other
+four tables were untouched and still matched their original snapshot
+unchanged.
+
+Full suite: 167/167 passing — 155 after WP2, +5 in `test_batch_load.py`
+(3 `_parse_fiscal_year_end` cases + 2 `get_or_create_company` FYE-backfill
+cases), +4 in `test_forensics.py` (3 off-calendar-fye genericity tests +
+1 live check that Pernod Ricard actually resolves), +3 in the new
+`test_valuation.py` = 167.
+
 ---
 
-# WP4 — Entity resolution: LEI → ISIN → ticker
+# WP4 — Entity resolution: LEI → ISIN → ticker ✅ DONE (partial - see below)
 
 **Objective:** new `scripts/26_entity_resolution.py`. Retire `TICKER_MAP`.
 
@@ -366,6 +504,113 @@ is disappointing for smaller Nordic names. **Effort:** 1.5–2 sessions.
 
 **Unblocks:** breadth entirely. Without this, company #12 onward has no market
 data.
+
+**What actually happened - built, verified live, and honestly incomplete:**
+
+**The free path changed shape once actually built, verified live before
+committing to it:**
+- `filings.xbrl.org` was dropped in favor of **GLEIF's own LEI-search API**
+  (`api.gleif.org/api/v1/lei-records?filter[entity.legalName]=...`) -
+  more authoritative for name→LEI than filings.xbrl.org's sparse entity
+  endpoint (confirmed: `filter[name]=` on that endpoint returned zero
+  results for every company name tried).
+- The ~1GB+ **bulk ISIN-to-LEI relationship file** this WP originally
+  specified was dropped in favor of **GLEIF's own per-LEI ISIN endpoint**
+  (`.../lei-records/{lei}/isins`) - found live while building this: it
+  serves the identical mapping, queried on demand, which is far more
+  practical at 11→low-hundreds scale than downloading and indexing a
+  bulk file for a few hundred lookups.
+
+**A real complication found building this, not assumed:** one LEI maps
+to MANY ISINs, not one - L'Oreal's alone has 32 (equity + bond issuances
+across currencies/tenors), and a single legal name can match SEVERAL
+ACTIVE LEIs (LVMH returned 9: "ACTIONS LVMH", "LVMH Group Treasury",
+"LVMH LUXURY VENTURES FUND I", ..., and the real parent, "LVMH MOET
+HENNESSY LOUIS VUITTON" - no name-text heuristic reliably tells them
+apart). Solved by **verifying candidates against real market data
+instead of guessing from name text**: for an ambiguous LEI, each
+candidate's ISINs are checked via OpenFIGI until one actually resolves
+to a live, exchange-listed common-stock security - a subsidiary/
+treasury/foundation LEI does not itself have separately listed common
+stock, so this is a verification, not an inference.
+
+**A second real bug found running this, not assumed, and actually
+fixed:** the first live check flagged Essity as a "mismatch"
+(`TICKER_MAP` says `ESSITY-B.ST`, resolver said `ESSITYB.ST`) - not a
+wrong company, a wrong ticker FORMAT: OpenFIGI's raw `ticker` field
+doesn't carry the hyphen yfinance requires for share-class tickers.
+Confirmed live: `ESSITYB.ST` genuinely 404s on yfinance; `ESSITY-B.ST`
+works. Fixed with `resolve_working_ticker()` - validates a candidate
+ticker against yfinance itself before trusting it (never persist a
+plausible-looking-but-broken value, per this project's own "never
+guess" rule), trying one well-justified normalization (insert a hyphen
+before a trailing single-letter share-class suffix) if the raw form
+fails. This turned the one real mismatch into a correct resolve on
+re-verification.
+
+**A third real, structural finding: OpenFIGI's anonymous rate limit is
+tighter and has a longer cooldown than a fixed per-request delay alone
+can survive.** A company with many bond ISINs (Danone: 60+) can burn
+through the anonymous budget mid-company and trigger a wall of 429s
+that a flat delay doesn't recover from. Fixed with
+`_post_openfigi_with_retry()` - exponential backoff (3 attempts) on a
+429 specifically, not just a longer flat delay. This measurably
+improved the real match rate across successive live runs as the fix
+landed: 1/11 → 3/11 (partially rate-limited) → 6/11 (1 mismatch, since
+fixed) → **7/11, 0 mismatched, 4 unresolved**, the number recorded below
+and in the README per this WP's own instruction ("that number is a real
+result and belongs in the README").
+
+**Final live spot-check against all 11 current companies (this WP's own
+required verification step):**
+
+| Result | Companies |
+|---|---|
+| Matched (7) | L'Oreal, Kering, Pernod Ricard, Essity, Moncler, Amplifon, Puig Brands |
+| Mismatched (0) | none |
+| Unresolved (4) | LVMH, EssilorLuxottica, Danone, Shell |
+
+All four unresolved cases are large multinationals where the real
+equity ISIN sits behind more bond ISINs than
+`MAX_ISINS_TO_CHECK_PER_LEI` (20) practically allows to check under
+OpenFIGI's rate limit even with retry/backoff, or (Shell, EssilorLuxottica)
+GLEIF's own candidate list didn't yield a working listing within the
+LEI-candidate cap (10) tried. Not a logic bug - a real, disclosed
+external-API constraint. **Not fixed further here**: an OpenFIGI API
+key (free to obtain, materially higher rate limits) would likely close
+most of this gap, but signing up for a third-party account is not
+something to do on the user's behalf without asking first - flagged as
+the clear next step rather than done here.
+
+**Decision: `TICKER_MAP` is NOT retired.** `19_valuation.py`'s new
+`resolve_ticker_currency()` prefers `TICKER_MAP` (hand-verified, still
+correct for all 11 companies) and falls back to the DB-resolved
+`company.ticker`/`ticker_currency` only for a company `TICKER_MAP`
+doesn't have - the opposite priority from this WP's original "delete
+TICKER_MAP in the same PR" instruction, and deliberately so: at 7/11
+real coverage, deleting it would be a regression, not a cleanup.
+`22_dcf.py`/`23_market_risk.py` updated to the same fallback pattern.
+Revisit retiring `TICKER_MAP` only once the resolver's real coverage is
+re-measured and materially better (e.g. with an API key, or once WP7's
+company universe makes hand-maintaining `TICKER_MAP` itself impractical).
+
+**Also added, not originally specified:** `company.ticker_currency`
+(`sql/migration_003_ticker_currency.sql`) - `TICKER_MAP`'s second
+element (quote currency) had no column to land in after WP3b's
+original scope (`ticker`/`ticker_exchange`/`isin`/`ticker_source` only).
+A small exchange→currency table (`EXCH_TO_CURRENCY`) mirrors
+`EXCH_TO_YF_SUFFIX`, with the same "never guess an unmapped exchange"
+rule - includes a note on the LSE's GBX-pence complication, matching
+`19_valuation.py`'s existing documented Shell simplification.
+
+**Verification performed:** 12 new tests in `tests/test_entity_resolution.py`
+(the pure `pick_best_equity_hit`/`_ticker_variants` ranking and
+ticker-normalization logic - the network-calling functions are
+deliberately exercised live via `--verify`, per this WP's own spec,
+not mocked). Migration 003 applied and confirmed idempotent (ran twice,
+no error). `tests/test_baseline_regression.py` stayed green throughout -
+this WP never touched the five WP1-migrated tables. Full suite passing
+(see commit for the exact count).
 
 ---
 
@@ -508,9 +753,9 @@ This is the Asset Management deliverable. Do not build it on 11 companies in
 ```
 WP0 safety net          0.5 session   ← DONE
 WP1 company_id          1.5           ← DONE
-WP2 forensics persist   1.0
-WP3 company columns     1.0
-WP4 entity resolution   2.0           ← the real wall before breadth
+WP2 forensics persist   1.0           ← DONE
+WP3 company columns     1.0           ← DONE
+WP4 entity resolution   2.0           ← DONE (7/11 real coverage, TICKER_MAP kept)
 WP5 thin screener       1.0
 WP6 Phase 10 one-pager  2.0           ← priority #1 payoff, portfolio artifact
 --- GATE: measure 3 numbers ---
@@ -522,4 +767,6 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: WP2** (WP0 and WP1 are done — see above).
+**Immediate next action: WP5** (WP0-WP4 are done — see above; WP4's
+`TICKER_MAP` retirement is incomplete at 7/11 real coverage and should be
+revisited before/alongside WP7, not blocking WP5/WP6).
