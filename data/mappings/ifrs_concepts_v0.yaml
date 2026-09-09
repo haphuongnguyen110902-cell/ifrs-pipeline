@@ -587,6 +587,321 @@ income_statement:
     display_label: Profit (loss) from operating activities, recurring (LVMH 2021)
     xbrl_tags:
     - LVM:ProfitLossFromOperatingActivitiesRecurring
+  gains_losses_recognised_when_control_in_subsidiary_is_lost:
+    display_label: Gains (losses) recognised when control of subsidiary is lost
+    xbrl_tags:
+    - ifrs-full:GainsLossesRecognisedWhenControlInSubsidiaryIsLost
+  interest_revenue_calculated_using_effective_interest_method:
+    display_label: Interest revenue calculated using effective interest method
+    xbrl_tags:
+    - ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod
+  fee_and_commission_income:
+    display_label: Fee and commission income
+    xbrl_tags:
+    - ifrs-full:FeeAndCommissionIncome
+  fee_and_commission_expense:
+    display_label: Fee and commission expense
+    xbrl_tags:
+    - ifrs-full:FeeAndCommissionExpense
+  fee_and_commission_income_expense:
+    display_label: Fee and commission income (expense)
+    xbrl_tags:
+    - ifrs-full:FeeAndCommissionIncomeExpense
+  trading_income_expense:
+    display_label: Trading income (expense)
+    xbrl_tags:
+    - ifrs-full:TradingIncomeExpense
+  impairment_loss_impairment_gain_and_reversal_of_impairment_l_etc:
+    display_label: Impairment loss (impairment gain and reversal of impairment loss)
+      determined in accordance with IFRS 9
+    xbrl_tags:
+    - ifrs-full:ImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIFRS9
+  insurance_service_result:
+    display_label: Insurance service result
+    xbrl_tags:
+    - ifrs-full:InsuranceServiceResult
+  insurance_revenue:
+    display_label: Insurance revenue
+    xbrl_tags:
+    - ifrs-full:InsuranceRevenue
+  insurance_service_expenses_from_insurance_contracts_issued:
+    display_label: Insurance service expenses from insurance contracts issued
+    xbrl_tags:
+    - ifrs-full:InsuranceServiceExpensesFromInsuranceContractsIssued
+  insurance_finance_income_expenses_from_insurance_contracts_i_etc:
+    display_label: Insurance finance income (expenses) from insurance contracts issued
+      recognised in profit or loss
+    xbrl_tags:
+    - ifrs-full:InsuranceFinanceIncomeExpensesFromInsuranceContractsIssuedRecognisedInProfitOrLoss
+  finance_income_expenses_from_reinsurance_contracts_held_reco_etc:
+    display_label: Finance income (expenses) from reinsurance contracts held recognised
+      in profit or loss
+    xbrl_tags:
+    - ifrs-full:FinanceIncomeExpensesFromReinsuranceContractsHeldRecognisedInProfitOrLoss
+  gains_losses_on_disposals_of_investments:
+    display_label: Gains (losses) on disposals of investments
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnDisposalsOfInvestments
+  net_gain_on_financial_instruments_at_fair_value_through_prof_etc:
+    display_label: Net gain on financial instruments at fair value through profit
+      or loss (non-insurance activities)
+    xbrl_tags:
+    - bnpp:NetGainOnFinancialInstrumentsAtFairValueThroughProfitOrLossNoninsuranceActivities
+  net_gain_on_financial_instruments_at_fair_value_through_equi_etc:
+    display_label: Net gain on financial instruments at fair value through equity
+      (non-insurance activities)
+    xbrl_tags:
+    - bnpp:NetGainOnFinancialInstrumentsAtFairValueThroughEquityNoninsuranceActivities
+  gain_loss_arising_from_derecognition_of_financial_assets_mea_etc:
+    display_label: Gain (loss) arising from derecognition of financial assets measured
+      at amortised cost
+    xbrl_tags:
+    - ifrs-full:GainLossArisingFromDerecognitionOfFinancialAssetsMeasuredAtAmortisedCost
+  net_income_from_insurance_activities:
+    display_label: Net income from insurance activities
+    xbrl_tags:
+    - bnpp:NetIncomeFromInsuranceActivities
+  investment_return_relatede_to_insurance_activities:
+    display_label: Investment return
+    xbrl_tags:
+    - bnpp:InvestmentReturnRelatedeToInsuranceActivities
+  miscellaneous_other_operating_expense:
+    display_label: Miscellaneous other operating expense
+    xbrl_tags:
+    - ifrs-full:MiscellaneousOtherOperatingExpense
+  revenues_from_continuing_activities:
+    display_label: Revenues from continuing activities
+    xbrl_tags:
+    - bnpp:RevenuesFromContinuingActivities
+  gross_operating_income_from_continuing_activities:
+    display_label: Gross operating income from continuing activities
+    xbrl_tags:
+    - bnpp:GrossOperatingIncomeFromContinuingActivities
+  other_net_losses_for_risk_on_financial_instruments:
+    display_label: Other net losses for risk on financial instruments
+    xbrl_tags:
+    - bnpp:OtherNetLossesForRiskOnFinancialInstruments
+  net_gain_on_noncurrent_assets:
+    display_label: Net gain on non-current assets
+    xbrl_tags:
+    - bnpp:NetGainOnNoncurrentAssets
+  changes_in_goodwill:
+    display_label: Increase (decrease) in goodwill
+    xbrl_tags:
+    - ifrs-full:ChangesInGoodwill
+  pretax_income_from_continuing_activities:
+    display_label: Pre-tax income from continuing activities
+    xbrl_tags:
+    - bnpp:PretaxIncomeFromContinuingActivities
+  loyalty_program_costs:
+    display_label: Loyalty Program Costs
+    xbrl_tags:
+    - carrefour:LoyaltyProgramCosts
+  net_sales_net_of_loyalty_program_costs:
+    display_label: Net Sales Net Of Loyalty Program Costs
+    xbrl_tags:
+    - carrefour:NetSalesNetOfLoyaltyProgramCosts
+  revenue_other:
+    display_label: Revenue other
+    xbrl_tags:
+    - carrefour:RevenueOther
+  sales_general_and_administrative_expenses_depreciation_and_a_etc:
+    display_label: Sales General And Administrative Expenses Depreciation And Amortisation
+    xbrl_tags:
+    - carrefour:SalesGeneralAndAdministrativeExpensesDepreciationAndAmortisation
+  profit_loss_from_ordinary_operating_activities:
+    display_label: Profit (loss) from ordinary operating activities
+    xbrl_tags:
+    - carrefour:ProfitLossFromOrdinaryOperatingActivities
+  profit_loss_from_ordinary_activities_after_share_of_profit_l_etc:
+    display_label: Profit (loss) from ordinary activities after share of profit (loss)
+      of associates and joint ventures in operating activity
+    xbrl_tags:
+    - carrefour:ProfitLossFromOrdinaryActivitiesAfterShareOfProfitLossOfAssociatesAndJointVenturesInOperatingActivity
+  non_recurring_income_and_expenses_net:
+    display_label: Non Recurring Income And Expenses Net
+    xbrl_tags:
+    - carrefour:NonRecurringIncomeAndExpensesNet
+  profit_loss_from_operating_activities_after_share_of_profit__etc:
+    display_label: Profit (loss) from operating activities after share of profit (loss)
+      of associates and joint ventures in operating activity
+    xbrl_tags:
+    - carrefour:ProfitLossFromOperatingActivitiesAfterShareOfProfitLossOfAssociatesAndJointVenturesInOperatingActivity
+  finance_costs_net:
+    display_label: Finance Costs Net
+    xbrl_tags:
+    - carrefour:FinanceCostsNet
+  impairment_loss_reversal_of_impairment_loss_recognised_in_pr_etc_x:
+    display_label: Impairment loss (reversal of impairment loss) recognised in profit
+      or loss, trade receivables
+    xbrl_tags:
+    - ifrs-full:ImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossTradeReceivables
+  gains_losses_on_change_in_fair_value_of_derivatives:
+    display_label: Gains (losses) on change in fair value of derivatives
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnChangeInFairValueOfDerivatives
+  interessi_attivi_e_proventi_assimilati:
+    display_label: Interest Income And Similar Revenues
+    xbrl_tags:
+    - finecobank:InteressiAttiviEProventiAssimilati
+  interessi_passivi_e_oneri_assimilati:
+    display_label: Interest Expenses And Similar Charges
+    xbrl_tags:
+    - finecobank:InteressiPassiviEOneriAssimilati
+  margine_di_interesse:
+    display_label: Net Interest Margin
+    xbrl_tags:
+    - finecobank:MargineDiInteresse
+  risultato_netto_dellattivita_di_copertura:
+    display_label: Net Gains Losses From Hedge Accounting
+    xbrl_tags:
+    - finecobank:RisultatoNettoDellattivitaDiCopertura
+  utile_perdite_da_cessione_o_riacquisto_di_attivita_e_passivi_etc:
+    display_label: Gains Losses On Disposals and Repurchase Of Financial Assets and
+      Liabilities
+    xbrl_tags:
+    - finecobank:UtilePerditeDaCessioneORiacquistoDiAttivitaEPassivitaFinanziarie
+  utili_perdite_da_cessione_o_riacquisto_di_attività_finanzia_etc:
+    display_label: Gain Loss Arising From Disposal Of Financial Assets Measured At
+      Amortised Cost
+    xbrl_tags:
+    - finecobank:UtiliPerditeDaCessioneORiacquistoDiAttivitàFinanziarieValutateAlCostoAmmortizzato
+  risultato_netto_delle_altre_attivita_passivita_finanziarie_v_etc:
+    display_label: Net Gains Losses On Other Financial Assets Liabilities At Fair
+      Value Through Profit Or Loss
+    xbrl_tags:
+    - finecobank:RisultatoNettoDelleAltreAttivitaPassivitaFinanziarieValutateAlFairValueConImpattoAContoEconomico
+  utili_perdite_su_attività_passività_finanziarie_obbligator_etc:
+    display_label: Gains Losses On Financial Assets Liabilities Mandatorily At Fair
+      Value Through Profit Or Loss
+    xbrl_tags:
+    - finecobank:UtiliPerditeSuAttivitàPassivitàFinanziarieObbligatoriamenteValutateAlFairValueConImpattoAContoEconomico
+  margine_di_intermediazione:
+    display_label: Gross Income
+    xbrl_tags:
+    - finecobank:MargineDiIntermediazione
+  rettifiche_riprese_di_valore_nette_per_rischio_di_credito_su_etc:
+    display_label: Impairment Loss Impairment Gain And Reversal Of Impairment Loss
+      Determined In Accordance With IFRS9 On Financial Assets At Amortised Cost
+    xbrl_tags:
+    - finecobank:RettificheRipreseDiValoreNettePerRischioDiCreditoSuAttivitaFinanziarieValutateAlCostoAmmortizzatoInBaseAIFRS9
+  rettifiche_riprese_di_valore_nette_per_rischio_di_credito_su_etc_x:
+    display_label: Impairment Loss Impairment Gain And Reversal Of Impairment Loss
+      Determined In Accordance With IFRS9 On Financial Assets At Fair Value Through
+      Other Comprehensive Income
+    xbrl_tags:
+    - finecobank:RettificheRipreseDiValoreNettePerRischioDiCreditoSuAttivitaFinanziarieValutateAlFairValueConImpattoSullaRedditivitaComplessivaInBaseAIFRS9
+  utili_perdite_da_modifiche_contrattuali_senza_cancellazioni:
+    display_label: Gains Losses From Contractual Changes Without derecognition
+    xbrl_tags:
+    - finecobank:UtiliPerditeDaModificheContrattualiSenzaCancellazioni
+  risultato_netto_della_gestione_finanziaria:
+    display_label: Net Profit From Financial Activities
+    xbrl_tags:
+    - finecobank:RisultatoNettoDellaGestioneFinanziaria
+  risultato_netto_della_gestione_finanziaria_e_assicurativa:
+    display_label: Profit Loss From Financial And Insurance Activities
+    xbrl_tags:
+    - finecobank:RisultatoNettoDellaGestioneFinanziariaEAssicurativa
+  spese_amministrative_spese_per_il_personale:
+    display_label: Administrative Expense Staff Costs
+    xbrl_tags:
+    - finecobank:SpeseAmministrativeSpesePerIlPersonale
+  altre_spese_amministrative:
+    display_label: Other Administrative Expenses
+    xbrl_tags:
+    - finecobank:AltreSpeseAmministrative
+  accantonamenti_netti_ai_fondi_per_rischi_e_oneri:
+    display_label: Net Provisions For Risks And Charges
+    xbrl_tags:
+    - finecobank:AccantonamentiNettiAiFondiPerRischiEOneri
+  accantonamenti_netti_ai_fondi_per_rischi_e_oneri_impegni_e_g_etc:
+    display_label: Net Provisions For Risks And Charges Commitments And Financial
+      Guarantees Given
+    xbrl_tags:
+    - finecobank:AccantonamentiNettiAiFondiPerRischiEOneriImpegniEGaranzieRilasciate
+  accantonamenti_netti_ai_fondi_per_rischi_e_oneri_altri_accan_etc:
+    display_label: Net Provisions For Risks And Charges Other Net Provision
+    xbrl_tags:
+    - finecobank:AccantonamentiNettiAiFondiPerRischiEOneriAltriAccantonamentiNetti
+  rettifiche_riprese_di_valore_nette_su_attivita_materiali_ril_etc:
+    display_label: Depreciation Amortisation And Impairment Loss Reversal Of Impairment
+      Loss Recognised In Profit Or Loss Tangible Assets
+    xbrl_tags:
+    - finecobank:RettificheRipreseDiValoreNetteSuAttivitaMaterialiRilevateAContoEconomico
+  rettifiche_riprese_di_valore_nette_su_attivita_immateriali_r_etc:
+    display_label: Depreciation Amortisation And Impairment Loss Reversal Of Impairment
+      Loss Recognised In Profit Or Loss Intangible Assets Other Than Goodwill
+    xbrl_tags:
+    - finecobank:RettificheRipreseDiValoreNetteSuAttivitaImmaterialiRilevateAContoEconomico
+  costi_operativi:
+    display_label: Operating Costs
+    xbrl_tags:
+    - finecobank:CostiOperativi
+  recurring_operating_income_x_x:
+    display_label: Recurring Operating Income
+    xbrl_tags:
+    - hermes:RecurringOperatingIncome
+  gains_on_disposals_of_noncurrent_assets:
+    display_label: Gains on disposals of non-current assets
+    xbrl_tags:
+    - ifrs-full:GainsOnDisposalsOfNoncurrentAssets
+  services_expense:
+    display_label: Services expense
+    xbrl_tags:
+    - ifrs-full:ServicesExpense
+  current_tax_expense_income_and_adjustments_for_current_tax_o_etc:
+    display_label: Current tax expense (income) and adjustments for current tax of
+      prior periods
+    xbrl_tags:
+    - ifrs-full:CurrentTaxExpenseIncomeAndAdjustmentsForCurrentTaxOfPriorPeriods
+  deferred_tax_expense_income_recognised_in_profit_or_loss:
+    display_label: Deferred tax expense (income) recognised in profit or loss
+    xbrl_tags:
+    - ifrs-full:DeferredTaxExpenseIncomeRecognisedInProfitOrLoss
+  other_operating_revenue:
+    display_label: Other Operating Revenue
+    xbrl_tags:
+    - safran:OtherOperatingRevenue
+  changes_in_inventories_of_finished_goods_and_work_in_progres_etc:
+    display_label: Decrease (increase) in inventories of finished goods and work in
+      progress
+    xbrl_tags:
+    - ifrs-full:ChangesInInventoriesOfFinishedGoodsAndWorkInProgress
+  other_work_performed_by_entity_and_capitalised:
+    display_label: Other work performed by entity and capitalised
+    xbrl_tags:
+    - ifrs-full:OtherWorkPerformedByEntityAndCapitalised
+  amortisations_and_provisions_net_use:
+    display_label: Amortisations and provisions net use
+    xbrl_tags:
+    - safran:AmortisationsAndProvisionsNetUse
+  other_incomes_expenses_operating_recurring:
+    display_label: Other incomes expenses operating recurring
+    xbrl_tags:
+    - safran:OtherIncomesExpensesOperatingRecurring
+  profit_loss_from_ordinary_activities_after_share_of_profit_l_etc_x:
+    display_label: Profit Loss From Ordinary Activities After Share Of Profit Loss
+      Of Associates And Joint Ventures In Operating Activity
+    xbrl_tags:
+    - safran:ProfitLossFromOrdinaryActivitiesAfterShareOfProfitLossOfAssociatesAndJointVenturesInOperatingActivity
+  other_non_recurring_operating_income_expenses:
+    display_label: Other non recurring operating income expenses
+    xbrl_tags:
+    - safran:OtherNonRecurringOperatingIncomeExpenses
+  profit_loss_from_operating_activities_after_share_of_profit__etc_x:
+    display_label: Profit Loss From Operating Activities After Share Of Profit Loss
+      Of Associates And Joint Ventures In Operating Activity
+    xbrl_tags:
+    - safran:ProfitLossFromOperatingActivitiesAfterShareOfProfitLossOfAssociatesAndJointVenturesInOperatingActivity
+  cost_of_net_debt_x:
+    display_label: Cost of net debt
+    xbrl_tags:
+    - safran:CostOfNetDebt
+  expense_due_to_unwinding_of_discount_on_provisions:
+    display_label: Expense arising from passage of time on other provisions
+    xbrl_tags:
+    - ifrs-full:ExpenseDueToUnwindingOfDiscountOnProvisions
 balance_sheet:
   accumulated_other_comprehensive_income:
     display_label: Accumulated Other Comprehensive Income
@@ -1219,6 +1534,740 @@ balance_sheet:
     display_label: Property, Plant and Equipment including Right-of-use Assets
     xbrl_tags:
     - shel:PropertyPlantAndEquipmentIncludingRightOfUseAssets
+  noncurrent_financial_assets_at_fair_value_through_profit_or__etc:
+    display_label: Non-current financial assets at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinancialAssetsAtFairValueThroughProfitOrLoss
+  current_financial_assets_at_amortised_cost:
+    display_label: Current financial assets at amortised cost
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialAssetsAtAmortisedCost
+  liabilities_from_sharebased_payment_transactions2011:
+    display_label: Liabilities from share-based payment transactions
+    xbrl_tags:
+    - ifrs-full:LiabilitiesFromSharebasedPaymentTransactions2011
+  current_tax_assets_noncurrent:
+    display_label: Current tax assets, non-current
+    xbrl_tags:
+    - ifrs-full:CurrentTaxAssetsNoncurrent
+  current_portion_of_longterm_borrowings:
+    display_label: Current portion of non-current borrowings
+    xbrl_tags:
+    - ifrs-full:CurrentPortionOfLongtermBorrowings
+  noncurrent_finance_lease_receivables:
+    display_label: Non-current finance lease receivables
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinanceLeaseReceivables
+  net_deferred_tax_assets:
+    display_label: Net deferred tax assets
+    xbrl_tags:
+    - ifrs-full:NetDeferredTaxAssets
+  derivative_financial_liabilities_held_for_hedging:
+    display_label: Derivative financial liabilities held for hedging
+    xbrl_tags:
+    - ifrs-full:DerivativeFinancialLiabilitiesHeldForHedging
+  net_deferred_tax_liabilities:
+    display_label: Net deferred tax liabilities
+    xbrl_tags:
+    - ifrs-full:NetDeferredTaxLiabilities
+  current_finance_lease_receivables:
+    display_label: Current finance lease receivables
+    xbrl_tags:
+    - ifrs-full:CurrentFinanceLeaseReceivables
+  current_prepayments_and_current_accrued_income_including_cur_etc:
+    display_label: Current prepayments and current accrued income including current
+      contract assets
+    xbrl_tags:
+    - ifrs-full:CurrentPrepaymentsAndCurrentAccruedIncomeIncludingCurrentContractAssets
+  current_accruals_and_current_deferred_income_including_curre_etc:
+    display_label: Current accruals and current deferred income including current
+      contract liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentAccrualsAndCurrentDeferredIncomeIncludingCurrentContractLiabilities
+  investments_other_than_investments_accounted_for_using_equit_etc:
+    display_label: Investments other than investments accounted for using equity method
+    xbrl_tags:
+    - ifrs-full:InvestmentsOtherThanInvestmentsAccountedForUsingEquityMethod
+  noncurrent_financial_liabilities_at_fair_value_through_profi_etc:
+    display_label: Non-current financial liabilities at fair value through profit
+      or loss
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss
+  shortterm_warranty_provision:
+    display_label: Current warranty provision
+    xbrl_tags:
+    - ifrs-full:ShorttermWarrantyProvision
+  current_accrued_expenses_and_other_current_liabilities:
+    display_label: Current accrued expenses and other current liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentAccruedExpensesAndOtherCurrentLiabilities
+  current_financial_liabilities_at_fair_value_through_profit_o_etc:
+    display_label: Current financial liabilities at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss
+  prepayments_and_accrued_income_including_contract_assets:
+    display_label: Prepayments and accrued income including contract assets
+    xbrl_tags:
+    - ifrs-full:PrepaymentsAndAccruedIncomeIncludingContractAssets
+  current_tax_liabilities:
+    display_label: Current tax liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentTaxLiabilities
+  financial_assets_at_fair_value_through_profit_or_loss:
+    display_label: Financial assets at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:FinancialAssetsAtFairValueThroughProfitOrLoss
+  financial_assets_at_fair_value_through_profit_or_loss_classi_etc:
+    display_label: Financial assets at fair value through profit or loss, classified
+      as held for trading
+    xbrl_tags:
+    - ifrs-full:FinancialAssetsAtFairValueThroughProfitOrLossClassifiedAsHeldForTrading
+  financial_assets_at_fair_value_through_profit_or_loss_mandat_etc:
+    display_label: Financial assets at fair value through profit or loss, mandatorily
+      measured at fair value, other than those classified as held for trading
+    xbrl_tags:
+    - ifrs-full:FinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValueOtherThanThoseClassifiedAsHeldForTrading
+  financial_assets_measured_at_fair_value_through_other_compre_etc:
+    display_label: Financial assets measured at fair value through other comprehensive
+      income
+    xbrl_tags:
+    - ifrs-full:FinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome
+  financial_assets_at_amortised_cost:
+    display_label: Financial assets at amortised cost
+    xbrl_tags:
+    - ifrs-full:FinancialAssetsAtAmortisedCost
+  loans_and_advances_to_banks_at_amortised_cost:
+    display_label: Loans and advances to banks at amortised cost
+    xbrl_tags:
+    - ifrs-full:LoansAndAdvancesToBanksAtAmortisedCost
+  loans_and_advances_to_customers_at_amortised_cost:
+    display_label: Loans and advances to customers at amortised cost
+    xbrl_tags:
+    - ifrs-full:LoansAndAdvancesToCustomersAtAmortisedCost
+  derivative_financial_assets_held_for_hedging:
+    display_label: Derivative financial assets held for hedging
+    xbrl_tags:
+    - ifrs-full:DerivativeFinancialAssetsHeldForHedging
+  insurance_contracts_issued_that_are_assets:
+    display_label: Insurance contracts issued that are assets
+    xbrl_tags:
+    - ifrs-full:InsuranceContractsIssuedThatAreAssets
+  reinsurance_contracts_held_that_are_assets:
+    display_label: Reinsurance contracts held that are assets
+    xbrl_tags:
+    - ifrs-full:ReinsuranceContractsHeldThatAreAssets
+  current_tax_assets:
+    display_label: Current tax assets
+    xbrl_tags:
+    - ifrs-full:CurrentTaxAssets
+  other_assets:
+    display_label: Other assets
+    xbrl_tags:
+    - ifrs-full:OtherAssets
+  financial_liabilities_at_amortised_cost:
+    display_label: Financial liabilities at amortised cost
+    xbrl_tags:
+    - ifrs-full:FinancialLiabilitiesAtAmortisedCost
+  deposits_from_banks_at_amortised_cost:
+    display_label: Deposits from banks at amortised cost
+    xbrl_tags:
+    - ifrs-full:DepositsFromBanksAtAmortisedCost
+  deposits_from_customers_at_amortised_cost:
+    display_label: Deposits from customers at amortised cost
+    xbrl_tags:
+    - ifrs-full:DepositsFromCustomersAtAmortisedCost
+  debt_instruments_issued_at_amortised_cost:
+    display_label: Debt instruments issued at amortised cost
+    xbrl_tags:
+    - ifrs-full:DebtInstrumentsIssuedAtAmortisedCost
+  financial_liabilities_at_fair_value_through_profit_or_loss_c_etc:
+    display_label: Financial liabilities at fair value through profit or loss that
+      meet definition of held for trading
+    xbrl_tags:
+    - ifrs-full:FinancialLiabilitiesAtFairValueThroughProfitOrLossClassifiedAsHeldForTrading
+  financial_liabilities_at_fair_value_through_profit_or_loss_d_etc:
+    display_label: Financial liabilities at fair value through profit or loss, designated
+      upon initial recognition or subsequently
+    xbrl_tags:
+    - ifrs-full:FinancialLiabilitiesAtFairValueThroughProfitOrLossDesignatedAsUponInitialRecognition
+  other_liabilities:
+    display_label: Other liabilities
+    xbrl_tags:
+    - ifrs-full:OtherLiabilities
+  provisions:
+    display_label: Provisions
+    xbrl_tags:
+    - ifrs-full:Provisions
+  insurance_contracts_issued_that_are_liabilities:
+    display_label: Insurance contracts issued that are liabilities
+    xbrl_tags:
+    - ifrs-full:InsuranceContractsIssuedThatAreLiabilities
+  cash_and_bank_balances_at_central_banks:
+    display_label: Cash and bank balances at central banks
+    xbrl_tags:
+    - ifrs-full:CashAndBankBalancesAtCentralBanks
+  financial_assets_at_fair_value_through_profit_or_loss_securi_etc:
+    display_label: Financial assets at fair value through profit or loss, Securities
+      (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialAssetsAtFairValueThroughProfitOrLossSecuritiesNoninsuranceActivities
+  financial_assets_at_fair_value_through_profit_or_loss_loans__etc:
+    display_label: Financial assets at fair value through profit or loss, Loans and
+      repurchase agreements (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialAssetsAtFairValueThroughProfitOrLossLoansAndRepurchaseAgreementsNoninsuranceActivities
+  financial_assets_at_fair_value_through_profit_or_loss_deriva_etc:
+    display_label: Financial assets at fair value through profit or loss, Derivative
+      financial instruments (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialAssetsAtFairValueThroughProfitOrLossDerivativeFinancialInstrumentsNoninsuranceActivities
+  derivatives_assets_used_for_hedging_purposes_noninsurance_ac_etc:
+    display_label: Derivatives assets used for hedging purposes (non-insurances activities)
+    xbrl_tags:
+    - bnpp:DerivativesAssetsUsedForHedgingPurposesNoninsuranceActivities
+  financial_assets_at_fair_value_through_equity_debt_securitie_etc:
+    display_label: Financial assets at fair value through equity, Debt securities
+      (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialAssetsAtFairValueThroughEquityDebtSecuritiesNoninsuranceActivities
+  financial_assets_at_fair_value_through_equity_equity_securit_etc:
+    display_label: Financial assets at fair value through equity, Equity securities
+      (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialAssetsAtFairValueThroughEquityEquitySecuritiesNoninsuranceActivities
+  financial_assets_at_amortised_cost_loans_and_advances_to_cre_etc:
+    display_label: Financial assets at amortised cost, Loans and advances to credit
+      institutions (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialAssetsAtAmortisedCostLoansAndAdvancesToCreditInstitutionsNoninsuranceActivities
+  financial_assets_at_amortised_cost_loans_and_advances_to_cus_etc:
+    display_label: Financial assets at amortised cost, Loans and advances to customers
+      (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialAssetsAtAmortisedCostLoansAndAdvancesToCustomersNoninsuranceActivities
+  financial_assets_at_amortised_cost_debt_securities_noninsura_etc:
+    display_label: Financial assets at amortised cost, Debt securities (non-insurance
+      activities)
+    xbrl_tags:
+    - bnpp:FinancialAssetsAtAmortisedCostDebtSecuritiesNoninsuranceActivities
+  remeasurement_adjustment_on_interestrate_risk_hedged_portfol_etc:
+    display_label: Remeasurement adjustment on interest-rate risk hedged portfolios,
+      Assets
+    xbrl_tags:
+    - bnpp:RemeasurementAdjustmentOnInterestrateRiskHedgedPortfoliosAssets
+  financial_investments_and_other_assets_related_to_insurance__etc:
+    display_label: Financial investments and other assets related to insurance activities
+    xbrl_tags:
+    - bnpp:FinancialInvestmentsAndOtherAssetsRelatedToInsuranceActivities
+  current_and_deferred_tax_assets:
+    display_label: Current and deferred tax assets
+    xbrl_tags:
+    - bnpp:CurrentAndDeferredTaxAssets
+  accrued_income_and_other_assets:
+    display_label: Accrued income and other assets
+    xbrl_tags:
+    - bnpp:AccruedIncomeAndOtherAssets
+  property_plant_and_equipment_rightofuse_assets_and_investmen_etc:
+    display_label: Property, plant and equipment, right-of-use assets and investment
+      property
+    xbrl_tags:
+    - bnpp:PropertyPlantAndEquipmentRightofuseAssetsAndInvestmentProperty
+  liabilities_due_to_central_banks:
+    display_label: Liabilities due to central banks
+    xbrl_tags:
+    - ifrs-full:LiabilitiesDueToCentralBanks
+  financial_liabilities_at_fair_value_through_profit_or_loss_s_etc:
+    display_label: Financial liabilities at fair value through profit or loss, Securities
+      (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesAtFairValueThroughProfitOrLossSecuritiesNoninsuranceActivities
+  financial_liabilities_at_fair_value_through_profit_or_loss_d_etc_x:
+    display_label: Financial liabilities at fair value through profit or loss, Deposits
+      and repurchase agreements (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesAtFairValueThroughProfitOrLossDepositsAndRepurchaseAgreementsNoninsuranceActivities
+  financial_liabilities_at_fair_value_through_profit_or_loss_i_etc:
+    display_label: Financial liabilities at fair value through profit or loss, Issued
+      debt securities (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesAtFairValueThroughProfitOrLossIssuedDebtSecuritiesNoninsuranceActivities
+  financial_liabilities_at_fair_value_through_profit_or_loss_d_etc_x_x:
+    display_label: Financial liabilities at fair value through profit or loss, Derivative
+      financial instruments (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesAtFairValueThroughProfitOrLossDerivativeFinancialInstrumentsNoninsuranceActivities
+  derivatives_liabilities_used_for_hedging_purposes_noninsuran_etc:
+    display_label: Derivatives liabilities used for hedging purposes (non-insurance
+      activities)
+    xbrl_tags:
+    - bnpp:DerivativesLiabilitiesUsedForHedgingPurposesNoninsuranceActivities
+  financial_liabilities_at_amortised_cost_deposits_from_credit_etc:
+    display_label: Financial liabilities at amortised cost, Deposits from credit institutions
+      (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesAtAmortisedCostDepositsFromCreditInstitutionsNoninsuranceActivities
+  financial_liabilities_at_amortised_cost_deposits_from_custom_etc:
+    display_label: Financial liabilities at amortised cost, Deposits from customers
+      (non-insurance activities)
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesAtAmortisedCostDepositsFromCustomersNoninsuranceActivities
+  financial_liabilities_at_amortised_cost_debt_securities_noni_etc:
+    display_label: Financial liabilities at amortised cost, Debt securities (non-insurance
+      activities)
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesAtAmortisedCostDebtSecuritiesNoninsuranceActivities
+  financial_liabilities_at_amortised_cost_subordinated_debt_no_etc:
+    display_label: Financial liabilities at amortised cost, Subordinated debt (non-insurance
+      activities)
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesAtAmortisedCostSubordinatedDebtNoninsuranceActivities
+  remeasurement_adjustment_on_interestrate_risk_hedged_portfol_etc_x:
+    display_label: Remeasurement adjustment on interest-rate risk hedged portfolios,
+      Liabilities
+    xbrl_tags:
+    - bnpp:RemeasurementAdjustmentOnInterestrateRiskHedgedPortfoliosLiabilities
+  current_and_deferred_tax_liabilities:
+    display_label: Current and deferred tax liabilities
+    xbrl_tags:
+    - bnpp:CurrentAndDeferredTaxLiabilities
+  accrued_expenses_and_other_liabilities:
+    display_label: Accrued expenses and other liabilities
+    xbrl_tags:
+    - bnpp:AccruedExpensesAndOtherLiabilities
+  financial_liabilities_related_to_insurance_activities:
+    display_label: Financial liabilities related to insurance activities
+    xbrl_tags:
+    - bnpp:FinancialLiabilitiesRelatedToInsuranceActivities
+  share_capital_additional_paidin_capital_and_retained_earning_etc:
+    display_label: Share capital, additional paid-in capital and retained earnings
+    xbrl_tags:
+    - bnpp:ShareCapitalAdditionalPaidinCapitalAndRetainedEarnings
+  total_capital_retained_earnings_and_net_income_for_the_perio_etc:
+    display_label: Total capital, retained earnings and net income for the period
+      attributable to shareholders
+    xbrl_tags:
+    - bnpp:TotalCapitalRetainedEarningsAndNetIncomeForThePeriodAttributableToShareholders
+  changes_in_assets_and_liabilities_recognised_directly_in_equ_etc:
+    display_label: Changes in assets and liabilities recognised directly in equity
+    xbrl_tags:
+    - bnpp:ChangesInAssetsAndLiabilitiesRecognisedDirectlyInEquity
+  investment_property:
+    display_label: Investment property
+    xbrl_tags:
+    - ifrs-full:InvestmentProperty
+  noncurrent_other_financial_assets:
+    display_label: Non current other financial assets
+    xbrl_tags:
+    - carrefour:NoncurrentOtherFinancialAssets
+  consumer_credit_granted_by_the_financial_services_companies__etc:
+    display_label: Consumer Credit Granted By The Financial Services Companies Portion
+      More Than One Year
+    xbrl_tags:
+    - carrefour:ConsumerCreditGrantedByTheFinancialServicesCompaniesPortionMoreThanOneYear
+  noncurrent_other_assets:
+    display_label: Non current other assets
+    xbrl_tags:
+    - carrefour:NoncurrentOtherAssets
+  trade_and_other_receivables:
+    display_label: Trade and other receivables
+    xbrl_tags:
+    - ifrs-full:TradeAndOtherReceivables
+  consumer_credit_granted_by_the_financial_services_companies__etc_x:
+    display_label: Consumer Credit Granted By The Financial Services Companies Portion
+      Less Than One Year
+    xbrl_tags:
+    - carrefour:ConsumerCreditGrantedByTheFinancialServicesCompaniesPortionLessThanOneYear
+  current_receivables_from_taxes_other_than_income_tax:
+    display_label: Current receivables from taxes other than income tax
+    xbrl_tags:
+    - ifrs-full:CurrentReceivablesFromTaxesOtherThanIncomeTax
+  current_other_assets:
+    display_label: Current other assets
+    xbrl_tags:
+    - carrefour:CurrentOtherAssets
+  consolidated_reserves_including_net_income:
+    display_label: Consolidated Reserves Including Net Income
+    xbrl_tags:
+    - carrefour:ConsolidatedReservesIncludingNetIncome
+  consumer_credit_financing_portion_more_than_one_year:
+    display_label: Consumer Credit Financing Portion More Than One Year
+    xbrl_tags:
+    - carrefour:ConsumerCreditFinancingPortionMoreThanOneYear
+  noncurrent_payables_on_social_security_and_taxes_other_than__etc:
+    display_label: Non-current payables on social security and taxes other than income
+      tax
+    xbrl_tags:
+    - ifrs-full:NoncurrentPayablesOnSocialSecurityAndTaxesOtherThanIncomeTax
+  trade_and_other_payables:
+    display_label: Trade and other payables
+    xbrl_tags:
+    - ifrs-full:TradeAndOtherPayables
+  consumer_credit_financing_portion_less_than_one_year:
+    display_label: Consumer Credit Financing Portion Less Than One Year
+    xbrl_tags:
+    - carrefour:ConsumerCreditFinancingPortionLessThanOneYear
+  tax_payables_portion_less_than_one_year:
+    display_label: Tax Payables Portion Less Than One Year
+    xbrl_tags:
+    - carrefour:TaxPayablesPortionLessThanOneYear
+  current_other_liabilities:
+    display_label: Current other liabilities
+    xbrl_tags:
+    - carrefour:CurrentOtherLiabilities
+  current_financial_assets:
+    display_label: Current financial assets
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialAssets
+  other_equity_interest:
+    display_label: Other equity interest
+    xbrl_tags:
+    - ifrs-full:OtherEquityInterest
+  other_noncurrent_receivables:
+    display_label: Other non-current receivables
+    xbrl_tags:
+    - ifrs-full:OtherNoncurrentReceivables
+  other_noncurrent_payables:
+    display_label: Other non-current payables
+    xbrl_tags:
+    - ifrs-full:OtherNoncurrentPayables
+  statutory_reserve:
+    display_label: Statutory reserve
+    xbrl_tags:
+    - ifrs-full:StatutoryReserve
+  land_and_buildings:
+    display_label: Land and buildings
+    xbrl_tags:
+    - ifrs-full:LandAndBuildings
+  machinery:
+    display_label: Machinery
+    xbrl_tags:
+    - ifrs-full:Machinery
+  other_property_plant_and_equipment:
+    display_label: Other property, plant and equipment
+    xbrl_tags:
+    - ifrs-full:OtherPropertyPlantAndEquipment
+  construction_in_progress:
+    display_label: Construction in progress
+    xbrl_tags:
+    - ifrs-full:ConstructionInProgress
+  current_advances:
+    display_label: Current advances received, representing current contract liabilities
+      for performance obligations satisfied at point in time
+    xbrl_tags:
+    - ifrs-full:CurrentAdvances
+  current_financial_assets_at_fair_value_through_profit_or_los_etc:
+    display_label: Current financial assets at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialAssetsAtFairValueThroughProfitOrLoss
+  noncurrent_inventories:
+    display_label: Non-current inventories
+    xbrl_tags:
+    - ifrs-full:NoncurrentInventories
+  trade_receivables:
+    display_label: Trade receivables
+    xbrl_tags:
+    - ifrs-full:TradeReceivables
+  provisions_for_employee_benefits:
+    display_label: Provisions for employee benefits
+    xbrl_tags:
+    - ifrs-full:ProvisionsForEmployeeBenefits
+  other_provisions:
+    display_label: Other provisions
+    xbrl_tags:
+    - ifrs-full:OtherProvisions
+  borrowings:
+    display_label: Borrowings
+    xbrl_tags:
+    - ifrs-full:Borrowings
+  other_financial_liabilities:
+    display_label: Other financial liabilities
+    xbrl_tags:
+    - ifrs-full:OtherFinancialLiabilities
+  trade_and_other_payables_to_trade_suppliers:
+    display_label: Trade payables
+    xbrl_tags:
+    - ifrs-full:TradeAndOtherPayablesToTradeSuppliers
+  variazioni_del_fair_value_degli_elementi_coperti_nel_portafo_etc:
+    display_label: Assets Fair Value Changes Of The Hedged Items In Portfolio Hedge
+      Of Interest Rate Risk
+    xbrl_tags:
+    - finecobank:VariazioniDelFairValueDegliElementiCopertiNelPortafoglioDiCoperturaDelRischioDiTassoDiInteresse
+  attività_materiali:
+    display_label: Tangible Assets
+    xbrl_tags:
+    - finecobank:AttivitàMateriali
+  di_cui_avviamento:
+    display_label: Of which Goodwill
+    xbrl_tags:
+    - finecobank:DiCuiAvviamento
+  attivita_fiscali:
+    display_label: Tax Assets
+    xbrl_tags:
+    - finecobank:AttivitaFiscali
+  passività_variazioni_del_fair_value_delle_voci_coperte_nel__etc:
+    display_label: Liabilities Fair Value Changes Of The Hedged Items In Portfolio
+      Hedge Of Interest Rate Risk
+    xbrl_tags:
+    - finecobank:PassivitàVariazioniDelFairValueDelleVociCoperteNelPortafoglioCoperturaDelRischioDiTassoDiInteresse
+  passivita_fiscali:
+    display_label: Tax Liabilities
+    xbrl_tags:
+    - finecobank:PassivitaFiscali
+  trattamento_di_fine_rapporto_del_personale:
+    display_label: Provision For Employee Severances Pay
+    xbrl_tags:
+    - finecobank:TrattamentoDiFineRapportoDelPersonale
+  impegni_e_garanzie_rilasciate:
+    display_label: Provision For Committments And Guarantees Given
+    xbrl_tags:
+    - finecobank:ImpegniEGaranzieRilasciate
+  altri_fondi_per_rischi_e_oneri:
+    display_label: Other Provisions For Risk And Charges
+    xbrl_tags:
+    - finecobank:AltriFondiPerRischiEOneri
+  riserve_da_valutazione:
+    display_label: Valuation Reserve
+    xbrl_tags:
+    - finecobank:RiserveDaValutazione
+  strumenti_di_capitale:
+    display_label: Equity Instrument
+    xbrl_tags:
+    - finecobank:StrumentiDiCapitale
+  altre_riserve:
+    display_label: Other Reserves Other
+    xbrl_tags:
+    - finecobank:AltreRiserve
+  utile_perdita_di_esercizio_di_pertinenza_della_capogruppo:
+    display_label: Profit loss attributable to owners of parent
+    xbrl_tags:
+    - finecobank:UtilePerditaDiEsercizioDiPertinenzaDellaCapogruppo
+  loans_and_advances_to_customers:
+    display_label: Loans and advances to customers
+    xbrl_tags:
+    - ifrs-full:LoansAndAdvancesToCustomers
+  reserves:
+    display_label: Reserves
+    xbrl_tags:
+    - hermes:Reserves
+  revaluation_adjustments:
+    display_label: Revaluation Adjustments
+    xbrl_tags:
+    - hermes:RevaluationAdjustments
+  noncurrent_financial_assets_at_amortised_cost:
+    display_label: Non-current financial assets at amortised cost
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinancialAssetsAtAmortisedCost
+  current_inventories_held_for_sale:
+    display_label: Current inventories held for sale
+    xbrl_tags:
+    - ifrs-full:CurrentInventoriesHeldForSale
+  current_prepayments_and_current_accrued_income_other_than_cu_etc:
+    display_label: Current prepayments and current accrued income other than current
+      contract assets
+    xbrl_tags:
+    - ifrs-full:CurrentPrepaymentsAndCurrentAccruedIncomeOtherThanCurrentContractAssets
+  accruals_classified_as_current:
+    display_label: Accruals classified as current
+    xbrl_tags:
+    - ifrs-full:AccrualsClassifiedAsCurrent
+  financial_assets_at_fair_value_through_other_comprehensive_i_etc:
+    display_label: Financial assets at fair value through other comprehensive income
+    xbrl_tags:
+    - ifrs-full:FinancialAssetsAtFairValueThroughOtherComprehensiveIncome
+  accumulated_fair_value_hedge_adjustment_on_hedged_item_inclu_etc:
+    display_label: Accumulated fair value hedge adjustment on hedged item included
+      in carrying amount, assets
+    xbrl_tags:
+    - ifrs-full:AccumulatedFairValueHedgeAdjustmentOnHedgedItemIncludedInCarryingAmountAssets
+  financial_liabilities:
+    display_label: Financial liabilities
+    xbrl_tags:
+    - ifrs-full:FinancialLiabilities
+  financial_liabilities_at_fair_value_through_profit_or_loss:
+    display_label: Financial liabilities at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:FinancialLiabilitiesAtFairValueThroughProfitOrLoss
+  insurance_contracts_that_are_liabilities:
+    display_label: Insurance contracts that are liabilities
+    xbrl_tags:
+    - ifrs-full:InsuranceContractsThatAreLiabilities
+  accumulated_fair_value_hedge_adjustment_on_hedged_item_inclu_etc_x:
+    display_label: Accumulated fair value hedge adjustment on hedged item included
+      in carrying amount, liabilities
+    xbrl_tags:
+    - ifrs-full:AccumulatedFairValueHedgeAdjustmentOnHedgedItemIncludedInCarryingAmountLiabilities
+  loans_and_advances_to_banks:
+    display_label: Loans and advances to banks
+    xbrl_tags:
+    - ifrs-full:LoansAndAdvancesToBanks
+  reverse_repurchase_agreements_and_cash_collateral_on_securit_etc:
+    display_label: Reverse repurchase agreements and cash collateral on securities
+      borrowed
+    xbrl_tags:
+    - ifrs-full:ReverseRepurchaseAgreementsAndCashCollateralOnSecuritiesBorrowed
+  deposits_from_banks:
+    display_label: Deposits from banks
+    xbrl_tags:
+    - ifrs-full:DepositsFromBanks
+  restricted_cash_and_cash_equivalents:
+    display_label: Restricted cash and cash equivalents
+    xbrl_tags:
+    - ifrs-full:RestrictedCashAndCashEquivalents
+  financial_assets_at_fair_value_through_profit_or_loss_design_etc:
+    display_label: Financial assets at fair value through profit or loss, designated
+      upon initial recognition or subsequently
+    xbrl_tags:
+    - ifrs-full:FinancialAssetsAtFairValueThroughProfitOrLossDesignatedAsUponInitialRecognition
+  reinsurance_contracts_held_that_are_liabilities:
+    display_label: Reinsurance contracts held that are liabilities
+    xbrl_tags:
+    - ifrs-full:ReinsuranceContractsHeldThatAreLiabilities
+  shortterm_employee_benefits_accruals:
+    display_label: Short-term employee benefits accruals
+    xbrl_tags:
+    - ifrs-full:ShorttermEmployeeBenefitsAccruals
+  deferred_income_other_than_contract_liabilities:
+    display_label: Deferred income other than contract liabilities
+    xbrl_tags:
+    - ifrs-full:DeferredIncomeOtherThanContractLiabilities
+  investments_in_joint_ventures_accounted_for_using_equity_met_etc:
+    display_label: Investments in joint ventures accounted for using equity method
+    xbrl_tags:
+    - ifrs-full:InvestmentsInJointVenturesAccountedForUsingEquityMethod
+  noncurrent_loans_and_receivables:
+    display_label: Non-current loans and receivables
+    xbrl_tags:
+    - ifrs-full:NoncurrentLoansAndReceivables
+  property_intended_for_sale_in_ordinary_course_of_business:
+    display_label: Property intended for sale in ordinary course of business
+    xbrl_tags:
+    - ifrs-full:PropertyIntendedForSaleInOrdinaryCourseOfBusiness
+  current_loans_and_receivables:
+    display_label: Current loans and receivables
+    xbrl_tags:
+    - ifrs-full:CurrentLoansAndReceivables
+  noncurrent_investments_in_equity_instruments_designated_at_f_etc:
+    display_label: Non-current investments in equity instruments designated at fair
+      value through other comprehensive income
+    xbrl_tags:
+    - ifrs-full:NoncurrentInvestmentsInEquityInstrumentsDesignatedAtFairValueThroughOtherComprehensiveIncome
+  noncurrent_assets_or_disposal_groups_classified_as_held_for__etc_x:
+    display_label: Non-current assets or disposal groups classified as held for distribution
+      to owners
+    xbrl_tags:
+    - ifrs-full:NoncurrentAssetsOrDisposalGroupsClassifiedAsHeldForDistributionToOwners
+  reserve_of_cash_flow_hedges:
+    display_label: Reserve of cash flow hedges
+    xbrl_tags:
+    - ifrs-full:ReserveOfCashFlowHedges
+  net_assets_liabilities:
+    display_label: Assets (liabilities)
+    xbrl_tags:
+    - ifrs-full:NetAssetsLiabilities
+  assets_recognised_from_costs_to_obtain_or_fulfil_contracts_w_etc:
+    display_label: Assets recognised from costs to obtain or fulfil contracts with
+      customers
+    xbrl_tags:
+    - ifrs-full:AssetsRecognisedFromCostsToObtainOrFulfilContractsWithCustomers
+  reserves_related_to_issued_capital_and_other_comprehensive_i_etc:
+    display_label: Reserves related to Issued Capital and Other comprehensive income
+    xbrl_tags:
+    - safran:ReservesRelatedToIssuedCapitalAndOtherComprehensiveIincome
+  borrowing_subject_to_specific_conditions:
+    display_label: Borrowing subject to specific conditions
+    xbrl_tags:
+    - safran:BorrowingSubjectToSpecificConditions
+  non_current_interest_bearing_financial_liablities:
+    display_label: Non current interest bearing financial liablities
+    xbrl_tags:
+    - safran:NonCurrentInterestBearingFinancialLiablities
+  current_interest_bearing_financial_liabilities:
+    display_label: Current interest bearing financial liabilities
+    xbrl_tags:
+    - safran:CurrentInterestBearingFinancialLiabilities
+  bonds_issued:
+    display_label: Bonds issued
+    xbrl_tags:
+    - ifrs-full:BondsIssued
+  equity_instruments_held:
+    display_label: Equity instruments held
+    xbrl_tags:
+    - ifrs-full:EquityInstrumentsHeld
+  current_dividend_payables:
+    display_label: Current dividend payables
+    xbrl_tags:
+    - ifrs-full:CurrentDividendPayables
+  current_prepayments_and_other_current_assets:
+    display_label: Current prepayments and other current assets
+    xbrl_tags:
+    - ifrs-full:CurrentPrepaymentsAndOtherCurrentAssets
+  shortterm_deposits_not_classified_as_cash_equivalents:
+    display_label: Short-term deposits, not classified as cash equivalents
+    xbrl_tags:
+    - ifrs-full:ShorttermDepositsNotClassifiedAsCashEquivalents
+  government_debt_instruments_held:
+    display_label: Government debt instruments held
+    xbrl_tags:
+    - ifrs-full:GovernmentDebtInstrumentsHeld
+  investments_for_risk_of_policyholders:
+    display_label: Investments for risk of policyholders
+    xbrl_tags:
+    - ifrs-full:InvestmentsForRiskOfPolicyholders
+  derivative_financial_assets:
+    display_label: Derivative financial assets
+    xbrl_tags:
+    - ifrs-full:DerivativeFinancialAssets
+  deposits_from_customers:
+    display_label: Deposits from customers
+    xbrl_tags:
+    - ifrs-full:DepositsFromCustomers
+  investment_contracts_liabilities:
+    display_label: Investment contracts liabilities
+    xbrl_tags:
+    - ifrs-full:InvestmentContractsLiabilities
+  debt_securities:
+    display_label: Debt instruments issued
+    xbrl_tags:
+    - ifrs-full:DebtSecurities
+  derivative_financial_liabilities:
+    display_label: Derivative financial liabilities
+    xbrl_tags:
+    - ifrs-full:DerivativeFinancialLiabilities
+  current_financial_liabilities_at_fair_value_through_profit_o_etc_x:
+    display_label: Current financial liabilities at fair value through profit or loss,
+      classified as held for trading
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialLiabilitiesAtFairValueThroughProfitOrLossClassifiedAsHeldForTrading
+  liabilities_arising_from_insurance_contracts:
+    display_label: Liabilities under insurance contracts and reinsurance contracts
+      issued
+    xbrl_tags:
+    - ifrs-full:LiabilitiesArisingFromInsuranceContracts
+  accruals_and_deferred_income_including_contract_liabilities:
+    display_label: Accruals and deferred income including contract liabilities
+    xbrl_tags:
+    - ifrs-full:AccrualsAndDeferredIncomeIncludingContractLiabilities
+  subordinated_liabilities:
+    display_label: Subordinated liabilities
+    xbrl_tags:
+    - ifrs-full:SubordinatedLiabilities
+  current_advances_to_suppliers:
+    display_label: Current advances to suppliers
+    xbrl_tags:
+    - ifrs-full:CurrentAdvancesToSuppliers
+  recognised_assets_defined_benefit_plan:
+    display_label: Net defined benefit asset
+    xbrl_tags:
+    - ifrs-full:RecognisedAssetsDefinedBenefitPlan
+  noncurrent_portion_of_noncurrent_loans_received:
+    display_label: Non-current portion of non-current loans received
+    xbrl_tags:
+    - ifrs-full:NoncurrentPortionOfNoncurrentLoansReceived
+  current_payables_on_social_security_and_taxes_other_than_inc_etc:
+    display_label: Current payables on social security and taxes other than income
+      tax
+    xbrl_tags:
+    - ifrs-full:CurrentPayablesOnSocialSecurityAndTaxesOtherThanIncomeTax
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense
@@ -2267,6 +3316,647 @@ cash_flow:
     display_label: Capital Expenditure
     xbrl_tags:
     - shel:CapitalExpenditure
+  adjustments_for_interest_income:
+    display_label: Adjustments for interest income
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForInterestIncome
+  adjustments_for_finance_income:
+    display_label: Adjustments for finance income
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForFinanceIncome
+  adjustments_for_amortisation_expense:
+    display_label: Adjustments for amortisation expense
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForAmortisationExpense
+  adjustments_for_decrease_increase_in_contract_assets:
+    display_label: Adjustments for decrease (increase) in contract assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInContractAssets
+  finance_income_received_classified_as_operating_activities:
+    display_label: Finance income received, classified as operating activities
+    xbrl_tags:
+    - ifrs-full:FinanceIncomeReceivedClassifiedAsOperatingActivities
+  finance_costs_paid_classified_as_operating_activities:
+    display_label: Finance costs paid, classified as operating activities
+    xbrl_tags:
+    - ifrs-full:FinanceCostsPaidClassifiedAsOperatingActivities
+  increase_decrease_in_intangible_assets_and_goodwill:
+    display_label: Increase (decrease) in intangible assets and goodwill
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseInIntangibleAssetsAndGoodwill
+  other_cash_payments_to_acquire_equity_or_debt_instruments_of_etc:
+    display_label: Other cash payments to acquire equity or debt instruments of other
+      entities, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:OtherCashPaymentsToAcquireEquityOrDebtInstrumentsOfOtherEntitiesClassifiedAsInvestingActivities
+  outflows_of_cash_from_investing_activities:
+    display_label: Outflows of cash from investing activities
+    xbrl_tags:
+    - ifrs-full:OutflowsOfCashFromInvestingActivities
+  adjustments_for_decrease_increase_in_other_current_assets:
+    display_label: Adjustments for decrease (increase) in other current assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInOtherCurrentAssets
+  adjustments_for_increase_decrease_in_other_current_liabiliti_etc:
+    display_label: Adjustments for increase (decrease) in other current liabilities
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInOtherCurrentLiabilities
+  payments_for_development_project_expenditure:
+    display_label: Payments for development project expenditure
+    xbrl_tags:
+    - ifrs-full:PaymentsForDevelopmentProjectExpenditure
+  dividends_received_from_associates_classified_as_investing_a_etc:
+    display_label: Dividends received from associates, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:DividendsReceivedFromAssociatesClassifiedAsInvestingActivities
+  adjustments_for_decrease_increase_in_financial_assets_held_f_etc:
+    display_label: Adjustments for decrease (increase) in financial assets held for
+      trading
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInFinancialAssetsHeldForTrading
+  adjustments_for_decrease_increase_in_financial_assets_at_fai_etc:
+    display_label: Adjustments for decrease (increase) in financial assets at fair
+      value through profit or loss, designated upon initial recognition or subsequently
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInFinancialAssetsAtFairValueThroughProfitOrLossDesignatedUponInitialRecognitionOrSubsequently
+  adjustments_for_decrease_increase_in_financial_assets_at_fai_etc_x:
+    display_label: Adjustments for decrease (increase) in financial assets at fair
+      value through profit or loss, mandatorily measured at fair value
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue
+  adjustments_for_decrease_increase_in_financial_assets_measur_etc:
+    display_label: Adjustments for decrease (increase) in financial assets measured
+      at fair value through other comprehensive income
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome
+  adjustments_for_decrease_increase_in_financial_assets_measur_etc_x:
+    display_label: Adjustments for decrease (increase) in financial assets measured
+      at amortised cost
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInFinancialAssetsMeasuredAtAmortisedCost
+  adjustments_for_decrease_increase_in_other_financial_assets:
+    display_label: Adjustments for decrease (increase) in other financial assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInOtherFinancialAssets
+  adjustments_for_increase_decrease_in_financial_liabilities_h_etc:
+    display_label: Adjustments for increase (decrease) in financial liabilities held
+      for trading
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInFinancialLiabilitiesHeldForTrading
+  proceeds_from_sales_of_intangible_assets_classified_as_inves_etc:
+    display_label: Proceeds from sales of intangible assets, classified as investing
+      activities
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSalesOfIntangibleAssetsClassifiedAsInvestingActivities
+  nonmonetary_items_included_in_pretax_net_income_and_other_ad_etc:
+    display_label: Non-monetary items included in pre-tax net income and other adjustments
+    xbrl_tags:
+    - bnpp:NonmonetaryItemsIncludedInPretaxNetIncomeAndOtherAdjustments
+  adjustments_for_impairment_of_goodwill_and_other_noncurrent__etc:
+    display_label: Adjustments for impairment of goodwill and other non-current assets
+    xbrl_tags:
+    - bnpp:AdjustmentsForImpairmentOfGoodwillAndOtherNoncurrentAssets
+  adjustments_for_net_addition_to_provisions:
+    display_label: Adjustments for net addition to provisions
+    xbrl_tags:
+    - bnpp:AdjustmentsForNetAdditionToProvisions
+  adjustments_for_variation_of_assets_liabilities_related_to_i_etc:
+    display_label: Adjustments for variation of assets/liabilities related to insurance
+      contracts
+    xbrl_tags:
+    - bnpp:AdjustmentsForVariationOfAssetsLiabilitiesRelatedToInsuranceContracts
+  net_expense_income_from_investing_activities:
+    display_label: Net expense (income) from investing activities
+    xbrl_tags:
+    - bnpp:NetExpenseIncomeFromInvestingActivities
+  net_expense_income_from_financing_activities:
+    display_label: Net expense (income) from financing activities
+    xbrl_tags:
+    - bnpp:NetExpenseIncomeFromFinancingActivities
+  net_increase_decrease_related_to_assets_and_liabilities_gene_etc:
+    display_label: Net increase (decrease) related to assets and liabilities generated
+      by operating activities
+    xbrl_tags:
+    - bnpp:NetIncreaseDecreaseRelatedToAssetsAndLiabilitiesGeneratedByOperatingActivities
+  net_increase_decrease_related_to_transactions_with_customers_etc:
+    display_label: Net increase (decrease) related to transactions with customers
+      and credit institutions
+    xbrl_tags:
+    - bnpp:NetIncreaseDecreaseRelatedToTransactionsWithCustomersAndCreditInstitutions
+  net_increase_decrease_related_to_transactions_involving_othe_etc:
+    display_label: Net increase (decrease) related to transactions involving other
+      financial assets and liabilities
+    xbrl_tags:
+    - bnpp:NetIncreaseDecreaseRelatedToTransactionsInvolvingOtherFinancialAssetsAndLiabilities
+  net_increase_decrease_related_to_transactions_involving_nonf_etc:
+    display_label: Net increase (decrease) related to transactions involving non-financial
+      assets and liabilities
+    xbrl_tags:
+    - bnpp:NetIncreaseDecreaseRelatedToTransactionsInvolvingNonfinancialAssetsAndLiabilities
+  net_increase_decrease_related_to_acquisitions_and_disposals__etc:
+    display_label: Net increase (decrease) related to acquisitions and disposals of
+      consolidated entities
+    xbrl_tags:
+    - bnpp:NetIncreaseDecreaseRelatedToAcquisitionsAndDisposalsOfConsolidatedEntities
+  net_increase_decrease_related_to_property_plant_and_equipmen_etc:
+    display_label: Net increase (decrease) related to property, plant and equipment
+      and intangible assets
+    xbrl_tags:
+    - bnpp:NetIncreaseDecreaseRelatedToPropertyPlantAndEquipmentAndIntangibleAssets
+  increase_decrease_in_cash_and_cash_equivalents_related_to_tr_etc:
+    display_label: Increase (decrease) in cash and cash equivalents related to transactions
+      with shareholders
+    xbrl_tags:
+    - bnpp:IncreaseDecreaseInCashAndCashEquivalentsRelatedToTransactionsWithShareholders
+  cash_and_amounts_due_from_central_banks:
+    display_label: Cash and amounts due from central banks
+    xbrl_tags:
+    - bnpp:CashAndAmountsDueFromCentralBanks
+  on_demand_deposits_with_credit_institutions:
+    display_label: On demand deposits with credit institutions
+    xbrl_tags:
+    - bnpp:OnDemandDepositsWithCreditInstitutions
+  on_demand_loans_from_credit_institutions:
+    display_label: On demand loans from credit institutions
+    xbrl_tags:
+    - bnpp:OnDemandLoansFromCreditInstitutions
+  deduction_of_receivables_and_accrued_interest_on_cash_and_ca_etc:
+    display_label: Deduction of receivables and accrued interest on cash and cash
+      equivalents
+    xbrl_tags:
+    - bnpp:DeductionOfReceivablesAndAccruedInterestOnCashAndCashEquivalents
+  cash_and_cash_equivalent_accounts_classified_as_assets_held__etc:
+    display_label: Cash and cash equivalent accounts classified as 'Assets held for
+      sale'
+    xbrl_tags:
+    - bnpp:CashAndCashEquivalentAccountsClassifiedAsAssetsHeldForSale
+  change_in_provisions_and_impairment:
+    display_label: Change In Provisions And Impairment
+    xbrl_tags:
+    - carrefour:ChangeInProvisionsAndImpairment
+  finance_costs_net_cf:
+    display_label: Finance Costs Net CF
+    xbrl_tags:
+    - carrefour:FinanceCostsNetCf
+  net_interests_related_to_leases:
+    display_label: Net Interests Related To Leases
+    xbrl_tags:
+    - carrefour:NetInterestsRelatedToLeases
+  net_income_and_dividends_received_from_equity_accounted_comp_etc:
+    display_label: Net Income And Dividends Received From Equity Accounted Companies
+    xbrl_tags:
+    - carrefour:NetIncomeAndDividendsReceivedFromEquityAccountedCompanies
+  cash_flows_from_used_in_operating_activities_discontinued_op_etc:
+    display_label: Cash flows from (used in) operating activities, discontinued operations,
+      before change in net working capital
+    xbrl_tags:
+    - carrefour:CashFlowsFromUsedInOperatingActivitiesDiscontinuedOperationsBeforeChangeInNetWorkingCapital
+  cash_flows_from_used_in_operating_activities_discontinued_op_etc_x:
+    display_label: Cash flows from (used in) operating activities, discontinued operations,
+      change in net working capital
+    xbrl_tags:
+    - carrefour:CashFlowsFromUsedInOperatingActivitiesDiscontinuedOperationsChangeInNetWorkingCapital
+  net_cash_used_in_from_operating_activities_excluding_financi_etc:
+    display_label: Net Cash Used In From Operating Activities Excluding Financial
+      Services Companies
+    xbrl_tags:
+    - carrefour:NetCashUsedInFromOperatingActivitiesExcludingFinancialServicesCompanies
+  change_in_consumer_credit_granted_by_the_financial_services__etc:
+    display_label: Change In Consumer Credit Granted By The Financial Services Companies
+    xbrl_tags:
+    - carrefour:ChangeInConsumerCreditGrantedByTheFinancialServicesCompanies
+  purchase_of_tangibleand_intangible_fixed_assets:
+    display_label: Purchase of tangible and intangible fixed assets
+    xbrl_tags:
+    - carrefour:PurchaseOfTangibleandIntangibleFixedAssets
+  proceeds_from_disposals_of_tangible_and_intangible_fixed_ass_etc:
+    display_label: Proceeds from disposals of tangible and intangible fixed assets
+    xbrl_tags:
+    - carrefour:ProceedsFromDisposalsOfTangibleAndIntangibleFixedAssets
+  change_in_amounts_receivable_from_disposals_of_non_current_a_etc:
+    display_label: Change In Amounts Receivable From Disposals Of Non Current Assets
+      And Due To Suppliers Of Non Current Assets
+    xbrl_tags:
+    - carrefour:ChangeInAmountsReceivableFromDisposalsOfNonCurrentAssetsAndDueToSuppliersOfNonCurrentAssets
+  investments_net_of_disposals_subtotal:
+    display_label: Investments Net Of Disposals Subtotal
+    xbrl_tags:
+    - carrefour:InvestmentsNetOfDisposalsSubtotal
+  capital_increase_decrease_subscribed_by_group:
+    display_label: Capital Increase (Decrease) Subscribed by Group
+    xbrl_tags:
+    - carrefour:CapitalIncreaseDecreaseSubscribedByGroup
+  proceeds_from_changes_in_ownership_interests_in_subsidiaries:
+    display_label: Proceeds from changes in ownership interests in subsidiaries that
+      do not result in loss of control
+    xbrl_tags:
+    - ifrs-full:ProceedsFromChangesInOwnershipInterestsInSubsidiaries
+  cash_flows_from_used_in_changes_in_treasury_shares_and_other_etc:
+    display_label: Cash flows from (used in) changes in treasury shares and other
+      instruments
+    xbrl_tags:
+    - carrefour:CashFlowsFromUsedInChangesInTreasurySharesAndOtherInstruments
+  change_in_current_financial_assets:
+    display_label: Change in current financial assets
+    xbrl_tags:
+    - carrefour:ChangeInCurrentFinancialAssets
+  net_financial_interest_paid:
+    display_label: Net financial interest paid
+    xbrl_tags:
+    - carrefour:NetFinancialInterestPaid
+  other_changes_in_borrowings:
+    display_label: Other Changes In Borrowings
+    xbrl_tags:
+    - carrefour:OtherChangesInBorrowings
+  net_interests_related_to_leases_paid:
+    display_label: Net Interests Related To Leases Paid
+    xbrl_tags:
+    - carrefour:NetInterestsRelatedToLeasesPaid
+  number_of_carmila_shares_disposed:
+    display_label: Number Of Carmila Shares Disposed
+    xbrl_tags:
+    - carrefour:NumberOfCarmilaSharesDisposed
+  price_per_carmila_share_on_disposal:
+    display_label: Price Per Carmila Share On Disposal
+    xbrl_tags:
+    - carrefour:PricePerCarmilaShareOnDisposal
+  cash_flows_from_losing_control_of_carmila:
+    display_label: Cashflow from losing control of Carmila
+    xbrl_tags:
+    - carrefour:CashFlowsFromLosingControlOfCarmila
+  cash_flows_from_losing_control_of_carrefour_italie:
+    display_label: Cashflow from losing control of Carrefour Italie
+    xbrl_tags:
+    - carrefour:CashFlowsFromLosingControlOfCarrefourItalie
+  income_taxes_paid_refund_classified_as_financing_activities:
+    display_label: Income taxes paid (refund), classified as financing activities
+    xbrl_tags:
+    - ifrs-full:IncomeTaxesPaidRefundClassifiedAsFinancingActivities
+  treasury_share_purchase_program:
+    display_label: Treasury Share Purchase Program
+    xbrl_tags:
+    - carrefour:TreasurySharePurchaseProgram
+  mandates_of_treasury_share_purchase_program:
+    display_label: Mandates of Treasury Share Purchase Program
+    xbrl_tags:
+    - carrefour:MandatesOfTreasurySharePurchaseProgram
+  treasury_share_purchase_program_from_galfa:
+    display_label: Treasury Share Purchase Program from Galfa
+    xbrl_tags:
+    - carrefour:TreasurySharePurchaseProgramFromGalfa
+  decrease_in_number_of_ordinary_shares_issued:
+    display_label: Decrease In Number Of Ordinary Shares Issued
+    xbrl_tags:
+    - carrefour:DecreaseInNumberOfOrdinarySharesIssued
+  purchase_of_investment_property:
+    display_label: Purchase of investment property
+    xbrl_tags:
+    - ifrs-full:PurchaseOfInvestmentProperty
+  proceeds_from_sales_of_investment_property:
+    display_label: Proceeds from sales of investment property
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSalesOfInvestmentProperty
+  proceeds_from_disposal_of_noncurrent_assets_or_disposal_grou_etc:
+    display_label: Proceeds from disposal of non-current assets or disposal groups
+      classified as held for sale and discontinued operations
+    xbrl_tags:
+    - ifrs-full:ProceedsFromDisposalOfNoncurrentAssetsOrDisposalGroupsClassifiedAsHeldForSaleAndDiscontinuedOperations
+  proceeds_from_issue_of_ordinary_shares:
+    display_label: Proceeds from issue of ordinary shares
+    xbrl_tags:
+    - ifrs-full:ProceedsFromIssueOfOrdinaryShares
+  proceeds_from_sale_or_issue_of_treasury_shares:
+    display_label: Proceeds from sale or issue of treasury shares
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSaleOrIssueOfTreasuryShares
+  adjustments_for_depreciation_expense:
+    display_label: Adjustments for depreciation expense
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDepreciationExpense
+  dividends_received_from_investments_accounted_for_using_equi_etc:
+    display_label: Dividends received from investments accounted for using equity
+      method, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:DividendsReceivedFromInvestmentsAccountedForUsingEquityMethodClassifiedAsInvestingActivities
+  adjustments_for_unrealised_foreign_exchange_losses_gains:
+    display_label: Adjustments for unrealised foreign exchange losses (gains)
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForUnrealisedForeignExchangeLossesGains
+  payments_of_other_equity_instruments:
+    display_label: Payments of other equity instruments
+    xbrl_tags:
+    - ifrs-full:PaymentsOfOtherEquityInstruments
+  gain_loss_on_financial_assets_held_for_trading_and_on_other__etc:
+    display_label: Gain Loss On Financial Assets Held For Trading And On Other Financial
+      Assets Liabilities At Fair Value Through Profit Or Loss
+    xbrl_tags:
+    - finecobank:GainLossOnFinancialAssetsHeldForTradingAndOnOtherFinancialAssetsLiabilitiesAtFairValueThroughProfitOrLoss
+  plusvalenze_e_minusvalenze_su_attività_di_copertura:
+    display_label: Gain Loss On Hedge Accounting
+    xbrl_tags:
+    - finecobank:PlusvalenzeEMinusvalenzeSuAttivitàDiCopertura
+  perdite_nette_recuperate_sul_deterioramento_del_credito:
+    display_label: Net Losses Recoveries On Credit Impairment
+    xbrl_tags:
+    - finecobank:PerditeNetteRecuperateSulDeterioramentoDelCredito
+  rettifiche_di_valore_nette_riprese_di_valore_su_attività_ma_etc:
+    display_label: Net Value Adjustments WriteBacks On Tangible And Intangible Assets
+    xbrl_tags:
+    - finecobank:RettificheDiValoreNetteRipreseDiValoreSuAttivitàMaterialiEImmateriali
+  accantonamenti_netti_a_fondi_rischi_ed_oneri_ed_altri_costi__etc:
+    display_label: Net Provisions For Risks And Charges And Other Expenses Income
+    xbrl_tags:
+    - finecobank:AccantonamentiNettiAFondiRischiEdOneriEdAltriCostiERicavi
+  net_revenues_and_costs_of_insurance_contracts_issued_and_rei_etc:
+    display_label: NetRevenuesAndCostsOfInsuranceContractsIssuedAndReinsuranceCeded
+    xbrl_tags:
+    - finecobank:NetRevenuesAndCostsOfInsuranceContractsIssuedAndReinsuranceCeded
+  imposte_tasse_e_crediti_di_imposta_non_liquidati:
+    display_label: Unpaid Duties Taxes And Tax Credits
+    xbrl_tags:
+    - finecobank:ImposteTasseECreditiDiImpostaNonLiquidati
+  rettifiche_di_valore_al_netto_delle_imposte_su_operazioni_ce_etc:
+    display_label: Impairment WriteBacks After Tax On Discontinued Operations
+    xbrl_tags:
+    - finecobank:RettificheDiValoreAlNettoDelleImposteSuOperazioniCessate
+  liquidita_generata_assorbita_dalle_attivita_finanziarie_clas_etc:
+    display_label: Cash Flows From Used In Financial Assets Classified As Operating
+      activities
+    xbrl_tags:
+    - finecobank:LiquiditaGenerataAssorbitaDalleAttivitaFinanziarieClassificateComeAttivitàOperative
+  liquidita_generata_assorbita_dalle_passivita_finanziarie_cla_etc:
+    display_label: Cash Flows From Used In Financial Liabilities Classified As Operating
+      activities
+    xbrl_tags:
+    - finecobank:LiquiditaGenerataAssorbitaDallePassivitaFinanziarieClassificateComeAttivitàOperative
+  adjustments_for_increase_decrease_in_financial_liabilities_m_etc:
+    display_label: Adjustments for increase (decrease) in financial liabilities measured
+      at amortised cost
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInFinancialLiabilitiesMeasuredAtAmortisedCost
+  adjustments_for_increase_decrease_in_financial_liabilities_a_etc:
+    display_label: Adjustments for increase (decrease) in financial liabilities at
+      fair value through profit or loss, designated upon initial recognition or subsequently
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInFinancialLiabilitiesAtFairValueThroughProfitOrLossDesignatedUponInitialRecognitionOrSubsequently
+  adjustments_for_increase_decrease_in_other_financial_liabili_etc:
+    display_label: Adjustments for increase (decrease) in other financial liabilities
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInOtherFinancialLiabilities
+  cash_flows_from_used_in_insurance_reinsurance_contracts:
+    display_label: CashFlowsFromUsedInInsuranceReinsuranceContracts
+    xbrl_tags:
+    - finecobank:CashFlowsFromUsedInInsuranceReinsuranceContracts
+  net_cash_flows_from_insurance_contracts_issued_which_are_lia_etc:
+    display_label: NetCashFlowsFromInsuranceContractsIssuedWhichAreLiabilitiesAssets
+    xbrl_tags:
+    - finecobank:NetCashFlowsFromInsuranceContractsIssuedWhichAreLiabilitiesAssets
+  net_cash_flows_from_reinsurance_cessions_constituting_assets_etc:
+    display_label: NetCashFlowsFromReinsuranceCessionsConstitutingAssetsLiabilities
+    xbrl_tags:
+    - finecobank:NetCashFlowsFromReinsuranceCessionsConstitutingAssetsLiabilities
+  liquidità_netta_generata_dalla_attività_di_investimento:
+    display_label: Cash Flows From Investing Activities
+    xbrl_tags:
+    - finecobank:LiquiditàNettaGenerataDallaAttivitàDiInvestimento
+  ricavi_dalla_vendita_di_beni_materiali_classificati_come_att_etc:
+    display_label: Proceeds From Sales Of Tangible Assets Classified As Investing
+      activities
+    xbrl_tags:
+    - finecobank:RicaviDallaVenditaDiBeniMaterialiClassificatiComeAttivitàDiInvestimento
+  flussi_di_cassa_utilizzati_in_attività_di_investimento:
+    display_label: Cash Flows Used In Investing Activities
+    xbrl_tags:
+    - finecobank:FlussiDiCassaUtilizzatiInAttivitàDiInvestimento
+  acquisti_di_beni_materiali_classificati_come_attività_di_in_etc:
+    display_label: Purchase Of Tangible Assets Classified As Investing activities
+    xbrl_tags:
+    - finecobank:AcquistiDiBeniMaterialiClassificatiComeAttivitàDiInvestimento
+  altri_flussi_in_entrata_in_uscita_derivanti_da_emissione_acq_etc:
+    display_label: Other Inflows Outflows From Issue Purchase Of Treasury shares
+    xbrl_tags:
+    - finecobank:AltriFlussiInEntrataInUscitaDerivantiDaEmissioneAcquistoDiAzioniProprie
+  altri_flussi_in_entrata_in_uscita_derivanti_da_emissione_acq_etc_x:
+    display_label: Other Inflows Outflows From Issue Purchase Of Equity instruments
+    xbrl_tags:
+    - finecobank:AltriFlussiInEntrataInUscitaDerivantiDaEmissioneAcquistoDiStrumentiDiCapitale
+  altri_flussi_in_entrata_in_uscita_derivanti_dalla_vendita_ac_etc:
+    display_label: Other Inflows Outflows From Sale Purchase of Minority control
+    xbrl_tags:
+    - finecobank:AltriFlussiInEntrataInUscitaDerivantiDallaVenditaAcquistoDiControlloDiTerzi
+  depreciation_of_fixed_assets_right_of_use_assets_and_impairm_etc:
+    display_label: Depreciation Of Fixed Assets, Right-Of Use Assets And Impairment
+      Losses
+    xbrl_tags:
+    - hermes:DepreciationOfFixedAssetsRightOfUseAssetsAndImpairmentLosses
+  adjustments_for_net_income_attributable_to_non_controlling_i_etc:
+    display_label: Adjustments For Net Income Attributable To Non Controlling Interests
+    xbrl_tags:
+    - hermes:AdjustmentsForNetIncomeAttributableToNonControllingInterests
+  purchase_of_financial_assets_measured_at_amortised_cost_clas_etc:
+    display_label: Purchase of financial assets measured at amortised cost, classified
+      as investing activities
+    xbrl_tags:
+    - ifrs-full:PurchaseOfFinancialAssetsMeasuredAtAmortisedCostClassifiedAsInvestingActivities
+  proceeds_from_sales_or_maturity_of_financial_assets_measured_etc:
+    display_label: Proceeds from sales or maturity of financial assets measured at
+      amortised cost, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSalesOrMaturityOfFinancialAssetsMeasuredAtAmortisedCostClassifiedAsInvestingActivities
+  treasury_share_buybacks_net_of_disposals:
+    display_label: Treasury Share Buybacks Net Of Disposals
+    xbrl_tags:
+    - hermes:TreasuryShareBuybacksNetOfDisposals
+  depreciation_expense:
+    display_label: Depreciation expense
+    xbrl_tags:
+    - ifrs-full:DepreciationExpense
+  adjustments_for_impairment_loss_reversal_of_impairment_loss__etc_x:
+    display_label: Adjustments for impairment loss (reversal of impairment loss) recognised
+      in profit or loss, loans and advances
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossLoansAndAdvances
+  adjustments_for_decrease_increase_in_financial_assets_measur_etc_x_x:
+    display_label: Adjustments for decrease (increase) in financial assets measured
+      at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInFinancialAssetsMeasuredAtFairValueThroughProfitOrLoss
+  adjustments_for_decrease_increase_in_derivative_financial_as_etc:
+    display_label: Adjustments for decrease (increase) in derivative financial assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInDerivativeFinancialAssets
+  adjustments_for_increase_decrease_in_financial_liabilities_m_etc_x:
+    display_label: Adjustments for increase (decrease) in financial liabilities measured
+      at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInFinancialLiabilitiesMeasuredAtFairValueThroughProfitOrLoss
+  adjustments_for_increase_decrease_in_derivative_financial_li_etc:
+    display_label: Adjustments for increase (decrease) in derivative financial liabilities
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInDerivativeFinancialLiabilities
+  proceeds_from_sales_of_investments_accounted_for_using_equit_etc:
+    display_label: Proceeds from sales of investments accounted for using equity method
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSalesOfInvestmentsAccountedForUsingEquityMethod
+  payments_to_and_on_behalf_of_employees:
+    display_label: Payments to and on behalf of employees
+    xbrl_tags:
+    - ifrs-full:PaymentsToAndOnBehalfOfEmployees
+  other_cash_payments_from_operating_activities:
+    display_label: Other cash payments from operating activities
+    xbrl_tags:
+    - ifrs-full:OtherCashPaymentsFromOperatingActivities
+  other_cash_receipts_from_operating_activities:
+    display_label: Other cash receipts from operating activities
+    xbrl_tags:
+    - ifrs-full:OtherCashReceiptsFromOperatingActivities
+  adjustments_for_increase_decrease_in_deferred_income_other_t_etc:
+    display_label: Adjustments for increase (decrease) in deferred income other than
+      contract liabilities
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInDeferredIncomeOtherThanContractLiabilities
+  adjustments_for_decrease_increase_in_other_operating_receiva_etc_x_x_x:
+    display_label: Adjustments for decrease (increase) in other operating receivables
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivables
+  adjustments_for_increase_decrease_in_other_operating_payable_etc:
+    display_label: Adjustments for increase (decrease) in other operating payables
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInOtherOperatingPayables
+  proceeds_from_government_grants_classified_as_investing_acti_etc:
+    display_label: Proceeds from government grants, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:ProceedsFromGovernmentGrantsClassifiedAsInvestingActivities
+  adjustments_for_decrease_increase_in_loans_and_advances_to_c_etc:
+    display_label: Adjustments for decrease (increase) in loans and advances to customers
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInLoansAndAdvancesToCustomers
+  adjustments_for_provisions_depreciation_and_amortisation_exp_etc:
+    display_label: Adjustments for provisions, depreciation and amortisation expense
+    xbrl_tags:
+    - safran:AdjustmentsForProvisionsDepreciationAndAmortisationExpense
+  gains_losses_on_disposals_of_noncurrent_assets:
+    display_label: Gains (losses) on disposals of non-current assets
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnDisposalsOfNoncurrentAssets
+  other_adjustments:
+    display_label: Other Adjustments
+    xbrl_tags:
+    - safran:OtherAdjustments
+  capitalization_research_and_development_expenditure:
+    display_label: Capitalization research and development expenditure
+    xbrl_tags:
+    - safran:CapitalizationResearchAndDevelopmentExpenditure
+  payments_for_the_purchase_of_intangible_assets_net:
+    display_label: Payments for the purchase of intangible assets, net
+    xbrl_tags:
+    - safran:PaymentsForThePurchaseOfIntangibleAssetsNet
+  payments_for_the_purchase_of_property_plant_end_equipment_ne_etc:
+    display_label: Payments for the purchase of property, plant end equipment, net
+    xbrl_tags:
+    - safran:PaymentsForThePurchaseOfPropertyPlantEndEquipmentNet
+  proceeds_payments_arising_from_the_sale_acquisition_of_inves_etc:
+    display_label: Proceeds payments arising from the sale (aquisition) of investments
+      and loans, net
+    xbrl_tags:
+    - safran:ProceedsPaymentsArisingFromTheSaleAcquisitionOfInvestmentsAndLoansNet
+  change_in_share_capital_owners_of_the_parent:
+    display_label: Change in share capital, owners of the parent
+    xbrl_tags:
+    - safran:ChangeInShareCapitalOwnersOfTheParent
+  change_in_share_capital_non_controlling_interests:
+    display_label: Change in share capital, non-controlling interests
+    xbrl_tags:
+    - safran:ChangeInShareCapitalNonControllingInterests
+  acquisitions_and_disposals_of_treasury_shares:
+    display_label: Acquisitions and disposals of treasury shares
+    xbrl_tags:
+    - safran:AcquisitionsAndDisposalsOfTreasuryShares
+  increase_decrease_of_advances_reimbursables:
+    display_label: Increase (decrease) of advances reimbursables
+    xbrl_tags:
+    - safran:IncreaseDecreaseOfAdvancesReimbursables
+  change_in_short_term_financing:
+    display_label: Change in short term financing
+    xbrl_tags:
+    - safran:ChangeInShortTermFinancing
+  postemployment_benefit_expense_defined_benefit_plans:
+    display_label: Post-employment benefit expense in profit or loss, defined benefit
+      plans
+    xbrl_tags:
+    - ifrs-full:PostemploymentBenefitExpenseDefinedBenefitPlans
+  contributions_to_plan_by_employer_net_defined_benefit_liabil_etc:
+    display_label: Decrease (increase) in net defined benefit liability (asset) resulting
+      from resulting from contributions to plan by employer
+    xbrl_tags:
+    - ifrs-full:ContributionsToPlanByEmployerNetDefinedBenefitLiabilityAsset
+  cash_and_cash_equivalents_in_subsidiary_or_businesses_acquir_etc:
+    display_label: Cash and cash equivalents in subsidiary or businesses acquired
+      or disposed
+    xbrl_tags:
+    - ifrs-full:CashAndCashEquivalentsInSubsidiaryOrBusinessesAcquiredOrDisposed2013
+  proceeds_from_issuing_other_equity_instruments:
+    display_label: Proceeds from issuing other equity instruments
+    xbrl_tags:
+    - ifrs-full:ProceedsFromIssuingOtherEquityInstruments
+  adjustments_for_gains_losses_on_change_in_fair_value_of_fina_etc:
+    display_label: Adjustments for gains (losses) on change in fair value of financial
+      assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForGainsLossesOnChangeInFairValueOfFinancialAssets
+  purchase_of_financial_assets_measured_at_fair_value_through__etc:
+    display_label: Purchase of financial assets measured at fair value through other
+      comprehensive income, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:PurchaseOfFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncomeClassifiedAsInvestingActivities
+  purchase_of_financial_assets_measured_at_fair_value_through__etc_x:
+    display_label: Purchase of financial assets measured at fair value through profit
+      or loss, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:PurchaseOfFinancialAssetsMeasuredAtFairValueThroughProfitOrLossClassifiedAsInvestingActivities
+  other_adjustments_for_which_cash_effects_are_investing_or_fi_etc:
+    display_label: Other adjustments for which cash effects are investing or financing
+      cash flow
+    xbrl_tags:
+    - ifrs-full:OtherAdjustmentsForWhichCashEffectsAreInvestingOrFinancingCashFlow
+  adjustments_for_decrease_increase_in_loans_and_advances_to_b_etc:
+    display_label: Adjustments for decrease (increase) in loans and advances to banks
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInLoansAndAdvancesToBanks
+  adjustments_for_increase_decrease_in_deposits_from_banks:
+    display_label: Adjustments for increase (decrease) in deposits from banks
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInDepositsFromBanks
+  adjustments_for_increase_decrease_in_deposits_from_customers:
+    display_label: Adjustments for increase (decrease) in deposits from customers
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInDepositsFromCustomers
+  cash_advances_and_loans_made_to_related_parties:
+    display_label: Cash advances and loans made to related parties
+    xbrl_tags:
+    - ifrs-full:CashAdvancesAndLoansMadeToRelatedParties
+  cash_receipts_from_repayment_of_advances_and_loans_made_to_o_etc:
+    display_label: Cash receipts from repayment of advances and loans made to other
+      parties, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:CashReceiptsFromRepaymentOfAdvancesAndLoansMadeToOtherPartiesClassifiedAsInvestingActivities
+  cash_advances_and_loans_from_related_parties:
+    display_label: Cash advances and loans from related parties
+    xbrl_tags:
+    - ifrs-full:CashAdvancesAndLoansFromRelatedParties
+  cash_repayments_of_advances_and_loans_from_related_parties:
+    display_label: Cash repayments of advances and loans from related parties
+    xbrl_tags:
+    - ifrs-full:CashRepaymentsOfAdvancesAndLoansFromRelatedParties
+  cash_receipts_from_repayment_of_advances_and_loans_made_to_r_etc:
+    display_label: Cash receipts from repayment of advances and loans made to related
+      parties
+    xbrl_tags:
+    - ifrs-full:CashReceiptsFromRepaymentOfAdvancesAndLoansMadeToRelatedParties
+  adjustments_for_increase_decrease_in_contract_liabilities:
+    display_label: Adjustments for increase (decrease) in contract liabilities
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInContractLiabilities
 other:
   income_tax_relating_to_cash_flow_hedges_of_other_comprehe_etc:
     display_label: Income Tax on Cash Flow Hedges (OCI)
@@ -2920,3 +4610,382 @@ other:
     display_label: Other changes in equity
     xbrl_tags:
     - moncler:OtherInflowsOutflowsOfEquity
+  bank_and_similar_charges:
+    display_label: Bank and similar charges
+    xbrl_tags:
+    - ifrs-full:BankAndSimilarCharges
+  wages_and_salaries:
+    display_label: Wages and salaries
+    xbrl_tags:
+    - ifrs-full:WagesAndSalaries
+  depreciation_and_amortisation_expense:
+    display_label: Depreciation and amortisation expense
+    xbrl_tags:
+    - ifrs-full:DepreciationAndAmortisationExpense
+  miscellaneous_other_operating_income:
+    display_label: Miscellaneous other operating income
+    xbrl_tags:
+    - ifrs-full:MiscellaneousOtherOperatingIncome
+  increase_decrease_through_transfers_and_other_changes_intang_etc:
+    display_label: Increase (decrease) through transfers and other changes, intangible
+      assets other than goodwill
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughTransfersAndOtherChangesIntangibleAssetsOtherThanGoodwill
+  increase_decrease_through_exercise_of_warrants_equity:
+    display_label: Increase (decrease) through exercise of warrants, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughExerciseOfWarrantsEquity
+  decrease_increase_through_tax_on_sharebased_payment_transact_etc:
+    display_label: Decrease (increase) through tax on share-based payment transactions,
+      equity
+    xbrl_tags:
+    - ifrs-full:DecreaseIncreaseThroughTaxOnSharebasedPaymentTransactions
+  increase_decrease_through_transactions_with_owners:
+    display_label: Increase (decrease) through transactions with owners, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughTransactionsWithOwners
+  other_comprehensive_income_before_tax_change_in_value_of_for_etc_x:
+    display_label: Other comprehensive income, before tax, change in value of forward
+      elements of forward contracts
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxChangeInValueOfForwardElementsOfForwardContracts
+  comprehensive_income_from_continuing_operations_attributable_etc:
+    display_label: Comprehensive income from continuing operations, attributable to
+      owners of parent
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeFromContinuingOperationsAttributableToOwnersOfParent
+  comprehensive_income_from_discontinued_operations_attributab_etc:
+    display_label: Comprehensive income from discontinued operations, attributable
+      to owners of parent
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeFromDiscontinuedOperationsAttributableToOwnersOfParent
+  comprehensive_income_from_continuing_operations_attributable_etc_x:
+    display_label: Comprehensive income from continuing operations, attributable to
+      non-controlling interests
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeFromContinuingOperationsAttributableToNoncontrollingInterests
+  comprehensive_income_from_discontinued_operations_attributab_etc_x:
+    display_label: Comprehensive income from discontinued operations, attributable
+      to non-controlling interests
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeFromDiscontinuedOperationsAttributableToNoncontrollingInterests
+  increase_decrease_through_conversion_of_convertible_instrume_etc:
+    display_label: Increase (decrease) through conversion of convertible instruments,
+      equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughConversionOfConvertibleInstruments
+  sale_or_issue_of_treasury_shares:
+    display_label: Sale or issue of treasury shares
+    xbrl_tags:
+    - ifrs-full:SaleOrIssueOfTreasuryShares
+  reclassification_adjustments_on_exchange_differences_on_tran_etc_x:
+    display_label: Reclassification adjustments on exchange differences on translation
+      of foreign operations, before tax
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnExchangeDifferencesOnTranslationBeforeTax
+  other_comprehensive_income_net_of_tax_change_in_fair_value_o_etc:
+    display_label: Other comprehensive income, net of tax, change in fair value of
+      financial liability attributable to change in credit risk of liability
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxChangeInFairValueOfFinancialLiabilityAttributableToChangeInCreditRiskOfLiability
+  other_comprehensive_income_net_of_tax_insurance_finance_inco_etc:
+    display_label: Other comprehensive income, net of tax, insurance finance income
+      (expenses) from insurance contracts issued excluded from profit or loss that
+      will be reclassified to profit or loss
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxInsuranceFinanceIncomeExpensesFromInsuranceContractsIssuedExcludedFromProfitOrLossThatWillBeReclassifiedToProfitOrLoss
+  changes_in_fair_value_of_financial_assets_at_fair_value_thro_etc:
+    display_label: Changes in fair value of financial assets at fair value through
+      equity, Changes in fair value recognised in equity (non-insurance activities)
+    xbrl_tags:
+    - bnpp:ChangesInFairValueOfFinancialAssetsAtFairValueThroughEquityChangesInFairValueRecognisedInEquityNoninsuranceActivities
+  changes_in_fair_value_of_financial_assets_at_fair_value_thro_etc_x:
+    display_label: Changes in fair value of financial assets at fair value through
+      equity, Changes in fair value reported in net income (non-insurance activities)
+    xbrl_tags:
+    - bnpp:ChangesInFairValueOfFinancialAssetsAtFairValueThroughEquityChangesInFairValueReportedInNetIncomeNoninsuranceActivities
+  changes_in_fair_value_of_investments_of_insurance_activities_etc:
+    display_label: Changes in fair value of investments of insurance activities, Changes
+      in fair value recognised in equity
+    xbrl_tags:
+    - bnpp:ChangesInFairValueOfInvestmentsOfInsuranceActivitiesChangesInFairValueRecognisedInEquity
+  changes_in_fair_value_of_investments_of_insurance_activities_etc_x:
+    display_label: Changes in fair value of investments of insurance activities, Changes
+      in fair value reported in net income
+    xbrl_tags:
+    - bnpp:ChangesInFairValueOfInvestmentsOfInsuranceActivitiesChangesInFairValueReportedInNetIncome
+  other_comprehensive_income_before_tax_insurance_finance_inco_etc:
+    display_label: Other comprehensive income, before tax, insurance finance income
+      (expenses) from insurance contracts issued excluded from profit or loss that
+      will be reclassified to profit or loss
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxInsuranceFinanceIncomeExpensesFromInsuranceContractsIssuedExcludedFromProfitOrLossThatWillBeReclassifiedToProfitOrLoss
+  other_comprehensive_income_before_tax_change_in_fair_value_o_etc:
+    display_label: Other comprehensive income, before tax, change in fair value of
+      financial liability attributable to change in credit risk of liability
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxChangeInFairValueOfFinancialLiabilityAttributableToChangeInCreditRiskOfLiability
+  appropriation_of_net_income_of_the_previous_period:
+    display_label: Appropriation of net income of the previous period
+    xbrl_tags:
+    - bnpp:AppropriationOfNetIncomeOfThePreviousPeriod
+  reduction_of_issued_capital:
+    display_label: Reduction of issued capital
+    xbrl_tags:
+    - ifrs-full:ReductionOfIssuedCapital
+  movements_in_consolidation_scope_impacting_minority_sharehol_etc:
+    display_label: Movements in consolidation scope impacting minority shareholders
+    xbrl_tags:
+    - bnpp:MovementsInConsolidationScopeImpactingMinorityShareholders
+  change_in_commitments_to_repurchase_minority_shareholders_in_etc:
+    display_label: Change in commitments to repurchase minority shareholders’ interests
+    xbrl_tags:
+    - bnpp:ChangeInCommitmentsToRepurchaseMinorityShareholdersInterests
+  realised_gains_or_losses_reclassified_to_retained_earnings:
+    display_label: Realised gains or losses reclassified to retained earnings
+    xbrl_tags:
+    - bnpp:RealisedGainsOrLossesReclassifiedToRetainedEarnings
+  impact_of_internal_transactions_on_minority_shareholders:
+    display_label: Impact of internal transactions on minority shareholders
+    xbrl_tags:
+    - bnpp:ImpactOfInternalTransactionsOnMinorityShareholders
+  interim_dividend_payments:
+    display_label: Interim dividend payments
+    xbrl_tags:
+    - bnpp:InterimDividendPayments
+  atacado_longterm_borrowings:
+    display_label: Atacado - Non-current portion of non-current borrowings
+    xbrl_tags:
+    - carrefour:AtacadoLongtermBorrowings
+  atacado_proceeds_from_borrowings_classified_as_financing_act_etc:
+    display_label: Atacado - Proceeds from borrowings, classified as financing activities
+    xbrl_tags:
+    - carrefour:AtacadoProceedsFromBorrowingsClassifiedAsFinancingActivities
+  decrease_in_number_of_ordinary_shares_issued_by_cancellation:
+    display_label: Decrease In Number Of Ordinary Shares Issued (By Cancellation)
+    xbrl_tags:
+    - carrefour:DecreaseInNumberOfOrdinarySharesIssuedByCancellation
+  swap_unwinding:
+    display_label: Swap Unwinding
+    xbrl_tags:
+    - carrefour:SwapUnwinding
+  change_in_capital_and_additional_paid_in_capital:
+    display_label: Change In Capital And Additional Paid In Capital
+    xbrl_tags:
+    - carrefour:ChangeInCapitalAndAdditionalPaidInCapital
+  first_decrease_in_number_of_ordinary_shares_issued_by_cancel_etc:
+    display_label: First Decrease In Number Of Ordinary Shares Issued (By Cancellation)
+    xbrl_tags:
+    - carrefour:FirstDecreaseInNumberOfOrdinarySharesIssuedByCancellation
+  second_decrease_in_number_of_ordinary_shares_issued_by_cance_etc:
+    display_label: Second Decrease In Number Of Ordinary Shares Issued (By Cancellation)
+    xbrl_tags:
+    - carrefour:SecondDecreaseInNumberOfOrdinarySharesIssuedByCancellation
+  shares_in_entity_held_by_entity_or_by_its_subsidiaries_or_as_etc:
+    display_label: Number of shares in entity held by entity or by its subsidiaries
+      or associates
+    xbrl_tags:
+    - ifrs-full:SharesInEntityHeldByEntityOrByItsSubsidiariesOrAssociates
+  number_of_shares_issued_to_acquire_full_ownership_of_carrefo_etc:
+    display_label: Number Of Shares Issued To Acquire Full Ownership Of Carrefour
+      Brazil
+    xbrl_tags:
+    - carrefour:NumberOfSharesIssuedToAcquireFullOwnershipOfCarrefourBrazil
+  issues_fair_value_measurement_entitys_own_equity_instruments:
+    display_label: Issues, fair value measurement, entity's own equity instruments
+    xbrl_tags:
+    - ifrs-full:IssuesFairValueMeasurementEntitysOwnEquityInstruments
+  gain_loss_on_hedge_ineffectiveness_recognised_in_other_compr_etc:
+    display_label: Gain (loss) on hedge ineffectiveness recognised in other comprehensive
+      income
+    xbrl_tags:
+    - ifrs-full:GainLossOnHedgeIneffectivenessRecognisedInOtherComprehensiveIncome
+  share_of_other_comprehensive_income_of_associates_and_joint__etc_x:
+    display_label: Share of other comprehensive income of associates and joint ventures
+      accounted for using equity method, net of tax
+    xbrl_tags:
+    - ifrs-full:ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethod
+  gains_losses_on_hedges_of_net_investments_in_foreign_operati_etc_x:
+    display_label: Gains (losses) on hedges of net investments in foreign operations,
+      net of tax
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnHedgesOfNetInvestmentsInForeignOperationsNetOfTax
+  utili_perdite_su_attività_finanziarie_diverse_dagli_strumen_etc:
+    display_label: Gains Losses On Financial Assets Other Than Equity Instruments
+      Measured At Fair Value Through Other Comprehensive Income Net Of Tax
+    xbrl_tags:
+    - finecobank:UtiliPerditeSuAttivitàFinanziarieDiverseDagliStrumentiDiCapitaleValutateAlFairValueConImpattoSullaRedditivitàComplessivaAlNettoDelleImposte
+  total_equity_attributable_to_owners_of_parent:
+    display_label: Total Equity Attributable To Owners Of Parent
+    xbrl_tags:
+    - finecobank:TotalEquityAttributableToOwnersOfParent
+  total_equity:
+    display_label: Total Equity
+    xbrl_tags:
+    - finecobank:TotalEquity
+  allocazione_risultato_esercizio_precedente_riserve:
+    display_label: Previous Year Profit Loss Allocation Reserves
+    xbrl_tags:
+    - finecobank:AllocazioneRisultatoEsercizioPrecedenteRiserve
+  aumenti_diminuzioni_di_riserve:
+    display_label: Increase Decrease of Reserves
+    xbrl_tags:
+    - finecobank:AumentiDiminuzioniDiRiserve
+  extraordinary_dividends_distribution:
+    display_label: Extraordinary Dividends Distribution
+    xbrl_tags:
+    - finecobank:ExtraordinaryDividendsDistribution
+  increase_decrease_due_to_equity_instruments:
+    display_label: Increase Decrease due to Equity Instruments
+    xbrl_tags:
+    - finecobank:IncreaseDecreaseDueToEquityInstruments
+  increase_decrease_through_treasury_share_derivatives:
+    display_label: Increase decrease through treasury share derivatives
+    xbrl_tags:
+    - finecobank:IncreaseDecreaseThroughTreasuryShareDerivatives
+  non_controlling_interests:
+    display_label: Non controlling Interests
+    xbrl_tags:
+    - finecobank:NonControllingInterests
+  tax_expense_other_than_income_tax_expense:
+    display_label: Tax expense other than income tax expense
+    xbrl_tags:
+    - ifrs-full:TaxExpenseOtherThanIncomeTaxExpense
+  reclassification_adjustments_on_cash_flow_hedges_net_of_tax:
+    display_label: Reclassification adjustments on cash flow hedges, net of tax
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnCashFlowHedgesNetOfTax
+  gains_losses_on_financial_assets_measured_at_fair_value_thro_etc_x:
+    display_label: Gains (losses) on financial assets measured at fair value through
+      other comprehensive income, net of tax
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncomeNetOfTax
+  number_of_shares_issued_and_fully_paid:
+    display_label: Number of shares issued and fully paid
+    xbrl_tags:
+    - ifrs-full:NumberOfSharesIssuedAndFullyPaid
+  reclassification_adjustments_on_financial_assets_measured_at_etc:
+    display_label: Reclassification adjustments on financial assets measured at fair
+      value through other comprehensive income, net of tax
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncomeNetOfTax
+  income_tax_relating_to_exchange_differences_on_translation_o_etc:
+    display_label: Income tax relating to exchange differences on translation of foreign
+      operations included in other comprehensive income
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToExchangeDifferencesOnTranslationOfOtherComprehensiveIncome
+  reclassification_adjustments_on_hedges_of_net_investments_in_etc:
+    display_label: Reclassification adjustments on hedges of net investments in foreign
+      operations, net of tax
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnHedgesOfNetInvestmentsInForeignOperationsNetOfTax
+  reclassification_adjustments_on_hedges_of_net_investments_in_etc_x:
+    display_label: Reclassification adjustments on hedges of net investments in foreign
+      operations, before tax
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnHedgesOfNetInvestmentsInForeignOperationsBeforeTax
+  income_tax_relating_to_share_of_other_comprehensive_income_o_etc:
+    display_label: Income tax relating to share of other comprehensive income of associates
+      and joint ventures accounted for using equity method that will be reclassified
+      to profit or loss
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLoss
+  other_components_of_other_comprehensive_income_that_will_be__etc:
+    display_label: Other components of other comprehensive income that will be reclassified
+      to profit or loss, net of tax
+    xbrl_tags:
+    - ifrs-full:OtherComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax
+  income_tax_relating_to_changes_in_fair_value_of_financial_li_etc:
+    display_label: Income tax relating to changes in fair value of financial liability
+      attributable to change in credit risk of liability included in other comprehensive
+      income
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToChangesInFairValueOfFinancialLiabilityAttributableToChangeInCreditRiskOfLiabilityOfOtherComprehensiveIncome
+  share_of_other_comprehensive_income_of_associates_and_joint__etc_x_x:
+    display_label: Share of other comprehensive income of associates and joint ventures
+      accounted for using equity method that will not be reclassified to profit or
+      loss, before tax
+    xbrl_tags:
+    - ifrs-full:ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillNotBeReclassifiedToProfitOrLossBeforeTax
+  income_tax_relating_to_share_of_other_comprehensive_income_o_etc_x:
+    display_label: Income tax relating to share of other comprehensive income of associates
+      and joint ventures accounted for using equity method that will not be reclassified
+      to profit or loss
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodThatWillNotBeReclassifiedToProfitOrLoss
+  increase_decrease_through_transfer_between_revaluation_reser_etc:
+    display_label: Increase (decrease) through transfer between revaluation surplus
+      and retained earnings, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughTransferBetweenRevaluationReserveAndRetainedEarnings
+  other_comprehensive_income_net_of_tax_gains_losses_on_hedgin_etc:
+    display_label: Other comprehensive income, net of tax, gains (losses) on hedging
+      instruments that hedge investments in equity instruments
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxGainsLossesOnHedgingInstrumentsThatHedgeInvestmentsInEquityInstruments
+  other_comprehensive_income_net_of_tax_insurance_finance_inco_etc_x:
+    display_label: Other comprehensive income, net of tax, insurance finance income
+      (expenses) from insurance contracts issued excluded from profit or loss that
+      will not be reclassified to profit or loss
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxInsuranceFinanceIncomeExpensesFromInsuranceContractsIssuedExcludedFromProfitOrLossThatWillNotBeReclassifiedToProfitOrLoss
+  other_comprehensive_income_net_of_tax_finance_income_expense_etc:
+    display_label: Other comprehensive income, net of tax, finance income (expenses)
+      from reinsurance contracts held excluded from profit or loss
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeNetOfTaxFinanceIncomeExpensesFromReinsuranceContractsHeldExcludedFromProfitOrLoss
+  dividends_recognised_as_distributions_to_owners_of_parent_re_etc:
+    display_label: Dividends recognised as distributions to owners of parent, relating
+      to current year
+    xbrl_tags:
+    - ifrs-full:DividendsRecognisedAsDistributionsToOwnersOfParentRelatingToCurrentYear
+  share_of_other_comprehensive_income_of_associates_and_joint__etc_x_x_x:
+    display_label: Share of other comprehensive income of associates and joint ventures
+      accounted for using equity method, before tax
+    xbrl_tags:
+    - ifrs-full:ShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethodBeforeTax
+  income_tax_relating_to_share_of_other_comprehensive_income_o_etc_x_x:
+    display_label: Income tax relating to share of other comprehensive income of associates
+      and joint ventures accounted for using equity method
+    xbrl_tags:
+    - ifrs-full:IncomeTaxRelatingToShareOfOtherComprehensiveIncomeOfAssociatesAndJointVenturesAccountedForUsingEquityMethod
+  other_comprehensive_income_before_tax:
+    display_label: Other comprehensive income, before tax
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTax
+  increase_decrease_of_issued_capial_related_reserves:
+    display_label: Increase decrease of issued capital and related reserves
+    xbrl_tags:
+    - safran:IncreaseDecreaseOfIssuedCapialRelatedReserves
+  other_changes_including_appropriation_of_retained_earnings:
+    display_label: Other Changes Including Appropriation Of Retained Earnings
+    xbrl_tags:
+    - safran:OtherChangesIncludingAppropriationOfRetainedEarnings
+  other_comprehensive_income_that_will_be_reclassified_to_prof_etc:
+    display_label: Other comprehensive income that will be reclassified to profit
+      or loss, before tax
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossBeforeTax
+  other_comprehensive_income_that_will_not_be_reclassified_to__etc:
+    display_label: Other comprehensive income that will not be reclassified to profit
+      or loss, before tax
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossBeforeTax
+  reclassification_adjustments_on_financial_assets_measured_at_etc_x:
+    display_label: Reclassification adjustments on financial assets measured at fair
+      value through other comprehensive income, before tax
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncomeBeforeTax
+  increase_decrease_through_other_distributions_to_owners:
+    display_label: Decrease through other distributions to owners, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughOtherDistributionsToOwners
+  other_revenue:
+    display_label: Other revenue
+    xbrl_tags:
+    - ifrs-full:OtherRevenue
+  other_comprehensive_income_before_tax_exchange_differences_o_etc:
+    display_label: Other comprehensive income, before tax, exchange differences on
+      translation of foreign operations and hedges of net investments in foreign operations
+    xbrl_tags:
+    - ifrs-full:OtherComprehensiveIncomeBeforeTaxExchangeDifferencesOnTranslationOfForeignOperationsAndHedgesOfNetInvestmentsInForeignOperations
