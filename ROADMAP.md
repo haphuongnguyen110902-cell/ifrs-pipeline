@@ -429,13 +429,50 @@ dashboard as a new "Credit Profile" tab.
 **Serves:** Dauphine (credit/markets angle) + Controlling (counterparty
 risk is a real controlling concern).
 
-### Phase 9 — `25_scenario.py`
-Perturb an input (margin -2pp, SEK -10%, etc.) and recompute downstream
-ratios/leverage/valuation. This is the actual day-to-day tool of FP&A
-(budget variance, sensitivity analysis) - the single most
-Controlling-relevant piece of the whole forward roadmap. Shares its
-"perturb and recompute" core with Phase 6's DCF sensitivity table, so
-build once, use in both places.
+### Phase 9 — `25_scenario.py` ✅ DONE
+Perturb one or more base-year assumptions (revenue, operating margin,
+revenue growth, cost of debt, capex - any combination in one run) and
+recompute the downstream 3-statement projection, unlevered FCFF,
+discounted Enterprise Value, and Net Debt/EBITDA leverage band, side by
+side against the unshocked base case. Genuinely shares its core with
+Phase 6's DCF and Phase 5's 3-statement model, not just in spirit:
+imports `21_three_statement_model.py`'s `project()`, `22_dcf.py`'s
+`compute_fcff()`/`discount_cash_flows()`, and `24_credit.py`'s
+`classify_band()` directly, so a shock's effect is computed the exact
+same way those scripts compute the unshocked case - not a parallel
+reimplementation that could quietly drift from them.
+
+**WACC held constant across scenarios, deliberately:** an operating
+shock (revenue/margin/growth/capex) and a financing-conditions shock
+(WACC) are different questions - re-deriving WACC under an operating
+shock would conflate them. WACC is fetched once from live market data
+and fixed for both the base and shocked run, so the entire Enterprise
+Value delta shown is attributable to the operating shock alone.
+
+**A real, subtle bug found via a live run, not assumed:** the first run
+(L'Oreal, a net-cash company, margin -2pp) showed "Net Debt (end):
+-12.09bn -> -10.65bn (-11.9%)" - net debt became LESS negative (leverage
+moved the wrong way) but the percentage read as an *improvement*, because
+dividing a positive delta by a negative base flips the sign. A first fix
+(only guarding against a sign FLIP) still let this through, since the
+base stayed negative throughout rather than crossing zero - dividing by
+ANY negative base is misleading, not just a sign-flipping one. Fixed by
+`format_delta_pct()` requiring BOTH the base and shocked value to be
+strictly positive before showing a percentage at all; the absolute
+delta is always shown regardless.
+
+**Deliberately no database table or dashboard tab:** every other
+analysis phase computes ONE canonical fact per company worth persisting
+and showing by default - a scenario is parameterized by whatever shock
+was just typed on the command line, so there's no single "the" scenario
+to show. CLI + Excel output only, consistent with `20_precedents.py`
+also not needing deep dashboard interactivity.
+
+11 new regression tests (131 total) on `apply_shocks()` and
+`format_delta_pct()` - both pure functions, no database or market-data
+calls in the test suite. Verified live across companies with negative
+net debt (L'Oreal, Moncler), positive net debt (Danone), and a non-EUR
+reporter requiring the Phase 6 currency-conversion path (Essity).
 **Serves:** Controlling primarily.
 
 ### Phase 10 — Presentation output (one-pager / mini pitch deck)

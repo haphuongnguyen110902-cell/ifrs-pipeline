@@ -24,11 +24,12 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 - **Values companies by DCF** — WACC built up via CAPM (live beta, sourced risk-free rate/ERP), unlevered FCFF discounted with a Gordon-growth terminal value, WACC × terminal-growth sensitivity table, cross-checked against the trading comps above
 - **Measures market risk** — annualized volatility, Sharpe ratio, max drawdown, and beta/correlation vs. STOXX Europe 600 computed directly from daily price history (not read from a third-party number)
 - **Classifies credit profile** — Net Debt/EBITDA trajectory bucketed into sector-agnostic leverage bands with a YoY trend label, computed from true EBITDA (not the differently-named `net_debt_ebitda_proxy` ratio, which is actually Net Debt/EBIT — see `24_credit.py`)
+- **Runs scenario/sensitivity analysis** — perturb revenue, margin, growth, cost of debt, or capex (any combination) and see the resulting shift in FCFF, Enterprise Value and leverage band, with WACC held constant so the delta is attributable to the operating shock alone
 - **Auto-classifies** new companies using the IFRS taxonomy's own presentation linkbase — standard tags require zero manual work
 - **Orchestrates** the full pipeline end-to-end with `run_pipeline.py --mode full`, or just the analysis layer with `--mode analyze`
 - **Serves** a public Streamlit dashboard (`webapp/app.py`) with 9 tabs per company — ratios, forensics flags, trading comps, the 3-statement model, DCF valuation, market risk, credit profile, forecast backtest results, and precedent transactions
 - **Refreshes automatically** every Monday via GitHub Actions (`--mode analyze`, no local files needed — see [Automation](#automation))
-- **Tests itself** — 120 pytest regression tests covering every bug found and fixed during development, run on every push via CI
+- **Tests itself** — 131 pytest regression tests covering every bug found and fixed during development, run on every push via CI
 
 ## Current status — V2 complete, valuation + market risk + credit layer live, automation running weekly
 
@@ -45,7 +46,7 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Market risk (volatility, Sharpe, beta, drawdown) | 11/11 companies — price-history-only, doesn't inherit the fundamentals side's data gaps |
 | Credit profile (Net Debt/true EBITDA trajectory) | computed for every company/year with both net debt and EBITDA available; years with no D&A tag matched are flagged, not hidden |
 | Regression tests (data) | 5/5 pass — verified against L'Oréal's published 2024 annual report |
-| Regression tests (code) | 120 pytest tests, run on every push via GitHub Actions CI |
+| Regression tests (code) | 131 pytest tests, run on every push via GitHub Actions CI |
 | Forensics flags | 62 across 10 companies (26 high / 12 medium / 24 low severity) |
 | Backtest coverage | 78/82 company-ratio pairs have enough rolling folds to pick a method |
 | Unmapped facts | 0 — all non-dimensional facts fully mapped |
@@ -229,6 +230,7 @@ python scripts/21_three_statement_model.py --company "COMPANY NAME"
 python scripts/22_dcf.py --company "COMPANY NAME"
 python scripts/23_market_risk.py --company "COMPANY NAME"
 python scripts/24_credit.py --company "COMPANY NAME"
+python scripts/25_scenario.py --company "COMPANY NAME" --margin-shock -2
 
 # or all at once:
 python run_pipeline.py --mode full      # everything, first run
@@ -265,6 +267,7 @@ streamlit run webapp/app.py
 | `22_dcf.py` | DCF valuation (CAPM WACC, unlevered FCFF, Gordon-growth terminal value) |
 | `23_market_risk.py` | Volatility, Sharpe ratio, max drawdown, beta/correlation vs. STOXX Europe 600 |
 | `24_credit.py` | Net Debt/true-EBITDA trajectory → leverage band + trend classification |
+| `25_scenario.py` | Perturb revenue/margin/growth/cost of debt/capex, recompute FCFF/EV/leverage vs. base case |
 | `run_pipeline.py` | Orchestrates the above (`--mode full` / `--mode analyze` / others) |
 | `webapp/app.py` | Public Streamlit dashboard — 7 tabs per company (ratios, forensics, comps, 3-statement, DCF, backtest, precedents) |
 | `tests/` | pytest regression suite (87 tests) — see each file's docstring for the real bug it locks in |
