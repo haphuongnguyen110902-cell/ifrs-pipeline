@@ -925,15 +925,56 @@ filer's extension taxonomy declares anchoring as faithfully as the RTS
 requires, and this pipeline should not assume 100% coverage from any one
 filer just because most do it well.
 
-**Still short of the 80% bar, honestly reported, not rounded up.** The
-free lever not yet built: rank the remaining review tags by their value's
-materiality to what this project's own ratio engine actually reads
-(revenue-relative size) — a tag worth a fraction of a percent of revenue
-that no ratio ever touches can honestly stay `UNKNOWN` forever at zero
-analytical cost, per this project's own rule 7 ("prefer an explicit 'not
-available' state"), rather than needing classification at all. Not
-implemented yet — the next concrete step before re-measuring the gate
-again, not a promise this document is counting as already done.
+**Still short of the 80% bar after anchoring alone — closed by the
+materiality screen below. ✅ DONE, both built on the same branch.**
+
+## Materiality screen — the second free lever
+
+A tag worth a fraction of a percent of revenue, that no ratio this
+project computes would ever read, doesn't need classification at all —
+per rule 7 ("prefer an explicit 'not available' state"), an honest,
+deliberate `UNKNOWN` costs nothing, so it's not worth a human's time
+either. Added to `13_batch_prep.py`: `build_value_map()` finds the
+largest absolute value seen for every concept anywhere in a filing;
+`assess_materiality()` compares a still-unclassified tag's own value
+against the filing's own revenue (duration concepts) or total assets
+(instant concepts) — the same revenue-tag fallback pair
+`11_ratio_engine.py`'s `get_best()` already trusts, reused rather than
+invented fresh — and flags anything under a 1% screen. Screened-immaterial
+tags are **never** added to the mapping; they're written to a separate
+`data/mappings/IMMATERIAL_extensions.yaml` audit trail (never applied
+anywhere) so the exclusion stays inspectable, not silent.
+
+**A real bug found running this live, not assumed:** the first pass
+compared every numeric fact's raw value against revenue regardless of
+unit — a share-count concept (`ALS:IncreaseDecreaseInNumberOfShares
+OutstandingThroughOtherComprehensiveIncome`, unit=`shares`) was being
+divided by a EUR revenue figure, a meaningless cross-unit ratio that
+happened to read as "0.00% of revenue" and get silently waved through as
+immaterial. Caught by inspecting the actual immaterial sample before
+trusting the number (this project's own standing rule), confirmed live
+via `concept.isMonetary` (`False`) and `fact.unit` (`shares`). Fixed by
+gating the whole screen on `concept.isMonetary` — a share count, a
+per-share ratio, or any other non-monetary disclosure now gets no
+materiality opinion at all (stays in `all_review`, honestly unscreened)
+rather than a spurious currency comparison. This dropped the first,
+buggy immaterial count from 80 to the real 65 — smaller, but trustworthy.
+
+**Final, corrected result on the same 40-company sample:**
+
+| | Tags | % of 1,302 found |
+|---|---:|---:|
+| Auto-classified (anchoring + presentation/periodType tiers) | 1,008 | 77.4% |
+| Immaterial — screened, left `UNKNOWN`, zero cost | 65 | 5.0% |
+| Still genuinely needs a human | 229 | 17.6% |
+| **Handled without a human** | **1,073** | **82.4%** |
+
+**Clears the gate's own ~80% bar — for real this time, with the bug that
+would have overstated it already caught and fixed before reporting.**
+6 more tests in `tests/test_batch_prep_anchoring.py` (materiality math,
+the monetary/instant/duration branches, and a locked-in regression for
+the exact non-monetary bug above) — 13 total in that file. Full suite:
+205/205 passing.
 
 ---
 
@@ -1008,7 +1049,8 @@ WP4 entity resolution   2.0           ← DONE (7/11 real coverage, TICKER_MAP k
 WP5 thin screener       1.0           ← DONE
 WP6 Phase 10 one-pager  2.0           ← DONE - priority #1 payoff, portfolio artifact
 --- GATE: measure 3 numbers ---            ← MEASURED, classification failed at 36.5%
-WP4b ESEF anchoring     1.0           ← DONE - 77.4% auto-classified, free, deterministic
+WP4b ESEF anchoring +   1.5           ← DONE - 82.4% handled without a human, gate PASSES
+  materiality screen
 WP7 breadth staged      3.0+
 WP8 sector comparison   2.0
 ```
@@ -1017,12 +1059,13 @@ WP0–WP5 are all prerequisites that serve **both** goals, so nothing in them is
 wasted whichever way priority tips later. WP6 is the job-search payoff. Only
 WP7–WP8 are the Asset Management bet, and they sit behind a measurement gate.
 
-**Immediate next action: the materiality-based triage described at the end
-of WP4b, then re-measure the gate, then WP7** (WP0-WP6 are all done, the
-GATE is measured, WP4b closed most of the classification gap for free —
-see above; WP4's `TICKER_MAP` retirement is incomplete at 7/11 real
-coverage and should be revisited before/alongside WP7's staged breadth,
-not blocking anything that came before it). WP6 (the one-pager) was the
+**Immediate next action: WP7 itself** (WP0-WP6 are done, the GATE is
+measured, and WP4b — anchoring plus the materiality screen — closed the
+classification gap for free: 82.4% of tags now handled without a human,
+above the gate's own ~80% bar. The classification blocker that stopped
+WP7 is resolved. WP4's `TICKER_MAP` retirement is still incomplete at
+7/11 real coverage and should be revisited before/alongside WP7's staged
+breadth, not blocking anything that came before it). WP6 (the one-pager) was the
 last item that serves the Contrôleur de Gestion job search directly -
 everything from here is the Asset Management / breadth bet, per §6's own
 strategic-honesty note.
