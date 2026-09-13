@@ -44,6 +44,78 @@ CONCEPT_KEYWORDS = [
                "incometaxrelatingto", "increasedecreasethrough"]),
 ]
 
+# ---------------------------------------------------------------- materiality
+# PLAN.md's WP4b: a tag no ratio in this project reads, and too small to move
+# one even if it did, doesn't need classification at all - per rule 7
+# ("prefer an explicit 'not available' state"), an honest, deliberately
+# UNKNOWN tag costs nothing, so it's not worth a human's or an LLM's time
+# either. This is a rough SCREEN, not a restated financial-materiality
+# judgement: the denominator is the largest revenue/assets figure found
+# anywhere in the filing (across all periods/dimensions), not a specific
+# year's consolidated total - good enough to separate "clearly negligible"
+# from "worth a human's attention", not precise enough to be trusted as a
+# computed ratio itself.
+MATERIALITY_THRESHOLD = 0.01  # 1% of the relevant scale figure
+
+# Same fallback pair 11_ratio_engine.py's get_best(wide, "revenue",
+# "revenue_from_contracts_with_customers") already trusts (Phase 6's own
+# fix - Kering/Pernod Ricard/Amplifon never tag bare Revenue) - reused here
+# as the raw XBRL tag names rather than invented fresh.
+REVENUE_TAGS = {"ifrs-full:Revenue", "ifrs-full:RevenueFromContractsWithCustomers"}
+ASSETS_TAGS = {"ifrs-full:Assets"}
+
+
+def build_value_map(model):
+    """Largest absolute numeric value seen for each concept anywhere in
+    this filing (any period, any dimensional breakdown) - deliberately not
+    restricted to one context, since this is only a rough size screen, not
+    a specific year's reported figure."""
+    result = {}
+    for fact in model.facts:
+        concept = fact.concept
+        if concept is None or not concept.isNumeric or fact.value is None:
+            continue
+        try:
+            v = abs(float(fact.value))
+        except (TypeError, ValueError):
+            continue
+        qn = str(fact.qname)
+        if qn not in result or v > result[qn]:
+            result[qn] = v
+    return result
+
+
+def find_scale(value_map, tags):
+    vals = [value_map[t] for t in tags if t in value_map]
+    return max(vals) if vals else None
+
+
+def assess_materiality(concept, tag_value, revenue, assets):
+    """Returns (is_immaterial: bool, ratio_or_None, denominator_label).
+    Never guesses: with no tag value or no denominator to compare against,
+    returns (False, None, None) - i.e. NOT flagged immaterial, since there's
+    nothing to honestly base that call on. periodType decides which scale
+    figure applies (revenue for a flow, assets for a balance) - the same
+    signal build_pres_map's own instant/duration fallback already uses.
+
+    Real bug found running this live, not assumed: a first pass compared
+    EVERY numeric fact's raw value against revenue/assets regardless of
+    unit - a share-count concept (e.g. "IncreaseDecreaseInNumberOfShares
+    OutstandingThroughOtherComprehensiveIncome", unit=shares) was being
+    divided by a EUR revenue figure, a meaningless ratio across
+    incompatible units that would flag or clear a tag for the wrong
+    reason. Fixed by restricting the screen to concept.isMonetary facts
+    only - a share count, a per-share ratio, or a pure-number disclosure
+    gets no materiality opinion at all (honestly unscreened, stays in
+    all_review) rather than a spurious currency comparison."""
+    if not concept.isMonetary or tag_value is None:
+        return False, None, None
+    denom, label = (assets, "assets") if concept.periodType == "instant" else (revenue, "revenue")
+    if not denom:
+        return False, None, None
+    ratio = tag_value / denom
+    return ratio < MATERIALITY_THRESHOLD, ratio, label
+
 
 def statement_from_role(definition):
     if not definition:
@@ -196,10 +268,19 @@ def scan_zips(zips, existing_tags, tag_to_statement=None):
     straight to a statement it ALREADY knows, when the tag it anchors to is
     already in the trusted mapping - the strongest tier of the whole
     classification ladder, since it's the filer's own regulator-mandated
-    declaration, not a guess (PLAN.md's WP4b)."""
+    declaration, not a guess (PLAN.md's WP4b).
+
+    Returns (all_auto, all_review, all_immaterial, per_company) - a tag that
+    doesn't auto-classify is still checked against the materiality screen
+    (see assess_materiality above) before landing in all_review: something
+    too small to move any ratio this project computes goes to
+    all_immaterial instead, an honest deliberate-UNKNOWN, not a review
+    burden. per_company tuples are now (company, auto_n, review_n,
+    immaterial_n)."""
     tag_to_statement = tag_to_statement or {}
-    all_auto = {}       # tag -> entry (standard or clearly classifiable extension)
-    all_review = {}     # tag -> entry + which companies use it
+    all_auto = {}        # tag -> entry (standard or clearly classifiable extension)
+    all_review = {}      # tag -> entry, material enough to need a human
+    all_immaterial = {}  # tag -> entry, found and sized, safely left UNKNOWN
     per_company = []
 
     for zip_path in zips:
@@ -217,14 +298,17 @@ def scan_zips(zips, existing_tags, tag_to_statement=None):
 
         pres_map = build_pres_map(model)
         anchor_map = build_anchor_map(model)
-        auto_n = review_n = skip_n = anchor_n = 0
+        value_map = build_value_map(model)
+        revenue = find_scale(value_map, REVENUE_TAGS)
+        assets = find_scale(value_map, ASSETS_TAGS)
+        auto_n = review_n = skip_n = anchor_n = immaterial_n = 0
 
         for fact in model.facts:
             concept = fact.concept
             if concept is None or not concept.isNumeric:
                 continue
             qn = str(fact.qname)
-            if qn in existing_tags or qn in all_auto or qn in all_review:
+            if qn in existing_tags or qn in all_auto or qn in all_review or qn in all_immaterial:
                 skip_n += 1
                 continue
 
@@ -274,14 +358,27 @@ def scan_zips(zips, existing_tags, tag_to_statement=None):
                 auto_n += 1
             else:
                 entry["statement"] = "REVIEW"
-                all_review[qn] = entry
-                review_n += 1
+                is_immaterial, ratio, denom_label = assess_materiality(
+                    concept, value_map.get(qn), revenue, assets)
+                if is_immaterial:
+                    entry["materiality_ratio"] = round(ratio, 5)
+                    entry["materiality_denominator"] = denom_label
+                    entry["materiality_note"] = (
+                        f"{ratio*100:.2f}% of this filing's largest {denom_label} figure - "
+                        f"below the {MATERIALITY_THRESHOLD*100:.0f}% screen, left UNKNOWN"
+                    )
+                    all_immaterial[qn] = entry
+                    immaterial_n += 1
+                else:
+                    all_review[qn] = entry
+                    review_n += 1
 
         c.close()
-        per_company.append((company, auto_n, review_n))
-        print(f"  auto={auto_n} (of which anchor-resolved={anchor_n})  review={review_n}  already_known={skip_n}")
+        per_company.append((company, auto_n, review_n, immaterial_n))
+        print(f"  auto={auto_n} (of which anchor-resolved={anchor_n})  review={review_n}  "
+              f"immaterial={immaterial_n}  already_known={skip_n}")
 
-    return all_auto, all_review, per_company
+    return all_auto, all_review, all_immaterial, per_company
 
 
 if __name__ == "__main__":
@@ -289,6 +386,10 @@ if __name__ == "__main__":
     ap.add_argument("--mapping", default="data/mappings/ifrs_concepts_v0.yaml")
     ap.add_argument("--raw-dir", default="data/raw")
     ap.add_argument("--review-out", default="data/mappings/REVIEW_extensions.yaml")
+    ap.add_argument("--immaterial-out", default="data/mappings/IMMATERIAL_extensions.yaml",
+                     help="Audit trail for tags found but judged too small to matter "
+                          "(PLAN.md's WP4b materiality screen) - never applied to the "
+                          "mapping, kept only so the exclusion is inspectable, not silent")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--only", nargs="+", help="Only process these zip filenames")
     args = ap.parse_args()
@@ -310,12 +411,17 @@ if __name__ == "__main__":
     else:
         zips = sorted(raw_dir.glob("*.zip"))
 
-    all_auto, all_review, per_company = scan_zips(zips, existing_tags, tag_to_statement)
+    all_auto, all_review, all_immaterial, per_company = scan_zips(zips, existing_tags, tag_to_statement)
+    total_found = len(all_auto) + len(all_review) + len(all_immaterial)
+    handled = len(all_auto) + len(all_immaterial)
 
     print(f"\n{'='*60}")
     print(f"TOTAL across all companies:")
-    print(f"  Auto-classify (no human needed): {len(all_auto)}")
-    print(f"  Need review (extension tags):    {len(all_review)}")
+    print(f"  Auto-classify (no human needed):     {len(all_auto)}")
+    print(f"  Immaterial (safe to leave UNKNOWN):  {len(all_immaterial)}")
+    print(f"  Need review (genuinely need a human): {len(all_review)}")
+    if total_found:
+        print(f"  Handled without a human: {handled}/{total_found} ({100*handled/total_found:.1f}%)")
 
     if args.dry_run:
         print("\nDRY RUN - nothing written.")
@@ -324,6 +430,10 @@ if __name__ == "__main__":
             print(f"  {qn}: {entry['display_label']}")
         if len(all_review) > 10:
             print(f"  ... and {len(all_review) - 10} more")
+        if all_immaterial:
+            print("\nSample of tags screened immaterial (left UNKNOWN, not applied):")
+            for qn, entry in list(all_immaterial.items())[:5]:
+                print(f"  {qn}: {entry['materiality_note']}")
     else:
         # add auto-classified to mapping
         added = 0
@@ -356,6 +466,28 @@ if __name__ == "__main__":
             yaml.dump(review_data, f, allow_unicode=True, sort_keys=False,
                       default_flow_style=False)
         print(f"Wrote {len(all_review)} extension tags to {args.review_out}")
+
+        # audit trail for the materiality-screened tags - NEVER applied to
+        # the mapping (they were deliberately not classified at all), kept
+        # only so a human can spot-check the screen itself, per rule 7's
+        # "prefer an explicit not available state" - a silent exclusion
+        # would be worse than a wrong classification.
+        if all_immaterial:
+            immaterial_data = {
+                "_instructions": (
+                    f"Tags found but judged too small (< {MATERIALITY_THRESHOLD*100:.0f}% of this "
+                    "filing's own revenue/assets scale) to be worth classifying - deliberately left "
+                    "UNKNOWN, per this project's own rule for an explicit 'not available' state. "
+                    "NOT applied anywhere. Spot-check a few if you want to sanity-check the screen "
+                    "itself; nothing here needs action."
+                ),
+                "left_unknown": list(all_immaterial.values()),
+            }
+            with open(args.immaterial_out, "w", encoding="utf-8") as f:
+                yaml.dump(immaterial_data, f, allow_unicode=True, sort_keys=False,
+                          default_flow_style=False)
+            print(f"Wrote {len(all_immaterial)} materiality-screened tags to {args.immaterial_out} (audit trail only)")
+
         print(f"\n*** Open {args.review_out}, fill in statements, then run:")
         print("*** python scripts/12_apply_review.py")
         print("*** Then reload ALL companies:")

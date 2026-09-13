@@ -23,8 +23,8 @@ def bp(load_script):
     return load_script("13_batch_prep.py")
 
 
-def make_concept(qname, period_type="duration", label="Some Label"):
-    return SimpleNamespace(qname=qname, periodType=period_type, label=lambda: label)
+def make_concept(qname, period_type="duration", label="Some Label", is_monetary=True):
+    return SimpleNamespace(qname=qname, periodType=period_type, label=lambda: label, isMonetary=is_monetary)
 
 
 def test_prefers_existing_mapping_over_everything_else(bp):
@@ -62,11 +62,69 @@ def test_unresolvable_anchor_returns_empty_statement_not_a_guess(bp):
     assert "unclassifiable" in reason
 
 
+def test_assess_materiality_flags_a_small_duration_tag(bp):
+    concept = make_concept("x:Tiny", period_type="duration")
+    is_immaterial, ratio, denom = bp.assess_materiality(concept, tag_value=500, revenue=1_000_000, assets=None)
+    assert is_immaterial is True
+    assert denom == "revenue"
+    assert ratio == pytest.approx(0.0005)
+
+
+def test_assess_materiality_does_not_flag_a_large_duration_tag(bp):
+    concept = make_concept("x:Big", period_type="duration")
+    is_immaterial, ratio, denom = bp.assess_materiality(concept, tag_value=50_000, revenue=1_000_000, assets=None)
+    assert is_immaterial is False
+    assert ratio == pytest.approx(0.05)
+
+
+def test_assess_materiality_uses_assets_for_instant_concepts(bp):
+    concept = make_concept("x:SmallBalance", period_type="instant")
+    is_immaterial, ratio, denom = bp.assess_materiality(concept, tag_value=100, revenue=1_000_000, assets=10_000_000)
+    assert is_immaterial is True
+    assert denom == "assets"
+
+
+def test_assess_materiality_never_guesses_with_no_data(bp):
+    """No tag value, or no denominator to compare against - never silently
+    call it immaterial (rule 7: an honest 'not available' state, not a
+    guess dressed up as a screen)."""
+    concept = make_concept("x:NoValue", period_type="duration")
+    assert bp.assess_materiality(concept, tag_value=None, revenue=1_000_000, assets=None) == (False, None, None)
+
+    concept2 = make_concept("x:NoRevenueFound", period_type="duration")
+    assert bp.assess_materiality(concept2, tag_value=500, revenue=None, assets=None) == (False, None, None)
+
+
+def test_find_scale_takes_the_largest_of_the_fallback_tags(bp):
+    value_map = {"ifrs-full:Revenue": 900, "ifrs-full:RevenueFromContractsWithCustomers": 1200}
+    assert bp.find_scale(value_map, bp.REVENUE_TAGS) == 1200
+
+
+def test_find_scale_returns_none_when_nothing_found(bp):
+    assert bp.find_scale({}, bp.REVENUE_TAGS) is None
+
+
+def test_assess_materiality_never_compares_a_non_monetary_fact_to_revenue(bp):
+    """Real bug found running this live: a share-count concept (unit=shares)
+    was being divided by EUR revenue - a meaningless cross-unit ratio that
+    happened to read as 0.00% and get silently waved through as
+    'immaterial'. A non-monetary fact (share count, per-share ratio, pure
+    number) must get NO materiality opinion at all, however large its raw
+    numeric value, rather than a spurious currency comparison."""
+    shares_concept = make_concept("x:SharesOutstandingChange", period_type="duration", is_monetary=False)
+    is_immaterial, ratio, denom = bp.assess_materiality(shares_concept, tag_value=50_000_000, revenue=1_000_000, assets=None)
+    assert is_immaterial is False
+    assert ratio is None
+    assert denom is None
+
+
 def test_scan_zips_signature_accepts_tag_to_statement(bp):
     """scan_zips() must accept the new tag_to_statement kwarg without
     breaking - a regression check for callers that don't pass it (the
-    default None -> {} path)."""
-    all_auto, all_review, per_company = bp.scan_zips([], existing_tags=set())
+    default None -> {} path), and return the 4-tuple including
+    all_immaterial (PLAN.md's WP4b materiality screen)."""
+    all_auto, all_review, all_immaterial, per_company = bp.scan_zips([], existing_tags=set())
     assert all_auto == {}
     assert all_review == {}
+    assert all_immaterial == {}
     assert per_company == []
