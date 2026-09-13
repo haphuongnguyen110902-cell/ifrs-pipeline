@@ -996,6 +996,47 @@ Ireland, Switzerland and Bulgaria return **zero** — see SCOPE.md §2.
 2. `~40 → ~150`, only if the gate passes.
 3. `~150 → 300+`.
 
+**Step 1a — `universe_membership` table, built ✅.** `sql/schema_universe.sql`
++ `scripts/29_universe_membership.py` implement the market-cap half of the
+rule ("member of national index OR market cap > €2bn") - the national-index
+half needs verified free constituent data per country (CAC 40, FTSE MIB,
+AEX, OMX Stockholm, BEL 20...), a real sourcing task not done yet, flagged
+rather than guessed at. Because the rule is an OR, the market-cap half
+alone already produces valid candidates. Pipeline reuses three already-
+verified modules end to end, no new network client written:
+`26_entity_resolution.py`'s `resolve_company()` → ticker,
+`19_valuation.py`'s `fetch_market_data()` + `fetch_live_fx_rate()` →
+market cap converted to EUR at today's live rate (the same live-vs-
+historical split that script's own docstring already establishes for
+market cap specifically). A candidate whose ticker doesn't resolve gets
+**no row at all** - this table only ever asserts positive inclusion, so
+absence means "not yet evaluated", never "excluded" (rule 7).
+
+**Run live against the GATE's own 40-company candidate list
+(`data/mappings/wp7_candidates.csv`, the same names used to measure the
+classification gate): 20/40 qualify at ≥ €2bn, written to the live DB
+with `as_of=2026-09-13`.** The other 20 split into two honestly different
+buckets, not conflated:
+- **4 genuinely below the threshold** (Piaggio €0.7bn, Dometic Group
+  €0.6bn, JM AB €0.7bn, Arjo €0.7bn) - correctly excluded, no bug.
+- **16 ticker-UNRESOLVED**, including large, obviously-qualifying names
+  (BNP Paribas, Renault, Eni, Unilever, RELX, Assa Abloy, Svenska
+  Handelsbanken, Safran, Schneider Electric, Mediobanca, Banco BPM,
+  FinecoBank, KBC Group, Cofinimmo, Alstom, Ferrari) - the exact WP4
+  LEI-disambiguation gap (several ACTIVE LEI candidates share a similar
+  name; the real listed parent isn't always among the first few tried),
+  now costing real universe coverage, not just a lower measured
+  percentage. These are absent from `universe_membership`, not wrongly
+  excluded - re-running this script once ticker resolution improves
+  (WP4's own noted next step: an OpenFIGI API key) will pick them up
+  without disturbing this `as_of` snapshot.
+
+7 new tests in `tests/test_universe_membership.py` (the qualification
+logic mocked at the resolution/market-data boundary - unit + EUR/SEK
+currency-conversion cases + both failure paths - real network calls
+exercised live above, not mocked, same pattern `test_entity_resolution.py`
+already established). Full suite: 212/212 passing.
+
 **Required infrastructure changes at this scale:**
 - **Storage:** change `load_historical.py` to download → parse → **discard the
   zip**, storing the source URL + SHA256 for provenance instead. Otherwise
