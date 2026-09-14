@@ -122,3 +122,35 @@ def test_unknown_exchanges_only_falls_back_to_first_hit_but_still_unresolved(er)
         {"ticker": "FOO", "exchCode": "YY", "isin": "YY0000000000"},
     ]
     assert er.pick_best_equity_hit(hits) is None
+
+
+class TestOpenfigiApiKey:
+    """WP7's noted next step: an OpenFIGI API key raises the anonymous
+    25-req/minute limit to 25-req/6s (~10x) and the ISIN cap per LEI
+    candidate is raised accordingly - verified live against OpenFIGI's
+    own docs before these numbers were trusted (see module docstring).
+    Read lazily from the environment, not a frozen constant, since
+    load_dotenv() only runs in each caller's own __main__, after this
+    module is already imported - these tests set/clear the env var
+    directly rather than relying on .env."""
+
+    def test_no_key_uses_anonymous_limits(self, er, monkeypatch):
+        monkeypatch.delenv("OPENFIGI_API_KEY", raising=False)
+        assert er._openfigi_api_key() is None
+        assert er._rate_limit_delay() == er.ANONYMOUS_RATE_LIMIT_DELAY_SECONDS
+        assert er._max_isins_per_lei() == er.MAX_ISINS_TO_CHECK_PER_LEI_ANONYMOUS
+
+    def test_key_present_uses_faster_limits(self, er, monkeypatch):
+        monkeypatch.setenv("OPENFIGI_API_KEY", "test-key-123")
+        assert er._openfigi_api_key() == "test-key-123"
+        assert er._rate_limit_delay() == er.API_KEY_RATE_LIMIT_DELAY_SECONDS
+        assert er._rate_limit_delay() < er.ANONYMOUS_RATE_LIMIT_DELAY_SECONDS
+        assert er._max_isins_per_lei() == er.MAX_ISINS_TO_CHECK_PER_LEI_WITH_KEY
+        assert er._max_isins_per_lei() > er.MAX_ISINS_TO_CHECK_PER_LEI_ANONYMOUS
+
+    def test_blank_key_treated_as_absent(self, er, monkeypatch):
+        """An empty string (e.g. an unset .env placeholder) must not be
+        sent as a real API key - falls back to anonymous limits."""
+        monkeypatch.setenv("OPENFIGI_API_KEY", "")
+        assert er._openfigi_api_key() is None
+        assert er._rate_limit_delay() == er.ANONYMOUS_RATE_LIMIT_DELAY_SECONDS

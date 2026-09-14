@@ -77,13 +77,41 @@ OPENFIGI_API = "https://api.openfigi.com/v3/mapping"
 # found live: even at 1 request/second, Danone's 60 bond ISINs alone
 # triggered a wall of 429s. 2.5s keeps this under ~24/minute, verified to
 # avoid 429s for a single company's ISIN list at this project's scale.
-RATE_LIMIT_DELAY_SECONDS = 2.5
+#
+# WP7's own noted next step, now built: verified live against OpenFIGI's
+# own documentation (not assumed) that a free API key raises the
+# unauthenticated 25-requests-per-MINUTE limit to 25-per-6-SECONDS (~10x)
+# and the per-request job batch size from 10 to 100. This script only
+# takes the faster-delay half of that win for now (see
+# resolve_ticker_from_isins' docstring for why true request batching - one
+# POST covering many ISINs at once - is a further, not-yet-built
+# optimization, not done here). Read lazily inside the functions below,
+# not as a frozen constant, since load_dotenv() runs in each caller's own
+# __main__, after this module is imported.
+ANONYMOUS_RATE_LIMIT_DELAY_SECONDS = 2.5
+API_KEY_RATE_LIMIT_DELAY_SECONDS = 0.3  # 25 req / 6s = ~4.2/s; a small margin under that
 
 # Most large multinationals have far more ISINs than one equity listing -
 # L'Oreal alone has 32 (mostly bond issuances). Checking every single one
 # against OpenFIGI is both slow (rate-limited) and unnecessary - this
 # caps how many are tried per LEI candidate before giving up on it.
-MAX_ISINS_TO_CHECK_PER_LEI = 20
+# Raised when an API key is present (see above) - checking more ISINs is
+# now cheap, so there's less reason to give up early on a candidate that
+# genuinely has its equity ISIN buried deep in a long bond-issuance list.
+MAX_ISINS_TO_CHECK_PER_LEI_ANONYMOUS = 20
+MAX_ISINS_TO_CHECK_PER_LEI_WITH_KEY = 60
+
+
+def _openfigi_api_key() -> str | None:
+    return os.environ.get("OPENFIGI_API_KEY") or None
+
+
+def _rate_limit_delay() -> float:
+    return API_KEY_RATE_LIMIT_DELAY_SECONDS if _openfigi_api_key() else ANONYMOUS_RATE_LIMIT_DELAY_SECONDS
+
+
+def _max_isins_per_lei() -> int:
+    return MAX_ISINS_TO_CHECK_PER_LEI_WITH_KEY if _openfigi_api_key() else MAX_ISINS_TO_CHECK_PER_LEI_ANONYMOUS
 
 COUNTRY_NAME_TO_ISO2 = {
     "France": "FR", "Italy": "IT", "Spain": "ES", "Sweden": "SE",
@@ -277,32 +305,53 @@ def _post_openfigi_with_retry(isin: str, max_retries: int = 3):
     LVMH: dozens) can burn through the budget mid-company, and the
     RIGHT response to a transient 429 is to back off and retry, not
     give up on that ISIN (which was silently understating the real
-    match rate before this fix - see PLAN.md WP4's verification notes)."""
+    match rate before this fix - see PLAN.md WP4's verification notes).
+
+    Sends the X-OPENFIGI-APIKEY header when OPENFIGI_API_KEY is set in
+    the environment (verified live against OpenFIGI's own docs before
+    trusting the header name/rate-limit numbers - see the module-level
+    constants above) - anonymous requests are unaffected, same headers
+    as before."""
+    delay = _rate_limit_delay()
+    headers = {"Content-Type": "application/json"}
+    api_key = _openfigi_api_key()
+    if api_key:
+        headers["X-OPENFIGI-APIKEY"] = api_key
     for attempt in range(max_retries):
         resp = requests.post(
             OPENFIGI_API,
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             json=[{"idType": "ID_ISIN", "idValue": isin}],
             timeout=30,
         )
         if resp.status_code == 429:
-            backoff = RATE_LIMIT_DELAY_SECONDS * (3 ** (attempt + 1))
+            backoff = delay * (3 ** (attempt + 1))
             print(f"  *** OpenFIGI 429 for {isin} (attempt {attempt + 1}/{max_retries}) - backing off {backoff:.0f}s")
             time.sleep(backoff)
             continue
         resp.raise_for_status()
-        time.sleep(RATE_LIMIT_DELAY_SECONDS)
+        time.sleep(delay)
         return resp
     raise RuntimeError(f"OpenFIGI still rate-limited after {max_retries} attempts for {isin}")
 
 
 def resolve_ticker_from_isins(isins: list, country_iso2: str = None) -> dict:
-    """Calls OpenFIGI per ISIN (capped at MAX_ISINS_TO_CHECK_PER_LEI -
-    see module docstring), keeps only common-stock/equity results, and
-    delegates the actual pick to pick_best_equity_hit() (the pure,
-    unit-tested part)."""
+    """Calls OpenFIGI per ISIN (capped at _max_isins_per_lei() - 20
+    anonymous, 60 with an API key present, since checking more is cheap
+    once the rate limit isn't the bottleneck - see module docstring),
+    keeps only common-stock/equity results, and delegates the actual
+    pick to pick_best_equity_hit() (the pure, unit-tested part).
+
+    NOT YET BUILT: true request batching - OpenFIGI's /v3/mapping accepts
+    up to 100 jobs per POST with an API key, so many ISINs could be
+    checked in ONE request instead of one-per-request. This function
+    still does one ISIN per call; the rate-limit-delay reduction above is
+    the win taken so far. Batching is a further, real optimization for
+    whoever picks this up next, not done here - it changes the response-
+    parsing shape (one result array per request instead of per ISIN) and
+    deserves its own verification pass before being trusted."""
     equity_hits = []
-    for isin in isins[:MAX_ISINS_TO_CHECK_PER_LEI]:
+    for isin in isins[:_max_isins_per_lei()]:
         try:
             resp = _post_openfigi_with_retry(isin)
         except Exception as e:
