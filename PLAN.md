@@ -1154,6 +1154,83 @@ Helsinki 25, Oslo Børs OBX) - the same Wikipedia-table pattern should
 extend cleanly, just not verified live yet for those three pages
 specifically.
 
+## ⏭ Next session checklist (written 2026-09-16, night of the OpenFIGI/yfinance flakiness)
+
+**1. Smoke-test before anything else - do not jump straight to the full
+40-candidate batch.**
+```
+python scripts/29_universe_membership.py --candidates data/mappings/wp7_candidates.csv --no-db
+```
+Actually just run the 2-company version first (Carrefour, Umicore - the
+exact pair used tonight) so a bad result costs seconds, not 15-30
+minutes:
+```
+printf "name,country\nCarrefour,France\nUmicore,Belgium\n" > /tmp/smoketest.csv
+python scripts/29_universe_membership.py --candidates /tmp/smoketest.csv --no-db
+```
+- **Clean signal:** both resolve in a few seconds each, zero
+  `*** OpenFIGI ...`/`*** yfinance validation failed ...` lines in the
+  output. Safe to run the full batch.
+- **Still flaky:** Carrefour (or anything) fails, or it takes noticeably
+  longer than a few seconds, or any retry-warning lines appear. Do not
+  push forward - wait longer (hours, not minutes) and re-test. Tonight's
+  actual failure mode was an 11-hour SILENT hang with zero output, not a
+  clean error - if a run seems to be taking unusually long, treat that
+  as the same signal, not bad luck.
+
+**2. Always wrap the real batch run in a hard external timeout** - this
+project has now hit one genuine multi-hour silent hang from an
+unbounded network call somewhere in the yfinance path, cause not fully
+diagnosed. Never run it bare:
+```
+timeout 1800 python scripts/29_universe_membership.py --candidates data/mappings/wp7_candidates.csv
+```
+
+**3. After it finishes, verify against the DB directly - never trust a
+single run's own printed count** (`save_rows()` is upsert-only and
+never deletes, so a company can be genuinely qualified today even if
+the run that would have found it again failed):
+```sql
+SELECT name, country, ticker, inclusion_rule, as_of
+FROM universe_membership
+ORDER BY as_of DESC, country, name;
+```
+
+**4. The 16 still-unresolved large-caps as of tonight** (all obviously
+> €2bn, all blocked purely on GLEIF LEI-candidate disambiguation, not
+market cap): Alstom, Safran, Thales, BNP Paribas, Schneider Electric,
+Mediobanca, Eni, Banco BPM, FinecoBank, Unilever, RELX, Svenska
+Handelsbanken, KBC Group, Cofinimmo, plus whichever of Renault/Assa
+Abloy/Carrefour didn't stick depending which run you're comparing
+against. None of the three retry fixes shipped tonight (timeout, 5xx,
+yfinance-validation) target this specific failure mode - it's
+`resolve_lei_candidates()`'s own 10-candidate cap or GLEIF's own name
+matching, not a network reliability problem. Worth its own investigation
+pass, separate from tonight's fixes - don't assume it's already solved
+just because the retry fixes are in.
+
+**5. Real work that does NOT need OpenFIGI/GLEIF/yfinance at all, if
+tonight's flakiness recurs and you want to keep moving instead of
+waiting:**
+- Extend `scripts/30_national_index_membership.py` to the three
+  remaining Nordic indices (OMX Copenhagen 25, OMX Helsinki 25, Oslo
+  Børs OBX) - verify each Wikipedia page live first (table shape can
+  differ, as BEL 20 already proved), same pattern as the 5 already done.
+- WP4's `TICKER_MAP` retirement - still incomplete, not blocking, but a
+  real follow-up (`19_valuation.py`/`22_dcf.py`/`23_market_risk.py` all
+  still prefer the hardcoded dict over the DB-resolved ticker).
+
+**6. The actual next milestone after universe_membership is populated
+(not started yet, the real point of all of this):** pick a batch of
+qualifying companies, download their real filings
+(`00_find_filing.py`/`14_scan_universe.py`, already built), run them
+through the classification pipeline (`13_batch_prep.py`, now with ESEF
+anchoring + materiality screening from WP4b), review/apply the
+remaining genuinely-ambiguous tags by hand, then actually load them into
+`company`/`fact_value` - this is the step that makes a new company
+appear on the live public dashboard. Nothing done tonight does this yet
+- discovery and classification are prerequisites, not the finish line.
+
 **Required infrastructure changes at this scale:**
 - **Storage:** change `load_historical.py` to download → parse → **discard the
   zip**, storing the source URL + SHA256 for provenance instead. Otherwise
