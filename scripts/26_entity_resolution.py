@@ -77,13 +77,41 @@ OPENFIGI_API = "https://api.openfigi.com/v3/mapping"
 # found live: even at 1 request/second, Danone's 60 bond ISINs alone
 # triggered a wall of 429s. 2.5s keeps this under ~24/minute, verified to
 # avoid 429s for a single company's ISIN list at this project's scale.
-RATE_LIMIT_DELAY_SECONDS = 2.5
+#
+# WP7's own noted next step, now built: verified live against OpenFIGI's
+# own documentation (not assumed) that a free API key raises the
+# unauthenticated 25-requests-per-MINUTE limit to 25-per-6-SECONDS (~10x)
+# and the per-request job batch size from 10 to 100. This script only
+# takes the faster-delay half of that win for now (see
+# resolve_ticker_from_isins' docstring for why true request batching - one
+# POST covering many ISINs at once - is a further, not-yet-built
+# optimization, not done here). Read lazily inside the functions below,
+# not as a frozen constant, since load_dotenv() runs in each caller's own
+# __main__, after this module is imported.
+ANONYMOUS_RATE_LIMIT_DELAY_SECONDS = 2.5
+API_KEY_RATE_LIMIT_DELAY_SECONDS = 0.3  # 25 req / 6s = ~4.2/s; a small margin under that
 
 # Most large multinationals have far more ISINs than one equity listing -
 # L'Oreal alone has 32 (mostly bond issuances). Checking every single one
 # against OpenFIGI is both slow (rate-limited) and unnecessary - this
 # caps how many are tried per LEI candidate before giving up on it.
-MAX_ISINS_TO_CHECK_PER_LEI = 20
+# Raised when an API key is present (see above) - checking more ISINs is
+# now cheap, so there's less reason to give up early on a candidate that
+# genuinely has its equity ISIN buried deep in a long bond-issuance list.
+MAX_ISINS_TO_CHECK_PER_LEI_ANONYMOUS = 20
+MAX_ISINS_TO_CHECK_PER_LEI_WITH_KEY = 60
+
+
+def _openfigi_api_key() -> str | None:
+    return os.environ.get("OPENFIGI_API_KEY") or None
+
+
+def _rate_limit_delay() -> float:
+    return API_KEY_RATE_LIMIT_DELAY_SECONDS if _openfigi_api_key() else ANONYMOUS_RATE_LIMIT_DELAY_SECONDS
+
+
+def _max_isins_per_lei() -> int:
+    return MAX_ISINS_TO_CHECK_PER_LEI_WITH_KEY if _openfigi_api_key() else MAX_ISINS_TO_CHECK_PER_LEI_ANONYMOUS
 
 COUNTRY_NAME_TO_ISO2 = {
     "France": "FR", "Italy": "IT", "Spain": "ES", "Sweden": "SE",
@@ -234,7 +262,7 @@ def pick_best_equity_hit(equity_hits: list, country_iso2: str = None) -> dict:
     return {"ticker": ticker, "exchange": exch, "isin": best["isin"], "currency": currency}
 
 
-def resolve_working_ticker(candidate_ticker: str) -> str:
+def resolve_working_ticker(candidate_ticker: str, max_retries: int = 3) -> str:
     """Validates a candidate ticker actually resolves on yfinance before
     trusting it - a real bug found running this live, not assumed: Essity's
     real yfinance ticker is 'ESSITY-B.ST' (hyphenated share class), but
@@ -245,14 +273,38 @@ def resolve_working_ticker(candidate_ticker: str) -> str:
     ONE well-justified normalization (insert a hyphen before a trailing
     single-letter share-class suffix, e.g. 'ESSITYB' -> 'ESSITY-B') and
     validates THAT too. Returns the first form that actually resolves on
-    yfinance, or None if neither does - never returns an unvalidated guess."""
+    yfinance, or None if neither does - never returns an unvalidated guess.
+
+    A SECOND REAL BUG, found the same way the OpenFIGI timeout one was:
+    Renault resolved cleanly (real ticker RNO.PA, verified 3/3 in
+    isolation) but came back UNRESOLVED twice running the full
+    40-company WP7 batch, with no OpenFIGI errors either time - this
+    function's own bare `except Exception: continue` was the actual
+    gap, not the OpenFIGI path already fixed. A single transient
+    yfinance hiccup under the load of many companies' worth of back-to-
+    back validation calls silently killed the whole candidate with no
+    retry and no log line - exactly the "give up on a transient failure
+    instead of retrying" mistake this project already fixed once for
+    OpenFIGI 429s, just not here too. Fixed with the same retry-with-
+    backoff shape, scoped to this function since it's the one place
+    that validates a ticker under real batch load, not a change to
+    19_valuation.py's fetch_market_data() itself."""
     for candidate in _ticker_variants(candidate_ticker):
-        try:
-            market = v19.fetch_market_data(candidate)
-        except Exception:
-            continue
-        if market and market.get("market_cap"):
-            return candidate
+        for attempt in range(max_retries):
+            try:
+                market = v19.fetch_market_data(candidate)
+            except Exception as e:
+                if attempt + 1 < max_retries:
+                    backoff = 2 * (attempt + 1)
+                    print(f"  *** yfinance validation failed for {candidate} ({e.__class__.__name__}, "
+                          f"attempt {attempt + 1}/{max_retries}) - retrying in {backoff}s")
+                    time.sleep(backoff)
+                    continue
+                print(f"  *** yfinance validation failed for {candidate} after {max_retries} attempts: {e}")
+                break
+            if market and market.get("market_cap"):
+                return candidate
+            break  # a clean response with no market_cap - not transient, try the next variant
     return None
 
 
@@ -269,40 +321,99 @@ def _ticker_variants(ticker: str):
 
 
 def _post_openfigi_with_retry(isin: str, max_retries: int = 3):
-    """A single OpenFIGI mapping call, retrying on 429 with exponential
-    backoff. Found necessary running this live, not assumed: OpenFIGI's
-    anonymous rate limit is tighter than a fixed inter-request delay
-    alone can reliably stay under, AND its cooldown outlasts a single
-    request's own delay - a company with many ISINs (Danone: 60,
-    LVMH: dozens) can burn through the budget mid-company, and the
-    RIGHT response to a transient 429 is to back off and retry, not
-    give up on that ISIN (which was silently understating the real
-    match rate before this fix - see PLAN.md WP4's verification notes)."""
+    """A single OpenFIGI mapping call, retrying on 429 AND on a transient
+    network failure, both with exponential backoff. The 429 case was
+    found necessary running this live, not assumed: OpenFIGI's anonymous
+    rate limit is tighter than a fixed inter-request delay alone can
+    reliably stay under, AND its cooldown outlasts a single request's own
+    delay - a company with many ISINs (Danone: 60, LVMH: dozens) can burn
+    through the budget mid-company, and the RIGHT response to a transient
+    429 is to back off and retry, not give up on that ISIN (which was
+    silently understating the real match rate before this fix - see
+    PLAN.md WP4's verification notes).
+
+    THE NETWORK-TIMEOUT CASE WAS A SECOND, LATER BUG FOUND THE SAME WAY:
+    Renault resolved cleanly in an isolated single-company test, then
+    failed ("none had a resolvable equity listing") in a full 40-company
+    batch run minutes later - genuinely non-deterministic behavior for
+    the same input, which is never supposed to happen in this pipeline.
+    The batch run's own log showed two OpenFIGI read/connect timeouts
+    that this function silently treated as "no equity hit for that ISIN"
+    (caught by resolve_ticker_from_isins' own except-and-continue) rather
+    than a transient failure worth retrying - if the timed-out ISIN
+    happened to be the real equity listing, the whole candidate wrongly
+    came back UNRESOLVED. Fixed by retrying requests.exceptions.Timeout/
+    ConnectionError the same way a 429 already was, instead of only
+    guarding the HTTP status code.
+
+    A THIRD case, found chasing the same residual flakiness after the
+    two fixes above: Thales and Eni resolved cleanly in one full-batch
+    run, then came back UNRESOLVED in the next, with no logged network
+    error or yfinance failure either time - and Thales's real equity
+    ISIN (FR0000121329) was independently confirmed to sit well inside
+    the range actually being checked (index 22 of 55, cap 60), so it
+    should have been found. The remaining gap: this function retried
+    connection-level exceptions and 429, but a plain HTTP 5xx from
+    `resp.raise_for_status()` was never caught here at all - it escaped
+    straight past this function's retry loop and was silently caught
+    one level up, in resolve_ticker_from_isins' per-ISIN except-and-
+    continue, as "no equity hit for that ISIN" - indistinguishable from
+    a genuine miss, with zero retry and zero visibility that a server
+    error, not an empty result, was the real cause. Fixed by treating a
+    5xx status the same as 429 - back off and retry, don't silently
+    treat a transient server error as a real answer.
+
+    Sends the X-OPENFIGI-APIKEY header when OPENFIGI_API_KEY is set in
+    the environment (verified live against OpenFIGI's own docs before
+    trusting the header name/rate-limit numbers - see the module-level
+    constants above) - anonymous requests are unaffected, same headers
+    as before."""
+    delay = _rate_limit_delay()
+    headers = {"Content-Type": "application/json"}
+    api_key = _openfigi_api_key()
+    if api_key:
+        headers["X-OPENFIGI-APIKEY"] = api_key
     for attempt in range(max_retries):
-        resp = requests.post(
-            OPENFIGI_API,
-            headers={"Content-Type": "application/json"},
-            json=[{"idType": "ID_ISIN", "idValue": isin}],
-            timeout=30,
-        )
-        if resp.status_code == 429:
-            backoff = RATE_LIMIT_DELAY_SECONDS * (3 ** (attempt + 1))
-            print(f"  *** OpenFIGI 429 for {isin} (attempt {attempt + 1}/{max_retries}) - backing off {backoff:.0f}s")
+        try:
+            resp = requests.post(
+                OPENFIGI_API,
+                headers=headers,
+                json=[{"idType": "ID_ISIN", "idValue": isin}],
+                timeout=30,
+            )
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            backoff = delay * (3 ** (attempt + 1))
+            print(f"  *** OpenFIGI network error for {isin} ({e.__class__.__name__}, attempt {attempt + 1}/{max_retries}) - retrying in {backoff:.0f}s")
+            time.sleep(backoff)
+            continue
+        if resp.status_code == 429 or resp.status_code >= 500:
+            backoff = delay * (3 ** (attempt + 1))
+            print(f"  *** OpenFIGI {resp.status_code} for {isin} (attempt {attempt + 1}/{max_retries}) - backing off {backoff:.0f}s")
             time.sleep(backoff)
             continue
         resp.raise_for_status()
-        time.sleep(RATE_LIMIT_DELAY_SECONDS)
+        time.sleep(delay)
         return resp
-    raise RuntimeError(f"OpenFIGI still rate-limited after {max_retries} attempts for {isin}")
+    raise RuntimeError(f"OpenFIGI still failing after {max_retries} attempts for {isin}")
 
 
 def resolve_ticker_from_isins(isins: list, country_iso2: str = None) -> dict:
-    """Calls OpenFIGI per ISIN (capped at MAX_ISINS_TO_CHECK_PER_LEI -
-    see module docstring), keeps only common-stock/equity results, and
-    delegates the actual pick to pick_best_equity_hit() (the pure,
-    unit-tested part)."""
+    """Calls OpenFIGI per ISIN (capped at _max_isins_per_lei() - 20
+    anonymous, 60 with an API key present, since checking more is cheap
+    once the rate limit isn't the bottleneck - see module docstring),
+    keeps only common-stock/equity results, and delegates the actual
+    pick to pick_best_equity_hit() (the pure, unit-tested part).
+
+    NOT YET BUILT: true request batching - OpenFIGI's /v3/mapping accepts
+    up to 100 jobs per POST with an API key, so many ISINs could be
+    checked in ONE request instead of one-per-request. This function
+    still does one ISIN per call; the rate-limit-delay reduction above is
+    the win taken so far. Batching is a further, real optimization for
+    whoever picks this up next, not done here - it changes the response-
+    parsing shape (one result array per request instead of per ISIN) and
+    deserves its own verification pass before being trusted."""
     equity_hits = []
-    for isin in isins[:MAX_ISINS_TO_CHECK_PER_LEI]:
+    for isin in isins[:_max_isins_per_lei()]:
         try:
             resp = _post_openfigi_with_retry(isin)
         except Exception as e:
