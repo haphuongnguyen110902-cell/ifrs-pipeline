@@ -1092,6 +1092,68 @@ repeatedly in one sitting once failures start recurring on previously-
 reliable names - that's a signal to stop for the day, not to retry
 harder.**
 
+## Step 1b — national-index membership, the other half of the rule ✅ DONE
+
+While the market-cap-rule discovery cools down for the night (see above),
+built the other, genuinely independent half of SCOPE.md §3's rule:
+"member of its country's main national index." `scripts/29_universe_membership.py`
+only ever implemented the market-cap half; this was flagged as a real gap
+in Step 1a, not guessed at.
+
+**Source: Wikipedia's own index-constituent tables** - verified live
+against all 5 target-country indices before writing any code (CAC 40,
+FTSE MIB, AEX, OMX Stockholm 30, BEL 20), each carrying a real, dated "as
+of" snapshot. Parses with plain `pandas.read_html()`, no LLM, no scraping
+heuristics beyond matching on column names - genuinely reproducible by
+re-running the script, unlike anything involving an LLM's own judgement.
+Deliberately does **not** touch OpenFIGI, GLEIF or yfinance - 4 of 5
+index pages' ticker columns are already yfinance-ready (e.g. `AC.PA`);
+only BEL 20's `"Euronext Brussels:ABI"` format needs light, explicit
+parsing (never a guessed exchange suffix - same rule `EXCH_TO_YF_SUFFIX`
+already follows).
+
+**A real gotcha found live, not assumed:** BEL 20's Wikipedia page has
+TWO tables with a ticker-like column - the current 20 constituents, and
+a 41-row historical/former-members table (`"Period in BEL 20"`). Picking
+the first match blindly would have silently grabbed the wrong one.
+`find_constituent_table()` fixes this by preferring the table whose row
+count is closest to the index's known real size, not just "has a ticker
+column."
+
+**A company can qualify under both rules** (Carrefour: CAC 40 member
+*and* > €2bn). `save_rows()` never creates a duplicate row for a company
+already present today from the other script's run - a disclosed
+simplification, not a silent loss: the company's *second* qualifying
+reason isn't recorded, its existing row is just left alone rather than
+duplicated or overwritten.
+
+**Run live against all 5 indices, written to the same live DB:**
+
+| Index | Country | Constituents found |
+|---|---:|---:|
+| CAC 40 | France | 40 |
+| FTSE MIB | Italy | 40 |
+| AEX | Netherlands | 25 |
+| OMX Stockholm 30 | Sweden | 30 |
+| BEL 20 | Belgium | 20 |
+
+155 constituent rows found, 139 genuinely new (16 already present today
+from the market-cap rule, correctly deduplicated - e.g. Carrefour,
+Umicore, Heineken). **Universe total for 2026-09-16 jumped from 21 to
+160 companies** - a direct `SELECT COUNT(*)` against `universe_membership`,
+verified, not estimated. 21 via market cap, 139 via national index.
+
+8 new tests in `tests/test_national_index_membership.py` (the BEL 20
+two-tables gotcha, ticker normalization including the real
+non-breaking-space artifact found in BEL 20's raw HTML, and the
+never-guess-an-unmapped-exchange case). Full suite: 231/231 passing.
+
+**Not yet done, disclosed rather than silently skipped:** the Nordics'
+other three indices SCOPE.md recommends (OMX Copenhagen 25, OMX
+Helsinki 25, Oslo Børs OBX) - the same Wikipedia-table pattern should
+extend cleanly, just not verified live yet for those three pages
+specifically.
+
 **Required infrastructure changes at this scale:**
 - **Storage:** change `load_historical.py` to download → parse → **discard the
   zip**, storing the source URL + SHA256 for provenance instead. Otherwise
