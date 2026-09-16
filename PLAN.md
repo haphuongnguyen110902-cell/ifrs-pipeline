@@ -1037,6 +1037,61 @@ currency-conversion cases + both failure paths - real network calls
 exercised live above, not mocked, same pattern `test_entity_resolution.py`
 already established). Full suite: 212/212 passing.
 
+**Step 1a follow-up — OpenFIGI API key + three real retry bugs found
+chasing the 16 unresolved names ✅.** The 16 ticker-UNRESOLVED gap above
+was WP4's own noted next step: an OpenFIGI API key. Verified live against
+OpenFIGI's own docs before trusting any of it (not assumed) - a free key
+raises the anonymous 25-req/minute limit to 25-per-6-seconds (~10x) and
+the per-request job batch size from 10 to 100. `26_entity_resolution.py`
+now sends the `X-OPENFIGI-APIKEY` header when `OPENFIGI_API_KEY` is set,
+with a faster delay and a higher per-LEI ISIN cap (60 vs. 20) when a key
+is present - fully backward-compatible, identical behaviour with no key
+set.
+
+**Re-running then surfaced real, live non-determinism - not one bug,
+three, found the same way each time (a company resolved in one run,
+then didn't in the next, with no code change in between):**
+1. OpenFIGI read/connect timeouts were silently treated as "no hit for
+   that ISIN", no retry - fixed by retrying `Timeout`/`ConnectionError`
+   the same way a 429 already was.
+2. `resolve_working_ticker()`'s yfinance validation call had a bare
+   `except Exception: continue` with **zero retry** - a single transient
+   yfinance hiccup under batch load silently killed a candidate that was
+   independently confirmed to be genuinely correct (Renault → RNO.PA,
+   verified 3/3 in isolation). Fixed with the same retry-with-backoff
+   shape.
+3. A plain HTTP 5xx from OpenFIGI's own `raise_for_status()` was never
+   caught by the retry function at all - it escaped the retry loop
+   entirely and was silently absorbed one level up as "no hit". Found by
+   independently confirming Thales's real equity ISIN
+   (`FR0000121329`) sits well inside the range actually being checked
+   (index 22 of 55, cap 60) - it should have been found, and wasn't.
+   Fixed by treating 5xx the same as 429.
+
+9 more tests in `tests/test_entity_resolution.py` covering all three
+(23 total in that file). Full suite: 223/223 passing.
+
+**Honest result after all three fixes, not overstated:** re-running the
+full 40-candidate batch several times the same evening surfaced continued
+run-to-run flakiness even after every fix - including, on one run,
+**Carrefour** (resolved cleanly on every prior attempt) coming back
+UNRESOLVED. This is very likely this project's own cumulative load on
+free-tier OpenFIGI/GLEIF/yfinance from six-plus full batch runs plus
+numerous one-off tests in a single evening, not a fourth undiscovered
+bug - but that's a hypothesis, not confirmed, and is recorded as such.
+**The real, DB-verified number: 21 distinct companies now qualify as of
+2026-09-16** (a straight `SELECT` against `universe_membership`, not any
+single run's own printed count) - net +2 over the original 20, gained
+because `save_rows()`'s upsert-only design never deletes a company that
+qualified in an earlier run but dropped out of a later one (Thales's
+2026-09-13 success stays on record under that date's own snapshot,
+untouched by tonight's churn). **Practical guidance for whoever runs
+this next: don't trust one run's own count as final - query the table's
+union across recent `as_of` dates, and don't re-run the full batch
+repeatedly in one sitting once failures start recurring on previously-
+reliable names - that's a signal to stop for the day, not to retry
+harder.**
+
 **Required infrastructure changes at this scale:**
 - **Storage:** change `load_historical.py` to download → parse → **discard the
   zip**, storing the source URL + SHA256 for provenance instead. Otherwise

@@ -154,3 +154,187 @@ class TestOpenfigiApiKey:
         monkeypatch.setenv("OPENFIGI_API_KEY", "")
         assert er._openfigi_api_key() is None
         assert er._rate_limit_delay() == er.ANONYMOUS_RATE_LIMIT_DELAY_SECONDS
+
+
+class TestOpenfigiTimeoutRetry:
+    """Real bug found running the API-key path live, not assumed: Renault
+    resolved cleanly in an isolated single-company test, then came back
+    UNRESOLVED in a full 40-company batch run minutes later - the batch
+    log showed OpenFIGI read/connect timeouts that _post_openfigi_with_retry
+    silently treated as 'no hit', not a transient failure worth retrying.
+    Fixed by retrying Timeout/ConnectionError the same way a 429 already
+    was - these tests lock that fix in with a monkeypatched requests.post,
+    not a real network call (matching this file's own established pattern
+    for the pure/mockable parts of this module)."""
+
+    def test_retries_a_timeout_then_succeeds(self, er, monkeypatch):
+        import requests as requests_module
+
+        calls = {"n": 0}
+
+        class FakeResponse:
+            status_code = 200
+            def raise_for_status(self): pass
+            def json(self): return [{"data": []}]
+
+        def fake_post(*args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise requests_module.exceptions.Timeout("simulated timeout")
+            return FakeResponse()
+
+        monkeypatch.setattr(er.requests, "post", fake_post)
+        monkeypatch.setattr(er.time, "sleep", lambda s: None)  # don't actually wait in tests
+        resp = er._post_openfigi_with_retry("FR0000131906")
+        assert calls["n"] == 2
+        assert resp.status_code == 200
+
+    def test_retries_a_connection_error_then_succeeds(self, er, monkeypatch):
+        import requests as requests_module
+
+        calls = {"n": 0}
+
+        class FakeResponse:
+            status_code = 200
+            def raise_for_status(self): pass
+            def json(self): return [{"data": []}]
+
+        def fake_post(*args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise requests_module.exceptions.ConnectionError("simulated connection error")
+            return FakeResponse()
+
+        monkeypatch.setattr(er.requests, "post", fake_post)
+        monkeypatch.setattr(er.time, "sleep", lambda s: None)
+        resp = er._post_openfigi_with_retry("SE0010468108")
+        assert calls["n"] == 2
+        assert resp.status_code == 200
+
+    def test_gives_up_after_max_retries_of_persistent_timeouts(self, er, monkeypatch):
+        import requests as requests_module
+
+        def always_times_out(*args, **kwargs):
+            raise requests_module.exceptions.Timeout("simulated persistent timeout")
+
+        monkeypatch.setattr(er.requests, "post", always_times_out)
+        monkeypatch.setattr(er.time, "sleep", lambda s: None)
+        with pytest.raises(RuntimeError):
+            er._post_openfigi_with_retry("FR0000000000", max_retries=2)
+
+    def test_retries_a_5xx_server_error_then_succeeds(self, er, monkeypatch):
+        """The third bug found chasing the same residual flakiness:
+        raise_for_status() on a plain HTTP 5xx was never caught by this
+        function at all - it escaped the retry loop entirely and was
+        silently treated one level up as 'no hit for this ISIN', which is
+        how Thales's and Eni's real equity ISINs (confirmed independently
+        to be well within the checked range) could still vanish even
+        after the 429/timeout fixes above."""
+        calls = {"n": 0}
+
+        class FakeResponse:
+            def __init__(self, status_code):
+                self.status_code = status_code
+            def raise_for_status(self):
+                if self.status_code >= 400:
+                    raise er.requests.exceptions.HTTPError(f"{self.status_code} error")
+            def json(self):
+                return [{"data": []}]
+
+        def fake_post(*args, **kwargs):
+            calls["n"] += 1
+            return FakeResponse(503 if calls["n"] == 1 else 200)
+
+        monkeypatch.setattr(er.requests, "post", fake_post)
+        monkeypatch.setattr(er.time, "sleep", lambda s: None)
+        resp = er._post_openfigi_with_retry("FR0000121329")
+        assert calls["n"] == 2
+        assert resp.status_code == 200
+
+    def test_a_4xx_other_than_429_is_not_retried(self, er, monkeypatch):
+        """A genuine client error (e.g. 400 malformed ISIN) is not
+        transient - retrying it would just waste time re-asking the same
+        broken question, so only 429 and 5xx get the backoff-and-retry
+        treatment."""
+        calls = {"n": 0}
+
+        class FakeResponse:
+            status_code = 400
+            def raise_for_status(self):
+                raise er.requests.exceptions.HTTPError("400 error")
+            def json(self):
+                return [{"data": []}]
+
+        def fake_post(*args, **kwargs):
+            calls["n"] += 1
+            return FakeResponse()
+
+        monkeypatch.setattr(er.requests, "post", fake_post)
+        monkeypatch.setattr(er.time, "sleep", lambda s: None)
+        with pytest.raises(er.requests.exceptions.HTTPError):
+            er._post_openfigi_with_retry("BAD_ISIN")
+        assert calls["n"] == 1  # not retried
+
+
+class TestResolveWorkingTickerRetry:
+    """The second real bug from the same live run as TestOpenfigiTimeoutRetry
+    above: resolve_working_ticker() had a bare except-and-continue with no
+    retry on its yfinance validation call - a single transient hiccup
+    under batch load silently killed a candidate that was genuinely
+    correct (Renault/RNO.PA, verified separately to actually work).
+    Fixed with the same retry-with-backoff shape as the OpenFIGI path;
+    these tests lock it in with a monkeypatched v19.fetch_market_data,
+    not a real yfinance call."""
+
+    def test_retries_a_transient_failure_then_succeeds(self, er, monkeypatch):
+        calls = {"n": 0}
+
+        def fake_fetch(ticker):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise RuntimeError("simulated transient yfinance error")
+            return {"market_cap": 8_000_000_000, "price": 50, "currency": "EUR"}
+
+        monkeypatch.setattr(er.v19, "fetch_market_data", fake_fetch)
+        monkeypatch.setattr(er.time, "sleep", lambda s: None)
+        result = er.resolve_working_ticker("RNO.PA")
+        assert result == "RNO.PA"
+        assert calls["n"] == 2
+
+    def test_gives_up_after_max_retries_and_tries_next_variant(self, er, monkeypatch):
+        """A ticker that persistently fails validation (not transient -
+        genuinely broken) still falls through to the hyphenated
+        share-class variant, same as before this fix."""
+        calls = []
+
+        def fake_fetch(ticker):
+            calls.append(ticker)
+            if ticker == "ESSITYB.ST":
+                raise RuntimeError("persistently broken")
+            return {"market_cap": 5_000_000_000, "price": 20, "currency": "SEK"}
+
+        monkeypatch.setattr(er.v19, "fetch_market_data", fake_fetch)
+        monkeypatch.setattr(er.time, "sleep", lambda s: None)
+        result = er.resolve_working_ticker("ESSITYB.ST", max_retries=2)
+        assert result == "ESSITY-B.ST"
+        assert calls.count("ESSITYB.ST") == 2  # retried once, then moved to the next variant
+
+    def test_a_clean_response_with_no_market_cap_is_not_retried(self, er, monkeypatch):
+        """Not every failure is transient - a response that comes back
+        clean but with no market_cap is a real 'no data' answer, not
+        something retrying would fix, so it should move on immediately
+        rather than burning retries on it. Uses "ZZ.PA" specifically
+        because its base is too short for _ticker_variants to add a
+        second, hyphenated variant (see TestTickerVariants' own
+        "too short a base" case) - so exactly one call is expected."""
+        calls = {"n": 0}
+
+        def fake_fetch(ticker):
+            calls["n"] += 1
+            return {"market_cap": None, "price": None, "currency": None}
+
+        monkeypatch.setattr(er.v19, "fetch_market_data", fake_fetch)
+        monkeypatch.setattr(er.time, "sleep", lambda s: None)
+        result = er.resolve_working_ticker("ZZ.PA")
+        assert result is None
+        assert calls["n"] == 1  # not retried 3x for a clean-but-empty response
