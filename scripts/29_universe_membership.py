@@ -79,7 +79,7 @@ def ensure_universe_table(engine):
         conn.execute(text(ddl))
 
 
-def resolve_company_with_retry(name: str, country: str, max_attempts: int = 3) -> dict:
+def resolve_company_with_retry(name: str, country: str, max_attempts: int = 2) -> dict:
     """Wraps er.resolve_company() with a COMPANY-LEVEL retry, layered on
     top of the HTTP-level retries already inside resolve_company() itself
     (OpenFIGI 429/5xx/timeout, yfinance validation).
@@ -95,10 +95,19 @@ def resolve_company_with_retry(name: str, country: str, max_attempts: int = 3) -
     some transient failure inside the resolution pipeline (GLEIF
     pagination, OpenFIGI backend inconsistency, or something else not
     yet isolated) that the HTTP-level retries don't happen to catch every
-    time. A company-level retry is the pragmatic fix given that evidence:
-    if the whole pipeline can succeed on a fresh attempt, retrying the
-    whole thing a few times costs much less than treating a real,
-    qualifying company as permanently unresolved."""
+    time.
+
+    max_attempts DELIBERATELY DROPPED FROM 3 TO 2, found necessary
+    running this live, not assumed: a full 40-candidate batch with
+    max_attempts=3 ran for a full hour and was killed by the timeout
+    wrapper without finishing - ~14-16 companies are persistently
+    UNRESOLVED (not transient), so every one of them now paid the full
+    retry cost for zero benefit (confirmed separately: Carrefour failed
+    all 3 attempts, back-to-back, in one run - see PLAN.md). This is a
+    real cost/benefit tradeoff, not free insurance: 2 attempts still
+    gives a genuinely transient failure one real chance to clear, at
+    roughly 2/3 the time penalty 3 attempts cost across every
+    persistently-unresolved company in the batch."""
     last = None
     for attempt in range(max_attempts):
         last = er.resolve_company(name, country)
