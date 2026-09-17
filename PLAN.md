@@ -1231,6 +1231,57 @@ remaining genuinely-ambiguous tags by hand, then actually load them into
 appear on the live public dashboard. Nothing done tonight does this yet
 - discovery and classification are prerequisites, not the finish line.
 
+### 2026-09-17 follow-up: the smoke test still failed, and a real mystery, not fully solved
+
+Ran the checklist above exactly as written the next morning. **Carrefour
+still failed, with the identical signature, after a full overnight
+cooldown** - ruling out simple rate-limit exhaustion as the sole cause
+(a real rate-limit would have reset by then).
+
+**What was tried and found, in order:**
+1. Confirmed live: Carrefour's real LEI candidate ("CARREFOUR",
+   `549300B8P6MUJ1YWTS08`) is still found first, unchanged. Its real
+   equity ISIN (`FR0000120172`) is still in its GLEIF ISIN list, at
+   index 34 of 41 - well inside the checked range (cap 60).
+2. Confirmed live: querying OpenFIGI directly for that exact ISIN,
+   right now, correctly returns `CA FP Equity Common Stock` (the right
+   answer) at the top of the result. The data and the classification
+   are both fine.
+3. Confirmed live: calling `resolve_company("Carrefour", "France")`
+   standalone, in a fresh process, succeeded cleanly in ~38s - same
+   inputs, same code, same correct result (`CA.PA`) every prior
+   successful run has produced.
+4. **Added a company-level retry** (`resolve_company_with_retry()` in
+   `29_universe_membership.py`, 3 attempts) on the reasoning that if the
+   whole pipeline can succeed on a fresh attempt, retrying it a few
+   times should be cheap insurance against whatever's transient. 3 new
+   tests, full suite 234/234.
+5. **Re-ran live with the fix - Carrefour failed all 3 retry attempts,
+   back-to-back, inside the SAME process, in ~3m46s.** This is the part
+   that doesn't fit a simple "transient/intermittent" story: three
+   fresh attempts, all identical, all failed, immediately after a
+   standalone call with identical code had just succeeded. A connection-
+   reuse theory (a load-balanced backend pinning to a stale replica) was
+   considered and set aside - this codebase's bare `requests.get()`/
+   `.post()` calls (no persistent `Session` object) create a fresh
+   connection per call already, so that specific mechanism doesn't fit
+   either. **Root cause not identified. Recorded honestly as unsolved,
+   not swept under a retry that only sometimes works.**
+
+**Why this isn't actually urgent, and shouldn't consume more time right
+now:** `universe_membership` already has a valid Carrefour row from
+2026-09-13/14/16 (`CA.PA`, `market_cap_gt_2bn`) - confirmed by direct
+query. The table's own upsert-only, cross-`as_of`-date design means
+today's failed re-verification doesn't remove or invalidate that -
+Carrefour is not missing from the real data, it's just that today's
+fresh confirmation attempt happens to be flaky. This is a re-
+verification consistency puzzle, not a data-loss risk. The company-
+level retry fix is kept - it's a real, tested, generally sound
+improvement for other companies experiencing genuine transient
+failures - but it should not be assumed to have "fixed Carrefour," and
+whoever revisits this should not spend another multi-hour session on
+this one company without new evidence pointing somewhere specific.
+
 **Required infrastructure changes at this scale:**
 - **Storage:** change `load_historical.py` to download → parse → **discard the
   zip**, storing the source URL + SHA256 for provenance instead. Otherwise

@@ -20,6 +20,15 @@ def um(load_script):
     return load_script("29_universe_membership.py")
 
 
+@pytest.fixture(autouse=True)
+def no_real_sleeps(um, monkeypatch):
+    """evaluate_candidate() now goes through resolve_company_with_retry(),
+    which sleeps between attempts - every test in this file mocks
+    resolve_company itself, so none of them should burn real wall-clock
+    time on a retry backoff that exists for a live network, not a test."""
+    monkeypatch.setattr(um.time, "sleep", lambda s: None)
+
+
 def _patch_resolution(monkeypatch, um, resolution):
     monkeypatch.setattr(um.er, "resolve_company", lambda name, country: resolution)
 
@@ -105,3 +114,61 @@ def test_fx_failure_returns_none_not_a_crash(um, monkeypatch):
     _patch_market(monkeypatch, um, market={"market_cap": 30_000_000_000, "currency": "SEK"},
                   rate_exc=ValueError("no live rate"))
     assert um.evaluate_candidate("FX Broken Co", "Sweden") is None
+
+
+class TestResolveCompanyWithRetry:
+    """Real, evidenced bug found the morning after WP7's OpenFIGI fixes
+    shipped: Carrefour came back UNRESOLVED as the very first company in
+    four separate full-batch runs across two days, with zero rate-limit
+    warnings logged - then resolved correctly in under 40s when the
+    identical resolve_company("Carrefour", "France") call was made
+    standalone, moments later, same day, same result every prior
+    successful run had. That rules out both "still rate-limited" and "the
+    code is wrong" - a company-level retry on top of the HTTP-level ones
+    already inside resolve_company() is the pragmatic fix given that
+    evidence."""
+
+    def test_resolves_on_first_try_no_retry_needed(self, um, monkeypatch):
+        resolved = {"lei": "L1", "isin": "I1", "ticker": "T1.PA", "ticker_exchange": "FP",
+                    "ticker_currency": "EUR", "ticker_source": "gleif+openfigi"}
+        calls = {"n": 0}
+
+        def fake_resolve(name, country):
+            calls["n"] += 1
+            return resolved
+
+        monkeypatch.setattr(um.er, "resolve_company", fake_resolve)
+        monkeypatch.setattr(um.time, "sleep", lambda s: None)
+        result = um.resolve_company_with_retry("Some Co", "France")
+        assert result == resolved
+        assert calls["n"] == 1
+
+    def test_retries_on_unresolved_then_succeeds(self, um, monkeypatch):
+        calls = {"n": 0}
+        resolved = {"lei": "L2", "isin": "I2", "ticker": "T2.PA", "ticker_exchange": "FP",
+                    "ticker_currency": "EUR", "ticker_source": "gleif+openfigi"}
+
+        def fake_resolve(name, country):
+            calls["n"] += 1
+            if calls["n"] < 3:
+                return dict(UNRESOLVED)
+            return resolved
+
+        monkeypatch.setattr(um.er, "resolve_company", fake_resolve)
+        monkeypatch.setattr(um.time, "sleep", lambda s: None)
+        result = um.resolve_company_with_retry("Carrefour", "France", max_attempts=3)
+        assert result == resolved
+        assert calls["n"] == 3
+
+    def test_gives_up_after_max_attempts_still_unresolved(self, um, monkeypatch):
+        calls = {"n": 0}
+
+        def fake_resolve(name, country):
+            calls["n"] += 1
+            return dict(UNRESOLVED)
+
+        monkeypatch.setattr(um.er, "resolve_company", fake_resolve)
+        monkeypatch.setattr(um.time, "sleep", lambda s: None)
+        result = um.resolve_company_with_retry("Genuinely Unresolvable Co", "France", max_attempts=3)
+        assert result["ticker_source"] == "UNRESOLVED"
+        assert calls["n"] == 3  # tried the full budget, never silently gave up early

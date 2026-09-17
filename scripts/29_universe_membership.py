@@ -49,6 +49,7 @@ import csv
 import importlib.util
 import os
 import sys
+import time
 from datetime import date
 from pathlib import Path
 
@@ -78,12 +79,43 @@ def ensure_universe_table(engine):
         conn.execute(text(ddl))
 
 
+def resolve_company_with_retry(name: str, country: str, max_attempts: int = 3) -> dict:
+    """Wraps er.resolve_company() with a COMPANY-LEVEL retry, layered on
+    top of the HTTP-level retries already inside resolve_company() itself
+    (OpenFIGI 429/5xx/timeout, yfinance validation).
+
+    Real, evidenced bug, not assumed: Carrefour came back UNRESOLVED as
+    the very first company in four separate full-batch runs across two
+    days (no rate-limit warnings logged, no obvious cause), then resolved
+    correctly in under 40s when the exact same resolve_company("Carrefour",
+    "France") call was made standalone, moments later, same day, same
+    LEI/ISIN/ticker as every prior successful run. That rules out both
+    "still rate-limited" (it succeeded right after) and "wrong code"
+    (identical inputs, identical result once it worked) - what's left is
+    some transient failure inside the resolution pipeline (GLEIF
+    pagination, OpenFIGI backend inconsistency, or something else not
+    yet isolated) that the HTTP-level retries don't happen to catch every
+    time. A company-level retry is the pragmatic fix given that evidence:
+    if the whole pipeline can succeed on a fresh attempt, retrying the
+    whole thing a few times costs much less than treating a real,
+    qualifying company as permanently unresolved."""
+    last = None
+    for attempt in range(max_attempts):
+        last = er.resolve_company(name, country)
+        if last["ticker_source"] != "UNRESOLVED":
+            return last
+        if attempt + 1 < max_attempts:
+            print(f"  {name:25s} [{country}]  UNRESOLVED on attempt {attempt + 1}/{max_attempts} - retrying")
+            time.sleep(3)
+    return last
+
+
 def evaluate_candidate(name: str, country: str) -> dict | None:
     """Returns a row dict ready for universe_membership, or None if this
     candidate can't be evaluated yet (ticker unresolved, or market cap
     unavailable) - never a guessed row. `country` is the full country
     name (e.g. "France"), matching resolve_company()'s own expectation."""
-    resolution = er.resolve_company(name, country)
+    resolution = resolve_company_with_retry(name, country)
     if resolution["ticker_source"] == "UNRESOLVED":
         print(f"  {name:25s} [{country}]  ticker UNRESOLVED - skipped, not excluded")
         return None
