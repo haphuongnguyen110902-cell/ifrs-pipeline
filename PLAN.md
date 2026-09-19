@@ -1383,9 +1383,24 @@ Note: running that forensics test **writes to the live `forensics_flag` table**.
 
 **Audit findings, each verified by a command (fixes NOT done - candidates for
 their own WPs; severity is my judgement):**
-- HIGH - `11_ratio_engine.py` pivots with `aggfunc="first"` over a query with no
-  `ORDER BY`; 223 (company, concept, period) keys hold *different* values across
-  filings, many exact sign flips (Essity D&A -7,671M vs +7,671M). Winner undefined.
+- HIGH - **FIXED on `fix/ratio-fact-tiebreak`.** `11_ratio_engine.py` pivoted with
+  `aggfunc="first"` over a query with no `ORDER BY`; 223 (company, concept, period)
+  keys held *different* values across filings, many exact sign flips (Essity D&A
+  -7,671M vs +7,671M). Measured: shuffling the input rows moved up to **47** ratio
+  cells on the old code, **0** on the new. `resolve_fact_conflicts()` now chooses:
+  real value > NaN; the year's representative period (~365-day duration / latest
+  instant); the latest filing (its year read from its own facts, not its filename);
+  then filing_id. All 232 contested facts (96 restated, 73 other_period, 36
+  rounding, 27 sign_flip) are reported, never silent. **Real corrections to live
+  values (NOT yet applied - run `python scripts/11_ratio_engine.py` after merge):**
+  Recordati net debt 2021 -9.1% / 2022 -3.1% (its mis-dated opening cash had been
+  picked over the year-end balance), EssilorLuxottica 2021 now on its restated
+  basis (operating margin 11.74% -> 11.64%), Kering 2021 < 0.4%. The 19 affected
+  frozen `tests/baseline/ratio.csv` rows were re-baselined explicitly. 13 new
+  tests, every rule mutation-tested. Re-running 19/21/22/24 picks the same
+  corrections up (their frozen baselines may need the same explicit re-baseline).
+  Still open: D&A and CFO are not abs()'d, so a wrong sign in a company's ONLY
+  filing would still flip EBITDA / cash conversion.
 - HIGH - `00_find_filing.py` picks "latest" by archive `period_end`; the archive
   has typos: Recordati lists a FY2022 package as `2032-12-31` (ranked first ->
   we downloaded FY2022, not FY2025 added 2026-04-07); Carrefour/Hermes carry
