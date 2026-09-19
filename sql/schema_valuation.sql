@@ -50,3 +50,15 @@ ALTER TABLE valuation ADD COLUMN IF NOT EXISTS implied_ev_from_peers NUMERIC;
 ALTER TABLE valuation ADD COLUMN IF NOT EXISTS premium_vs_peers_pct NUMERIC;
 ALTER TABLE valuation ADD COLUMN IF NOT EXISTS fwd_ev_ebitda NUMERIC;
 ALTER TABLE valuation ADD COLUMN IF NOT EXISTS fwd_ev_sales NUMERIC;
+
+-- EBITDA that is really just EBIT (no D&A tag matched in the filing) is not
+-- stored as EBITDA: ebitda_eur / ev_ebitda stay NULL for such a row, it is
+-- excluded from sector medians, and ebitda_is_fallback says why. EV/EBIT is
+-- always stored - an honest multiple for every company.
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS ebit_eur NUMERIC;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS ev_ebit NUMERIC;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS ebitda_is_fallback BOOLEAN;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS ev_ebit_sector_median NUMERIC;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS n_peers_ebit_in_sector INTEGER;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS implied_ev_from_peers_ebit NUMERIC;
+ALTER TABLE valuation ADD COLUMN IF NOT EXISTS premium_vs_peers_ebit_pct NUMERIC;
