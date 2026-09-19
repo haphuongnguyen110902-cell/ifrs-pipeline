@@ -54,6 +54,17 @@ DESIGN NOTES
   missing gross profit is different from a zero gross profit.
 - Signs: XBRL filers are inconsistent about whether expenses are positive
   or negative. We take absolute values where needed and note this.
+- One value per (company, year, concept), chosen DETERMINISTICALLY - see
+  resolve_fact_conflicts(). The same fact routinely appears in several
+  filings (each annual report repeats last year's comparatives), and it is
+  not always the same number: restated comparatives, rounding, a flipped
+  sign, or - found live on Recordati - an opening balance whose date is off
+  by a day so that two different instants land in the same year. The old
+  pivot took "first" over an un-ordered SQL result, so which one won was
+  undefined. Rule: real value > NaN; the year's representative period (a
+  ~365-day duration, or the latest instant); then the LATEST filing
+  (restated comparatives supersede the original); then filing_id. Every
+  contested key is reported, never silently absorbed.
 - Currency-neutral ratios are valid for cross-company comparison now.
   Absolute-value ratios (net debt, revenue size) need FX conversion first.
 
@@ -68,6 +79,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
@@ -76,12 +88,15 @@ from sqlalchemy import create_engine, text
 # ---------------------------------------------------------------- fetch
 
 def fetch_facts(engine, company_filter=None) -> pd.DataFrame:
-    """Pull all facts from the database into a wide-format DataFrame."""
+    """Pull all facts from the database as a long-format DataFrame (one row
+    per stored fact, with its filing_id so conflicts between filings can be
+    resolved deterministically - see resolve_fact_conflicts())."""
     where = "WHERE c.name = :company" if company_filter else ""
     query = f"""
         SELECT
             c.name          AS company,
             c.company_id,
+            fv.filing_id,
             ic.normalized_name,
             p.period_type,
             p.start_date,
@@ -111,20 +126,142 @@ def fetch_facts(engine, company_filter=None) -> pd.DataFrame:
     return df
 
 
-def pivot_to_wide(df: pd.DataFrame) -> pd.DataFrame:
+_KEY = ["company_id", "year", "normalized_name"]
+# a relative difference below this between two filings' value for the SAME
+# period is reported as rounding, not a restatement
+ROUNDING_TOLERANCE = 1e-3
+CONFLICT_COLUMNS = ["company", "company_id", "year", "normalized_name", "kind",
+                    "chosen_value", "alt_value", "chosen_filing_id", "alt_filing_id"]
+
+
+def filing_reporting_years(df: pd.DataFrame) -> pd.Series:
+    """{filing_id: fiscal year the filing is primarily ABOUT}, derived from
+    the filing's own facts - never from its filename or the archive's
+    period_end label, both of which have been wrong in practice (the archive
+    lists a Recordati FY2022 package as 2032-12-31).
+
+    A filing repeats prior-year comparatives, so its own year is the LATEST
+    end date that carries a substantial share (>= half) of its most
+    populated end date. Requiring a substantial share is what stops one
+    stray far-future-dated fact from making an old filing look like the
+    newest one."""
+    counts = df.groupby(["filing_id", "end_date"]).size().rename("n").reset_index()
+    counts["max_n"] = counts.groupby("filing_id")["n"].transform("max")
+    main = counts[counts["n"] >= 0.5 * counts["max_n"]]
+    latest_end = main.groupby("filing_id")["end_date"].max()
+    return latest_end.map(lambda d: (d - timedelta(days=1)).year)
+
+
+def resolve_fact_conflicts(df: pd.DataFrame):
+    """One row per (company_id, year, concept), chosen deterministically,
+    plus a report of every key where the candidates disagreed.
+
+    Selection order (first rule that separates the candidates wins):
+      1. a real value beats NaN;
+      2. the year's representative period: a duration closest to 365 days
+         (a stub or multi-year period loses), and among instants the LATEST
+         (the year-end balance beats an opening balance dated a day late -
+         found live: Recordati's opening cash, dated 2021-01-02, was landing
+         in the same year as its real 2021 close and being picked for it);
+      3. the LATEST filing (by filing_reporting_years): restated comparatives
+         supersede the number originally reported, so a trend is on one
+         accounting basis;
+      4. the highest filing_id, then the value - only so the result is a pure
+         function of the data, never of row order.
+
+    Returns (resolved, conflicts). `resolved` has the same columns as `df`.
+    `conflicts` has one row per NON-chosen candidate whose value differs from
+    the chosen one, with kind:
+      sign_flip     same period, |value| equal, opposite sign
+      rounding      same period, relative difference < ROUNDING_TOLERANCE
+      restated      same period, a genuinely different number
+      other_period  a different period in the same year (resolved by rule 2)
+    Identical repeats (the normal case: comparatives repeated verbatim) are
+    not conflicts."""
+    empty = pd.DataFrame(columns=CONFLICT_COLUMNS)
+    if df.empty:
+        return df.copy(), empty
+
+    d = df.copy()
+    if "filing_id" not in d.columns:
+        d["filing_id"] = 0
+    d["_filing_year"] = d["filing_id"].map(filing_reporting_years(d))
+    start = pd.to_datetime(d["start_date"])
+    end = pd.to_datetime(d["end_date"])
+    is_duration = d["period_type"].eq("duration")
+    span_days = (end - start).dt.days.where(is_duration)
+    d["_gap"] = (span_days - 365).abs().fillna(0)
+    d["_end"] = end
+    d["_has_value"] = d["value"].notna()
+
+    d = d.sort_values(
+        _KEY + ["_has_value", "_gap", "_end", "_filing_year", "filing_id", "value"],
+        ascending=[True, True, True, False, True, False, False, False, True],
+        na_position="last")
+    chosen_mask = ~d.duplicated(_KEY, keep="first")
+    chosen, alts = d[chosen_mask], d[~chosen_mask]
+
+    if alts.empty:
+        return chosen.drop(columns=["_filing_year", "_gap", "_end", "_has_value"]), empty
+
+    m = alts.merge(
+        chosen[_KEY + ["value", "start_date", "end_date", "filing_id"]],
+        on=_KEY, suffixes=("_alt", "_chosen"))
+    va, vc = m["value_alt"], m["value_chosen"]
+    identical = (va == vc) | (va.isna() & vc.isna())
+    same_period = (m["start_date_alt"].astype(str) == m["start_date_chosen"].astype(str)) & \
+                  (m["end_date_alt"].astype(str) == m["end_date_chosen"].astype(str))
+    flip = same_period & np.isclose(va.abs(), vc.abs(), rtol=1e-9) & (np.sign(va) != np.sign(vc))
+    rel = (va - vc).abs() / np.maximum(va.abs(), vc.abs()).replace(0, np.nan)
+    rounding = same_period & ~flip & (rel < ROUNDING_TOLERANCE)
+    m["kind"] = np.select(
+        [~same_period, flip, rounding], ["other_period", "sign_flip", "rounding"], default="restated")
+    m = m[~identical & va.notna()]
+    conflicts = m.rename(columns={"value_chosen": "chosen_value", "value_alt": "alt_value",
+                                  "filing_id_chosen": "chosen_filing_id",
+                                  "filing_id_alt": "alt_filing_id"})[CONFLICT_COLUMNS]
+    return chosen.drop(columns=["_filing_year", "_gap", "_end", "_has_value"]), \
+        conflicts.reset_index(drop=True)
+
+
+def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False):
     """
     Convert long-format facts into a wide table:
     one row per (company, year), one column per concept.
-    Where a concept appears multiple times for the same company/year
-    (shouldn't happen after dimensional filtering, but just in case),
-    take the first value.
+
+    Facts are first reduced to ONE row per (company, year, concept) by
+    resolve_fact_conflicts() - a pure function of the data. (This used to
+    pivot with aggfunc="first" over an un-ordered SQL result, so where two
+    filings disagreed the winner was whatever the database happened to
+    return first.)
+
+    return_conflicts=True also returns the conflicts report, for callers
+    (main) that want to print it; every other caller is unchanged.
     """
-    return df.pivot_table(
+    resolved, conflicts = resolve_fact_conflicts(df)
+    wide = resolved.pivot_table(
         index=["company", "company_id", "year"],
         columns="normalized_name",
         values="value",
         aggfunc="first",
     ).reset_index()
+    return (wide, conflicts) if return_conflicts else wide
+
+
+def print_conflict_summary(conflicts: pd.DataFrame):
+    """Loud, per this project's convention (never a silent choice)."""
+    if conflicts.empty:
+        return
+    by_kind = conflicts["kind"].value_counts().to_dict()
+    print(f"Resolved {len(conflicts)} conflicting fact(s) deterministically "
+          f"(latest filing wins): {by_kind}")
+    flips = conflicts[conflicts["kind"] == "sign_flip"]
+    if not flips.empty:
+        print(f"*** {len(flips)} SIGN FLIP(S) between filings - the later filing's sign was used; "
+              f"worth a look at the source:")
+        for _, r in flips.head(10).iterrows():
+            print(f"      {r['company']} {int(r['year'])} {r['normalized_name']}: "
+                  f"chosen {r['chosen_value']:,.0f}, other filing {r['alt_value']:,.0f}")
 
 
 # ---------------------------------------------------------------- ratio helpers
@@ -554,7 +691,8 @@ if __name__ == "__main__":
           f"{df['company'].nunique()} companies and "
           f"{df['year'].nunique()} years\n")
 
-    wide = pivot_to_wide(df)
+    wide, conflicts = pivot_to_wide(df, return_conflicts=True)
+    print_conflict_summary(conflicts)
     ratios = compute_ratios(wide)
 
     # print the comps table to terminal

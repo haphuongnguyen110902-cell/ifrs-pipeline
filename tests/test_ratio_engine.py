@@ -259,3 +259,159 @@ class TestExcelSheetNameSanitizer:
 
     def test_leaves_clean_names_alone(self, r11):
         assert r11.sanitize_sheet_name("Gross Margin") == "Gross Margin"
+
+
+# ---------------------------------------------------------------- deterministic fact resolution
+#
+# Real bug behind these: the wide pivot used aggfunc="first" over a SQL
+# result with no ORDER BY, so where two filings disagreed about the same
+# (company, year, concept) the winner was whatever the database returned
+# first. Measured live: shuffling the input rows moved up to 47 ratio cells
+# on the old code, 0 on the new. The concrete cases below are the ones found
+# in the live data (Recordati's mis-dated opening cash, EssilorLuxottica's
+# restated 2021, Essity's flipped D&A sign).
+
+from datetime import date  # noqa: E402
+
+
+def _fact(concept, value, filing_id, *, year=2021, company_id=1, ptype="duration",
+          start=None, end=None):
+    if ptype == "duration":
+        start = start or date(year, 1, 1)
+        end = end or date(year + 1, 1, 1)
+    else:
+        start, end = None, end or date(year + 1, 1, 1)
+    return {"company": "TestCo", "company_id": company_id, "year": year,
+            "normalized_name": concept, "period_type": ptype, "start_date": start,
+            "end_date": end, "value": value, "currency": "EUR", "filing_id": filing_id}
+
+
+def _anchors(filing_id, fy_end, n=6):
+    """Enough facts ending on fy_end that the filing's own fiscal year is
+    unambiguous - a real filing has hundreds."""
+    return [_fact(f"anchor_{i}", 1.0, filing_id, ptype="instant", end=fy_end) for i in range(n)]
+
+
+def _frame(*rows):
+    return pd.DataFrame([r for group in rows for r in (group if isinstance(group, list) else [group])])
+
+
+def _value(r11, df, concept, year=2021):
+    wide = r11.pivot_to_wide(df)
+    return wide.loc[wide["year"] == year, concept].iloc[0]
+
+
+class TestDeterministicFactResolution:
+
+    def test_result_does_not_depend_on_row_order(self, r11):
+        """The property the old code lacked."""
+        df = _frame(
+            _anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+            _fact("revenue", 100.0, 1), _fact("revenue", 90.0, 2),                 # restated
+            _fact("da", -7671.0, 1), _fact("da", 7671.0, 2),                       # sign flip
+            _fact("cash", 188.0, 2, ptype="instant", end=date(2021, 1, 2)),        # mis-dated opening
+            _fact("cash", 245.0, 2, ptype="instant", end=date(2022, 1, 1)),
+        )
+        expected = r11.pivot_to_wide(df).sort_index(axis=1).reset_index(drop=True)
+        for seed in range(25):
+            shuffled = df.sample(frac=1.0, random_state=seed).reset_index(drop=True)
+            got = r11.pivot_to_wide(shuffled).sort_index(axis=1).reset_index(drop=True)
+            pd.testing.assert_frame_equal(got, expected)
+
+    def test_latest_filing_wins_for_restated_comparatives(self, r11):
+        """EssilorLuxottica 2021: the FY2022 filing restated FY2021
+        (operating profit 2,326M -> 2,307M); the restated figure is the one
+        on the same basis as the latest year."""
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+                    _fact("revenue", 100.0, 1), _fact("revenue", 90.0, 2))
+        assert _value(r11, df, "revenue") == 90.0
+        _, conflicts = r11.pivot_to_wide(df, return_conflicts=True)
+        row = conflicts[conflicts["normalized_name"] == "revenue"].iloc[0]
+        assert row["kind"] == "restated"
+        assert (row["chosen_value"], row["alt_value"]) == (90.0, 100.0)
+
+    def test_identical_repeats_are_not_conflicts(self, r11):
+        """The normal case: each annual report repeats last year's
+        comparatives verbatim - 4,752 of 4,977 multi-row keys in the live DB."""
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+                    _fact("revenue", 100.0, 1), _fact("revenue", 100.0, 2))
+        wide, conflicts = r11.pivot_to_wide(df, return_conflicts=True)
+        assert wide.loc[wide["year"] == 2021, "revenue"].iloc[0] == 100.0
+        assert conflicts[conflicts["normalized_name"] == "revenue"].empty
+
+    def test_year_end_instant_beats_a_mis_dated_opening_balance(self, r11):
+        """Recordati: the opening cash balance is dated 2021-01-02, which the
+        engine's year mapping puts in 2021 - the same year as the real
+        2021-12-31 close. The old 'first' picked the opening balance (188.2M
+        vs the real 244.6M), overstating net debt by 9%."""
+        df = _frame(_anchors(1, date(2023, 1, 1)),
+                    _fact("cash", 188.23, 1, ptype="instant", end=date(2021, 1, 2)),
+                    _fact("cash", 244.578, 1, ptype="instant", end=date(2022, 1, 1)))
+        assert _value(r11, df, "cash", 2021) == pytest.approx(244.578)
+        _, conflicts = r11.pivot_to_wide(df, return_conflicts=True)
+        assert conflicts[conflicts["normalized_name"] == "cash"]["kind"].tolist() == ["other_period"]
+
+    def test_annual_duration_beats_a_stub_even_from_a_newer_filing(self, r11):
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+                    _fact("revenue", 100.0, 1),                                     # 365 days
+                    _fact("revenue", 40.0, 2, end=date(2021, 7, 1)),                # 6-month stub
+                    _fact("revenue", 999.0, 2, end=date(2033, 1, 1)))               # bogus far-future end
+        assert _value(r11, df, "revenue") == 100.0
+
+    def test_sign_flip_is_reported_and_the_later_filing_sign_used(self, r11):
+        """Essity 2020 D&A: -7,671M in the 2021 filing, +7,671M in the 2022
+        filing. _da_total feeds EBITDA and is NOT abs()'d, so the sign matters."""
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+                    _fact("da", -7671.0, 1), _fact("da", 7671.0, 2))
+        assert _value(r11, df, "da") == 7671.0
+        _, conflicts = r11.pivot_to_wide(df, return_conflicts=True)
+        assert conflicts[conflicts["normalized_name"] == "da"]["kind"].tolist() == ["sign_flip"]
+
+    def test_tiny_difference_is_classified_as_rounding(self, r11):
+        """Kering 2021 revenue: 17,645.2M (one-decimal filing) vs 17,645.0M."""
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+                    _fact("revenue", 17645.2, 1), _fact("revenue", 17645.0, 2))
+        _, conflicts = r11.pivot_to_wide(df, return_conflicts=True)
+        assert conflicts[conflicts["normalized_name"] == "revenue"]["kind"].tolist() == ["rounding"]
+
+    def test_a_stray_future_dated_fact_does_not_make_an_old_filing_look_newest(self, r11):
+        """Recordati's filing carries one fact dated 2033. Judging a filing's
+        year by its MAX end date would rank that old filing as the newest and
+        let its older numbers beat the real latest filing's restatement."""
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+                    _fact("stray", 1.0, 1, ptype="instant", end=date(2033, 1, 1)),
+                    _fact("x", 5.0, 1, ptype="instant", end=date(2022, 1, 1)),
+                    _fact("x", 7.0, 2, ptype="instant", end=date(2022, 1, 1)))
+        assert _value(r11, df, "x") == 7.0
+
+    def test_filing_reporting_year_is_taken_from_the_facts(self, r11):
+        df = _frame(_anchors(1, date(2023, 1, 1)), _fact("stray", 1.0, 1, ptype="instant", end=date(2033, 1, 1)))
+        assert r11.filing_reporting_years(df).loc[1] == 2022
+
+    def test_nan_never_beats_a_real_value(self, r11):
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+                    _fact("revenue", 100.0, 1), _fact("revenue", float("nan"), 2))
+        assert _value(r11, df, "revenue") == 100.0
+
+    def test_works_without_a_filing_id_column(self, r11):
+        """Callers/tests that predate filing_id still get a deterministic result."""
+        df = _frame(_fact("revenue", 100.0, 1), _fact("revenue", 90.0, 1)).drop(columns=["filing_id"])
+        first = r11.pivot_to_wide(df)
+        second = r11.pivot_to_wide(df.iloc[::-1].reset_index(drop=True))
+        pd.testing.assert_frame_equal(first.sort_index(axis=1), second.sort_index(axis=1))
+
+    def test_empty_input_is_safe(self, r11):
+        resolved, conflicts = r11.resolve_fact_conflicts(pd.DataFrame(
+            columns=["company", "company_id", "year", "normalized_name", "period_type",
+                     "start_date", "end_date", "value", "currency", "filing_id"]))
+        assert resolved.empty and conflicts.empty
+
+    def test_conflict_summary_prints_sign_flips_loudly(self, r11, capsys):
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
+                    _fact("da", -7671.0, 1), _fact("da", 7671.0, 2))
+        _, conflicts = r11.pivot_to_wide(df, return_conflicts=True)
+        r11.print_conflict_summary(conflicts)
+        out = capsys.readouterr().out
+        assert "SIGN FLIP" in out and "TestCo 2021 da" in out
+        r11.print_conflict_summary(conflicts.iloc[0:0])      # empty report prints nothing
+        assert capsys.readouterr().out == ""
