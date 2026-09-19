@@ -16,8 +16,14 @@
 # is found and used instead of the root's - no manual configuration
 # needed beyond setting "Main file path" to webapp/app.py at deploy time.
 
-pandas>=2.2.0
-SQLAlchemy>=2.0.0
-psycopg2-binary>=2.9.9
-python-dotenv>=1.0.0
-streamlit>=1.38.0
+# Lower bounds are the oldest versions the app is known to need; upper bounds
+# stop Streamlit Cloud from silently installing the next MAJOR version on a
+# rebuild (Cloud installs the newest version each bound allows, and this app is
+# a public demo with no one watching a rebuild). streamlit >= 1.63.0 because
+# that is the version the app was tested on (it uses st.dataframe(width="stretch",
+# on_select=...), and I could not verify which older release added them).
+pandas>=2.2.0,<4
+SQLAlchemy>=2.0.0,<3
+psycopg2-binary>=2.9.9,<3
+python-dotenv>=1.0.0,<2
+streamlit>=1.63.0,<2
