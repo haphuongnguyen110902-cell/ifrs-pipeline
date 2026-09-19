@@ -44,6 +44,22 @@ def test_returns_none_when_nothing_matches(nim):
     assert nim.find_constituent_table([t], expected_size=2) is None
 
 
+# ---------------------------------------------------------------- clean_company_name
+
+@pytest.mark.parametrize("raw,expected", [
+    ("Melexis\xa0[nl]", "Melexis"),
+    ("WDP [nl]", "WDP"),
+    ("arGEN-X [nl]", "arGEN-X"),
+    ("Foo Bar [1][2]", "Foo Bar"),
+    ("Hermès", "Hermès"),
+    ("  Assa   Abloy B ", "Assa Abloy B"),
+])
+def test_clean_company_name_strips_scrape_artifacts(nim, raw, expected):
+    """Real artifacts found live in the national_index rows: a non-breaking
+    space plus a trailing '[nl]' language marker."""
+    assert nim.clean_company_name(raw) == expected
+
+
 # ---------------------------------------------------------------- normalize_ticker
 
 def test_already_yfinance_ready_ticker_passes_through(nim):
