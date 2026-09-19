@@ -1,5 +1,11 @@
 arelle-release==2.44.4
 pandas==3.0.5
+# numpy and requests are imported directly by the scripts (they only arrived
+# transitively via pandas / yfinance) - declared so a change in those packages'
+# dependencies cannot silently remove them. pypdf is deliberately NOT listed: it
+# is only used by a live-database-only test, lazily imported.
+numpy==2.5.2
+requests==2.34.2
 SQLAlchemy==2.0.52
 psycopg2-binary==2.9.12
 python-dotenv==1.2.3
