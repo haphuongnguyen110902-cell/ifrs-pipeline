@@ -89,9 +89,12 @@ def load_screener(_engine):
 
 @st.cache_data(ttl=3600)
 def load_ratios(_engine, company_id: int):
+    # SELECT *: the optional `note` column (why a ratio is blank on purpose -
+    # see gating_caption) only exists once 11_ratio_engine.py has run since
+    # the financial-sector gating fix. Naming it here would break this query,
+    # and so the whole tab, on a database that hasn't been recomputed yet.
     return pd.read_sql(text(
-        "SELECT year, ratio_name, display_label, value FROM ratio "
-        "WHERE company_id = :cid ORDER BY year"
+        "SELECT * FROM ratio WHERE company_id = :cid ORDER BY year"
     ), _engine, params={"cid": company_id})
 
 
@@ -211,6 +214,21 @@ def format_ratio_value(ratio_name: str, value) -> str:
     return f"{value:.1f}%"
 
 
+def gating_caption(ratios: pd.DataFrame):
+    """Why some ratios read n/a ON PURPOSE (not because data is missing), or
+    None. `note` is written by 11_ratio_engine.py's gate_financial_ratios; a
+    database the engine hasn't run against since that fix has no such column,
+    which just means no caption."""
+    if "note" not in ratios.columns:
+        return None
+    gated = ratios.dropna(subset=["note"])
+    if gated.empty:
+        return None
+    labels = ", ".join(sorted(gated["display_label"].unique()))
+    reasons = "; ".join(sorted(gated["note"].unique()))
+    return f"Blank on purpose, not missing data: {labels}. {reasons}."
+
+
 def render_ratio_table(ratios: pd.DataFrame):
     if ratios.empty:
         st.info("No ratios computed yet for this company.")
@@ -234,6 +252,9 @@ def render_ratio_table(ratios: pd.DataFrame):
         ratio_name = ratios[ratios["display_label"] == row_label]["ratio_name"].iloc[0]
         display.loc[row_label] = [format_ratio_value(ratio_name, v) for v in pivot.loc[row_label]]
     st.dataframe(display, width="stretch")
+    caption = gating_caption(ratios)
+    if caption:
+        st.caption(caption)
 
 
 @st.cache_data(ttl=3600)

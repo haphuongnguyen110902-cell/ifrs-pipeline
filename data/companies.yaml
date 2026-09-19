@@ -5,6 +5,11 @@
 # loader reads the real currency from the filing itself. If they disagree,
 # something is wrong (wrong entity downloaded, or the filing genuinely
 # reports in a currency you didn't expect - worth knowing either way).
+#
+# Optional per-company fields: `fiscal_year_end: "June 30"`, and
+# `reporting_model: financial` + `reporting_model_reason: "..."` to blank the
+# ratios that are meaningless for a lender / insurer / payment processor when
+# the free sector label (yfinance) misses it - see 11_ratio_engine.py.
 
 companies:
   loreal_2025:
@@ -80,6 +85,8 @@ companies:
     expected_currency: EUR
     sector: Financials / Payments
     country: Netherlands
+    reporting_model: financial
+    reporting_model_reason: "payments processor - client money sits in payables to merchants and financial institutions (EUR 6.4bn vs EUR 0.3bn of trade payables at FY2025 in the loaded filing), so working-capital and leverage ratios are meaningless; yfinance labels it Technology, hence the explicit override"
   asm_international:
     name: "ASM International"
     expected_currency: EUR

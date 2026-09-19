@@ -56,6 +56,12 @@ DESIGN NOTES
   or negative. We take absolute values where needed and note this.
 - Currency-neutral ratios are valid for cross-company comparison now.
   Absolute-value ratios (net debt, revenue size) need FX conversion first.
+- Some ratios are BLANKED on purpose for financial companies (gate_financial_
+  ratios): working-capital, gross-margin, cash-conversion, ROIC and
+  net-debt-vs-EBIT are built on cost-of-sales / trade-cycle / debt-as-
+  financing ideas that mean nothing for a lender, insurer or payment
+  processor (found live: Adyen showed DPO 1,018 days). A blank with a stored
+  reason (ratio.note) is honest; a plausible-looking wrong number is not.
 
 Usage:
     python scripts/11_ratio_engine.py
@@ -69,8 +75,11 @@ from datetime import timedelta
 from pathlib import Path
 
 import pandas as pd
+import yaml
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+
+COMPANIES_YAML = Path(__file__).parent.parent / "data" / "companies.yaml"
 
 
 # ---------------------------------------------------------------- fetch
@@ -392,6 +401,109 @@ RATIO_META = {
 }
 
 
+# ---------------------------------------------------------------- financial-sector gating
+#
+# A financial company's statements are not built like an industrial's, so
+# ratios that assume one are blanked (NaN + a stored reason), never computed.
+# Which ratios, and why - each is a judgement worth reviewing:
+FINANCIAL_NOT_MEANINGFUL = {
+    "gross_margin":          "a lender, insurer or payment processor has no cost of sales",
+    "cash_conversion":       "operating cash flow includes customer-deposit, policyholder or merchant-payable flows",
+    "dso":                   "trade receivables are not its operating cycle",
+    "dio":                   "inventory is not its operating cycle",
+    "dpo":                   "payables are measured against a cost of sales it does not have",
+    "ccc":                   "built from DSO, DIO and DPO",
+    "roic":                  "invested capital (equity + net debt) is undefined when deposits, insurance "
+                             "liabilities or client money are operating liabilities",
+    "net_debt_ebitda_proxy": "its debt funds lending or client money, and EBIT is not its earnings base",
+}
+# Deliberately NOT gated: operating_margin, net_margin, tax_rate, roe. Whether
+# revenue-based margins make sense is company-specific (fine for a payments
+# firm; for a bank the revenue tag is usually absent, so they are NaN anyway),
+# and ROE / tax rate are meaningful for every kind of company.
+
+# company.sector_std is yfinance's own sector field (PLAN.md WP3a)
+FINANCIAL_SECTORS = {"Financial Services"}
+
+
+def load_reporting_model_overrides(path=None) -> dict:
+    """{company name: reason} for companies.yaml entries that declare
+    `reporting_model: financial`. Needed because the free sector source
+    misclassifies some (yfinance calls Adyen 'Technology' although its balance
+    sheet is EUR 6.4bn of merchant payables against EUR 0.3bn of trade
+    payables). The override lives in reviewable config, with a stated reason,
+    not in code."""
+    path = Path(path) if path else COMPANIES_YAML
+    if not path.exists():
+        return {}
+    cfg = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    overrides = {}
+    for stem, entry in (cfg.get("companies") or {}).items():
+        entry = entry or {}
+        model = entry.get("reporting_model")
+        if not model:
+            continue
+        if str(model).strip().lower() != "financial":
+            print(f"*** companies.yaml: '{stem}' has unknown reporting_model {model!r} - "
+                  f"ignored (only 'financial' is recognised)")
+            continue
+        overrides[entry.get("name", stem)] = (
+            entry.get("reporting_model_reason") or "reporting_model: financial in companies.yaml")
+    return overrides
+
+
+def fetch_company_profiles(engine) -> pd.DataFrame:
+    """company_id, name, sector_std. sector_std comes from migration 002, so a
+    database built only from schema.sql lacks it - degrade LOUDLY (sector-based
+    gating off, config overrides still apply) instead of crashing the whole
+    ratio run."""
+    try:
+        return pd.read_sql(text("SELECT company_id, name, sector_std FROM company"), engine)
+    except Exception as e:
+        print(f"*** could not read company.sector_std ({type(e).__name__}) - sector-based "
+              f"financial gating is OFF; only companies.yaml overrides apply")
+        profiles = pd.read_sql(text("SELECT company_id, name FROM company"), engine)
+        profiles["sector_std"] = None
+        return profiles
+
+
+def financial_company_reasons(profiles: pd.DataFrame, overrides: dict) -> dict:
+    """{company_id: basis} for every company treated as financial. An explicit
+    override (with its stated reason) outranks the sector label."""
+    reasons = {}
+    for _, row in profiles.iterrows():
+        cid, name, sector = int(row["company_id"]), row["name"], row.get("sector_std")
+        if name in overrides:
+            reasons[cid] = overrides[name]
+        elif isinstance(sector, str) and sector in FINANCIAL_SECTORS:
+            reasons[cid] = f"sector_std is '{sector}'"
+    return reasons
+
+
+def gate_financial_ratios(ratios: pd.DataFrame, financial: dict):
+    """Blank (NaN) the FINANCIAL_NOT_MEANINGFUL ratios for financial companies.
+
+    Returns (gated, notes, n_blanked). `notes` maps (company_id, year,
+    ratio_name) -> the stored reason for EVERY gated cell (so the dashboard can
+    say why it reads n/a even where no value existed); `n_blanked` counts only
+    the values that actually existed and were removed. Private `_` columns are
+    left alone - valuation reads absolute values from them."""
+    gated = ratios.copy()
+    notes, n_blanked = {}, 0
+    if not financial:
+        return gated, notes, 0
+    is_fin = gated["company_id"].isin(list(financial))
+    for ratio_name in FINANCIAL_NOT_MEANINGFUL:
+        if ratio_name in gated.columns:
+            n_blanked += int((is_fin & gated[ratio_name].notna()).sum())
+            gated.loc[is_fin, ratio_name] = float("nan")
+    for _, row in gated.loc[is_fin, ["company_id", "year"]].iterrows():
+        text_note = f"Not meaningful for a financial company ({financial[int(row['company_id'])]})"
+        for ratio_name in FINANCIAL_NOT_MEANINGFUL:
+            notes[(int(row["company_id"]), int(row["year"]), ratio_name)] = text_note
+    return gated, notes, n_blanked
+
+
 def format_ratio(value, unit):
     if pd.isna(value):
         return "n/a"
@@ -429,8 +541,12 @@ def print_comps_table(ratios: pd.DataFrame):
 
 # ---------------------------------------------------------------- save
 
-def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict):
-    """Upsert ratios into the ratio table."""
+def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict, notes: dict = None):
+    """Upsert ratios into the ratio table. `notes` maps (company_id, year,
+    ratio_name) -> why that cell is blank on purpose (see
+    gate_financial_ratios); rows without one get NULL, so a company that stops
+    being gated loses its note on the next run."""
+    notes = notes or {}
     # create the ratio table if it doesn't exist
     with engine.connect() as conn:
         conn.execute(text("""
@@ -445,9 +561,12 @@ def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict):
                 currency            TEXT,
                 source_concepts     TEXT[],
                 computed_at         TIMESTAMP DEFAULT now(),
+                note                TEXT,
                 UNIQUE(company_id, year, ratio_name)
             )
         """))
+        # additive + idempotent: a table created before the gating fix lacks it
+        conn.execute(text("ALTER TABLE ratio ADD COLUMN IF NOT EXISTS note TEXT"))
         conn.commit()
 
     rows_written = 0
@@ -462,17 +581,18 @@ def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict):
                 conn.execute(text("""
                     INSERT INTO ratio
                         (company_id, year, ratio_name, display_label,
-                         value, is_currency_neutral, computed_at)
+                         value, is_currency_neutral, computed_at, note)
                     VALUES
-                        (:cid, :year, :rn, :label, :val, :neutral, now())
+                        (:cid, :year, :rn, :label, :val, :neutral, now(), :note)
                     ON CONFLICT (company_id, year, ratio_name)
                     DO UPDATE SET
                         value = EXCLUDED.value,
                         display_label = EXCLUDED.display_label,
+                        note = EXCLUDED.note,
                         computed_at = now()
                 """), {"cid": int(cid), "year": int(year), "rn": ratio_name,
                        "label": label, "val": None if pd.isna(val) else float(val),
-                       "neutral": neutral})
+                       "neutral": neutral, "note": notes.get((int(cid), int(year), ratio_name))})
                 rows_written += 1
         conn.commit()
     return rows_written
@@ -557,6 +677,14 @@ if __name__ == "__main__":
     wide = pivot_to_wide(df)
     ratios = compute_ratios(wide)
 
+    financial = financial_company_reasons(fetch_company_profiles(engine), load_reporting_model_overrides())
+    ratios, notes, n_blanked = gate_financial_ratios(ratios, financial)
+    gated_names = sorted(ratios.loc[ratios["company_id"].isin(list(financial)), "company"].unique())
+    if gated_names:
+        print(f"Financial-sector gating: blanked {n_blanked} value(s) that are not meaningful for "
+              f"{', '.join(gated_names)} (working-capital, gross-margin, cash-conversion, ROIC, "
+              f"net-debt/EBIT - reason stored in ratio.note)\n")
+
     # print the comps table to terminal
     years = sorted(ratios["year"].unique())
     print(f"{'=' * 70}")
@@ -566,7 +694,7 @@ if __name__ == "__main__":
 
     # save to database
     if not args.no_db:
-        rows = save_to_db(engine, ratios, {})
+        rows = save_to_db(engine, ratios, {}, notes)
         print(f"\nWrote {rows} ratio rows to database")
 
     # save to Excel
