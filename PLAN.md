@@ -1381,9 +1381,10 @@ live-DB tests now fail *because they hard-code the 11-company universe*:
 because those 34 live-DB tests skip there (206 pass / 34 skip with no DB).
 Note: running that forensics test **writes to the live `forensics_flag` table**.
 
-**Audit findings, each verified by a command (fixes NOT done - candidates for
-their own WPs; severity is my judgement):**
-- HIGH - **FIXED on `fix/ratio-fact-tiebreak`.** `11_ratio_engine.py` pivoted with
+**Audit findings, each verified by a command (the three HIGH items below were
+fixed on 2026-09-19 - PRs #22, #23, #24 - the rest are open candidates; severity
+is my judgement):**
+- HIGH - **FIXED (PR #22).** `11_ratio_engine.py` pivoted with
   `aggfunc="first"` over a query with no `ORDER BY`; 223 (company, concept, period)
   keys held *different* values across filings, many exact sign flips (Essity D&A
   -7,671M vs +7,671M). Measured: shuffling the input rows moved up to **47** ratio
@@ -1391,9 +1392,9 @@ their own WPs; severity is my judgement):**
   real value > NaN; the year's representative period (~365-day duration / latest
   instant); the latest filing (its year read from its own facts, not its filename);
   then filing_id. All 232 contested facts (96 restated, 73 other_period, 36
-  rounding, 27 sign_flip) are reported, never silent. **Real corrections to live
-  values (NOT yet applied - run `python scripts/11_ratio_engine.py` after merge):**
-  Recordati net debt 2021 -9.1% / 2022 -3.1% (its mis-dated opening cash had been
+  rounding, 27 sign_flip) are reported, never silent. **Applied to the live DB on
+  2026-09-19** (39 of 984 ratio values changed, verified by a before/after diff;
+  the 19 frozen baseline rows now match live again): Recordati net debt 2021 -9.1% / 2022 -3.1% (its mis-dated opening cash had been
   picked over the year-end balance), EssilorLuxottica 2021 now on its restated
   basis (operating margin 11.74% -> 11.64%), Kering 2021 < 0.4%. The 19 affected
   frozen `tests/baseline/ratio.csv` rows were re-baselined explicitly. 13 new
@@ -1401,12 +1402,41 @@ their own WPs; severity is my judgement):**
   corrections up (their frozen baselines may need the same explicit re-baseline).
   Still open: D&A and CFO are not abs()'d, so a wrong sign in a company's ONLY
   filing would still flip EBITDA / cash conversion.
-- HIGH - `00_find_filing.py` picks "latest" by archive `period_end`; the archive
-  has typos: Recordati lists a FY2022 package as `2032-12-31` (ranked first ->
-  we downloaded FY2022, not FY2025 added 2026-04-07); Carrefour/Hermes carry
-  2026-12-31. Use `date_added` + a `<= today` guard.
-- HIGH - no financial-sector gating: Adyen shows DIO 275d / DPO 1,018d / CCC
-  -713d. ~20% of the universe by name (my rough read) are banks/insurers/holdings.
+- HIGH - **FIXED (PR #23).** `00_find_filing.py`, `14_scan_universe.py` and
+  `download_historical.py` picked "latest" by the archive's `period_end`, which
+  has typos: Recordati lists a FY2022 package as `2032-12-31` (ranked first -> we
+  downloaded FY2022, not FY2025 added 2026-04-07); Carrefour/Hermes carry
+  2026-12-31, Melexis 2025-12-31 on a report published April 2025. A live survey
+  of 23 entities found 4 (17%) with an impossible label. Now: a declared period is
+  trusted only if it has ended and precedes the publication date; otherwise it is
+  recovered ONLY from a possible date in the package filename, else reported as
+  unknown (never guessed); an impossible-label filing published after the newest
+  trustworthy one is chosen but flagged; same-period duplicates are ranked by the
+  archive's own validation counts. 25 tests built from the real archive records,
+  8 rules mutation-tested. **Recordati's DB data is still FY2022** - the fix picks
+  the right file; re-downloading and loading FY2025 is a separate step.
+- HIGH - **FIXED (PR #24).** No financial-sector gating: Adyen showed DIO 275d /
+  DPO 1,018d / CCC -713d / ROIC -15.9%. `gate_financial_ratios()` blanks 8 ratios
+  (gross margin, cash conversion, DSO/DIO/DPO/CCC, ROIC, net-debt/EBIT) for a
+  company whose `sector_std` is 'Financial Services' OR that declares
+  `reporting_model: financial` in `companies.yaml` (yfinance labels Adyen
+  'Technology'); operating/net margin, tax rate and ROE are kept. The reason is
+  stored in a new additive `ratio.note` column and shown on the dashboard.
+  Applied live 2026-09-19: only Adyen changed (16 values blanked, 24 note rows).
+  Limits: sector gating cannot fire for a company with NULL `sector_std`
+  (`populate_sector_std` only fills the hard-coded `TICKER_MAP` companies);
+  19/21/22/24 don't gate; ~20% of the universe by name (my rough read) are
+  banks/insurers/holdings.
+- HIGH - **FIX OPEN (PR #25), found while applying the above.**
+  `15_forensics.save_to_db` deleted old flags only for companies present in the NEW
+  flag list, so a company whose flags all stop triggering keeps them (Adyen: 3
+  stale flags incl. one HIGH). Also `test_rerunning_save_to_db_is_idempotent_not_
+  additive` re-saved `compute_flags(wide)` alone into the LIVE table, leaving it 13
+  flags short (revenue flags + Pernod warning) after every local test run - I
+  degraded the live table this way during today's work and restored it with
+  `15_forensics.py` (66 flags). Related, not fixed (measured tiny):
+  `fetch_revenue_growth` uses the same un-ordered `groupby().first()`; shuffling
+  ties moves only 2 Essity growth cells.
 - MED - 73 XBRL tags are mapped to two concept keys (`_x` suffix, from
   `12_apply_review.py` not de-duping by tag); pre-existing (642 distinct tags in
   HEAD). Facts are stored consistently under the `_x` name (no split found), but
