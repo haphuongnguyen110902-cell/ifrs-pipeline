@@ -375,15 +375,14 @@ def render_comps(df: pd.DataFrame, n_companies: int = 11):
 
 def render_three_statement(df: pd.DataFrame):
     if df.empty:
-        st.info("No 3-statement projection computed yet for this company "
-                "(see 21_three_statement_model.py).")
+        st.info("A projected 3-statement model hasn't been built for this company yet.")
         return
     base_year = int(df["base_year"].iloc[0])
     growth = df["growth_assumption"].iloc[0]
     rate = df["interest_rate_assumption"].iloc[0]
     st.caption(f"Projected from base year {base_year} · revenue growth "
-               f"{growth:.1%} · interest rate {rate:.1%} — see 21_three_statement_model.py "
-               f"for the full linked-model assumptions (circularity-solved debt schedule).")
+               f"{growth:.1%} · interest rate {rate:.1%} · linked income statement, cash "
+               f"flow and net debt, with a circularity-solved debt schedule.")
 
     display_cols = {
         "forecast_year": "Year", "revenue": "Revenue", "ebit": "EBIT",
@@ -396,19 +395,17 @@ def render_three_statement(df: pd.DataFrame):
     formatted = table.map(format_eur)
     st.dataframe(formatted, width="stretch")
     st.caption("FCF here is LEVERED (net of interest expense) - NOT the unlevered FCFF the "
-               "DCF tab discounts. See 22_dcf.py's module docstring for why the two must not "
-               "be mixed.")
+               "DCF tab discounts, so the two must not be mixed.")
 
 
 def render_dcf(df: pd.DataFrame):
     if df.empty:
-        st.info("No DCF computed yet for this company (see 22_dcf.py) - either a required "
-                "3-statement input is missing, or no ticker is mapped for market data.")
+        st.info("A DCF valuation hasn't been computed for this company yet. It needs the "
+                "projected 3-statement model and a stock ticker for market data.")
         return
     r = df.iloc[0]
     st.caption(f"Base year {int(r['base_year'])} · WACC built up via CAPM, unlevered FCFF "
-               f"discounted to Enterprise Value, Gordon-growth terminal value - see "
-               f"22_dcf.py's module docstring for the full method and sourced assumptions.")
+               f"discounted to Enterprise Value, Gordon-growth terminal value.")
 
     c1, c2, c3 = st.columns(3)
     c1.metric("WACC", format_pct_fraction(r["wacc"]))
@@ -427,13 +424,12 @@ def render_dcf(df: pd.DataFrame):
 
 def render_market_risk(df: pd.DataFrame):
     if df.empty:
-        st.info("No market risk metrics computed yet for this company (see 23_market_risk.py).")
+        st.info("Market-risk metrics haven't been computed for this company yet.")
         return
     r = df.iloc[0]
     st.caption(f"{r['period_start']} to {r['period_end']} ({int(r['n_observations'])} aligned "
                f"trading days) vs {r['benchmark']} (STOXX Europe 600) - beta and correlation are "
-               f"computed directly from daily price history, not read from a third-party number. "
-               f"See 23_market_risk.py's module docstring for the full method.")
+               f"computed directly from daily price history, not read from a third-party number.")
 
     c1, c2, c3 = st.columns(3)
     c1.metric("Annualized Volatility", format_pct_fraction(r["annualized_volatility"]))
@@ -454,14 +450,13 @@ def render_market_risk(df: pd.DataFrame):
 
 def render_credit_profile(df: pd.DataFrame):
     if df.empty:
-        st.info("No credit profile computed yet for this company (see 24_credit.py).")
+        st.info("A credit profile hasn't been computed for this company yet.")
         return
 
     st.caption("Net Debt / EBITDA trajectory - NOT the same as the Ratios tab's "
-               "\"Net Debt vs Op. Profit\" (that's Net Debt / EBIT, despite its column name "
-               "elsewhere; see 24_credit.py's module docstring for why reusing it would have "
-               "overstated leverage here). Bands are a fixed, sector-agnostic heuristic, not a "
-               "real agency rating - see the script's docstring.")
+               "\"Net Debt vs Op. Profit\" (that one is Net Debt / EBIT; reusing it here would "
+               "overstate leverage). Bands are a fixed, sector-agnostic heuristic, not a real "
+               "agency rating.")
 
     latest = df.iloc[-1]
     c1, c2, c3 = st.columns(3)
@@ -485,13 +480,12 @@ def render_credit_profile(df: pd.DataFrame):
 
     if df["is_da_fallback"].any():
         st.caption("⚠ Years marked above have no D&A tag matched for this company - EBITDA "
-                   "silently equals EBIT for those years, so leverage is likely overstated. "
-                   "See 11_ratio_engine.py's D&A fallback notes.")
+                   "silently equals EBIT for those years, so leverage is likely overstated.")
 
 
 def render_backtest(df: pd.DataFrame):
     if df.empty:
-        st.info("No forecast backtest computed yet for this company (see 17_backtest.py).")
+        st.info("A forecast backtest hasn't been computed for this company yet.")
         return
     display = df.copy()
     display["is_winner"] = display["is_winner"].map({True: "★ winner", False: ""})
@@ -510,13 +504,13 @@ def render_backtest(df: pd.DataFrame):
     st.dataframe(display, width="stretch", hide_index=True)
     st.caption("CAGR vs. linear regression, scored by rolling-origin backtest (not just "
                "last-year fit) - a winner picked from 1 fold is labelled low confidence, "
-               "not presented the same as a 4-fold pick. See 17_backtest.py.")
+               "not presented the same as a 4-fold pick.")
 
 
 def render_precedents(df: pd.DataFrame):
     st.caption("Curated, publicly-sourced M&A deals in this project's sectors - deliberately "
                "a small, well-verified list rather than padded with uncertain figures. Not "
-               "specific to the company selected above (see 20_precedents.py).")
+               "specific to the company selected above.")
     if df.empty:
         st.info("No precedent transactions loaded yet.")
         return
@@ -586,7 +580,7 @@ if screener_filtered.empty:
 display_screener = pd.DataFrame({
     "Company": screener_filtered["name"],
     "Country": screener_filtered["country"],
-    "Sector": screener_filtered["sector_std"],
+    "Sector": screener_filtered["sector_std"].fillna("Unclassified"),
     "Op. Margin": screener_filtered["operating_margin"].map(lambda v: f"{v:.1f}%" if pd.notna(v) else "n/a"),
     "ROIC": screener_filtered["roic"].map(lambda v: f"{v:.1f}%" if pd.notna(v) else "n/a"),
     "EV/EBITDA": screener_filtered["ev_ebitda"].map(lambda v: f"{v:.1f}x" if pd.notna(v) else "n/a"),
