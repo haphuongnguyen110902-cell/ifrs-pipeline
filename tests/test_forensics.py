@@ -225,6 +225,23 @@ def db_engine():
     return create_engine(DATABASE_URL) if DATABASE_URL else None
 
 
+def _pipeline_flags(forensics, engine):
+    """The flags exactly as scripts/15_forensics.py's main() builds them:
+    ratio flags WITH the off-calendar-FYE dict, plus the revenue flags.
+
+    These tests write to the LIVE forensics_flag table (save_to_db commits),
+    so what they save must be what the pipeline would save. One of them used
+    to save `compute_flags(wide)` alone - no revenue flags, no Pernod FYE
+    warning - which left the live table 13 flags short after every local
+    test run, until the next real pipeline run."""
+    wide = forensics.pivot_ratios(forensics.fetch_ratios(engine))
+    flags = forensics.compute_flags(wide, forensics.fetch_off_calendar_fye(engine))
+    rev_growth = forensics.fetch_revenue_growth(engine)
+    if not rev_growth.empty:
+        flags = forensics.add_revenue_flags(flags, rev_growth)
+    return flags, wide
+
+
 @pytest.mark.skipif(not DATABASE_URL, reason="needs a live DATABASE_URL - see module docstring")
 class TestPersistence:
     """save_to_db() (PLAN.md WP2) against the live DB - table creation,
@@ -241,15 +258,9 @@ class TestPersistence:
         future ratio-engine change that silently shifts flag counts is
         caught here rather than only noticed by re-reading the README."""
         forensics.ensure_forensics_table(db_engine)
-        ratio_df = forensics.fetch_ratios(db_engine)
-        wide = forensics.pivot_ratios(ratio_df)
-        off_calendar_fye = forensics.fetch_off_calendar_fye(db_engine)
-        flags = forensics.compute_flags(wide, off_calendar_fye)
-        rev_growth = forensics.fetch_revenue_growth(db_engine)
-        if not rev_growth.empty:
-            flags = forensics.add_revenue_flags(flags, rev_growth)
+        flags, wide = _pipeline_flags(forensics, db_engine)
 
-        n_saved = forensics.save_to_db(db_engine, flags)
+        n_saved = forensics.save_to_db(db_engine, flags, evaluated_companies=wide["company"].unique())
         assert n_saved == len(flags)
 
         with db_engine.connect() as conn:
@@ -268,15 +279,14 @@ class TestPersistence:
     def test_rerunning_save_to_db_is_idempotent_not_additive(self, forensics, db_engine):
         """Delete-then-insert, not upsert (see save_to_db's docstring) -
         running it twice must leave the SAME row count, not double it."""
-        ratio_df = forensics.fetch_ratios(db_engine)
-        wide = forensics.pivot_ratios(ratio_df)
-        flags = forensics.compute_flags(wide)
+        flags, wide = _pipeline_flags(forensics, db_engine)
+        evaluated = wide["company"].unique()
 
-        forensics.save_to_db(db_engine, flags)
+        forensics.save_to_db(db_engine, flags, evaluated_companies=evaluated)
         with db_engine.connect() as conn:
             first_count = conn.execute(text("SELECT COUNT(*) FROM forensics_flag")).scalar()
 
-        forensics.save_to_db(db_engine, flags)
+        forensics.save_to_db(db_engine, flags, evaluated_companies=evaluated)
         with db_engine.connect() as conn:
             second_count = conn.execute(text("SELECT COUNT(*) FROM forensics_flag")).scalar()
 
@@ -308,3 +318,94 @@ class TestPersistence:
             f"expected Pernod Ricard's fiscal_year_end_month/day to resolve to "
             f"'June 30', got {result.get('Pernod Ricard')!r} - full result: {result}"
         )
+
+
+# ---------------------------------------------------------------- save_to_db scope (DB-free)
+#
+# Real bug: save_to_db() deleted old rows only for companies PRESENT in the new
+# flag list. A company whose flags all stopped triggering is absent from that
+# list, so its stale flags were never deleted - Adyen kept three (one HIGH)
+# computed from ratios that had since been blanked, through a clean re-run.
+
+class _Rows:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def fetchall(self):
+        return self._rows
+
+
+class _FakeConn:
+    def __init__(self, companies):
+        self.companies = companies
+        self.calls = []
+
+    def execute(self, stmt, params=None):
+        sql = str(stmt)
+        self.calls.append((sql, params))
+        if "FROM company" in sql:
+            return _Rows([(cid, name) for name, cid in self.companies.items()])
+        return _Rows([])
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+class _FakeEngine:
+    def __init__(self, companies):
+        self.conn = _FakeConn(companies)
+
+    def begin(self):
+        return self.conn
+
+
+def _flag(company, year=2024):
+    return {"company": company, "year": year, "flag_id": "HIGH_LEVERAGE", "label": "x",
+            "severity": "high", "value": 1.0, "detail": "d", "what_to_check": "w"}
+
+
+class TestSaveToDbScope:
+    COMPANIES = {"Alpha": 1, "Adyen": 2, "Gamma": 3}
+
+    def deleted_ids(self, engine):
+        return [p["ids"] for s, p in engine.conn.calls if s.startswith("DELETE FROM forensics_flag")]
+
+    def test_a_company_that_now_has_no_flags_is_still_cleared(self, forensics):
+        engine = _FakeEngine(self.COMPANIES)
+        n = forensics.save_to_db(engine, pd.DataFrame([_flag("Alpha")]),
+                                 evaluated_companies=["Alpha", "Adyen", "Gamma"])
+        assert [sorted(ids) for ids in self.deleted_ids(engine)] == [[1, 2, 3]]   # Adyen, Gamma: no new flags
+        assert n == 1                                                              # ...only Alpha's is inserted
+
+    def test_default_scope_is_unchanged_for_existing_callers(self, forensics):
+        engine = _FakeEngine(self.COMPANIES)
+        forensics.save_to_db(engine, pd.DataFrame([_flag("Alpha")]))
+        assert self.deleted_ids(engine) == [[1]]
+
+    def test_no_flags_at_all_still_clears_the_evaluated_companies(self, forensics):
+        engine = _FakeEngine(self.COMPANIES)
+        empty = pd.DataFrame(columns=["company", "year", "flag_id", "label", "severity",
+                                      "value", "detail", "what_to_check"])
+        assert forensics.save_to_db(engine, empty, evaluated_companies=["Adyen"]) == 0
+        assert self.deleted_ids(engine) == [[2]]
+
+    def test_nothing_to_do_touches_nothing(self, forensics):
+        engine = _FakeEngine(self.COMPANIES)
+        assert forensics.save_to_db(engine, pd.DataFrame(), evaluated_companies=[]) == 0
+        assert engine.conn.calls == []
+
+    def test_flags_are_only_written_for_companies_with_flags(self, forensics):
+        engine = _FakeEngine(self.COMPANIES)
+        forensics.save_to_db(engine, pd.DataFrame([_flag("Alpha"), _flag("Gamma", 2023)]),
+                             evaluated_companies=["Alpha", "Adyen", "Gamma"])
+        inserted = [p["company_id"] for s, p in engine.conn.calls if s.lstrip().startswith("INSERT INTO forensics_flag")]
+        assert sorted(inserted) == [1, 3]
+
+    def test_an_unknown_evaluated_company_is_skipped_loudly_not_fatal(self, forensics, capsys):
+        engine = _FakeEngine(self.COMPANIES)
+        forensics.save_to_db(engine, pd.DataFrame([_flag("Alpha")]), evaluated_companies=["Ghost"])
+        assert self.deleted_ids(engine) == [[1]]
+        assert "no company_id found for 'Ghost'" in capsys.readouterr().out
