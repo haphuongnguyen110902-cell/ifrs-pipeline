@@ -7,12 +7,24 @@ Usage:
     python scripts/download_historical.py --dry-run
 """
 import argparse
+import importlib.util
 import re
 import time
 from pathlib import Path
 import requests
 
 API_BASE = "https://filings.xbrl.org/api"
+
+
+def _load(name, filename):
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).parent / filename)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# which filing / which period is trustworthy lives in one place
+ff = _load("find_filing_00", "00_find_filing.py")
 
 # All 11 companies with their entity identifiers
 COMPANIES = {
@@ -91,30 +103,24 @@ if __name__ == "__main__":
             summary.append((name, "fetch failed", 0))
             continue
 
-        # filter to filings with packages and not too old
-        # deduplicate by period_end - keep one per period
-        # priority: FR > NL > IT > SE > ES > GB (primary listing preference)
+        # ONE filing per TRUSTED period (the archive's own period_end can be
+        # wrong - e.g. Recordati FY2022 listed as 2032-12-31 - and this
+        # period ends up in the filename load_historical.py reads back as the
+        # fiscal year). Where several packages share a period: the primary-
+        # listing country first (FR > NL > IT > SE > ES > GB), then the best
+        # archive validation record. A filing whose real period can't be
+        # established is skipped and reported, never saved under a false label.
         COUNTRY_PRIORITY = {"FR": 0, "NL": 1, "IT": 2, "SE": 3, "ES": 4, "GB": 5}
-        seen_periods = {}
-        for f in filings:
-            attrs = f["attributes"]
-            if not attrs.get("package_url"):
-                continue
-            period = attrs.get("period_end", "")
-            if period < MIN_YEAR:
-                continue
-            country = attrs.get("country", "ZZ")
-            priority = COUNTRY_PRIORITY.get(country, 99)
-            if period not in seen_periods or priority < seen_periods[period][1]:
-                seen_periods[period] = (f, priority)
-
-        eligible = [v[0] for v in sorted(seen_periods.values(), key=lambda x: x[0]["attributes"]["period_end"], reverse=True)]
+        by_period, skipped = ff.filings_by_period(filings, country_priority=COUNTRY_PRIORITY)
+        for _, note in skipped:
+            print(f"  *** skipped a filing: {note}")
+        eligible_periods = sorted((p for p in by_period if p.isoformat() >= MIN_YEAR), reverse=True)
+        eligible = [(p.isoformat(), by_period[p]) for p in eligible_periods]
 
         print(f"  Found {len(eligible)} eligible filings (from {MIN_YEAR})")
 
         downloaded = 0
-        for filing in eligible:
-            period = filing["attributes"]["period_end"]
+        for period, filing in eligible:
             country = filing["attributes"].get("country", "XX")
             filename = f"{slug}_{period}.zip"
             out_path = out_dir / filename

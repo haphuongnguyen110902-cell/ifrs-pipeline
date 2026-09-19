@@ -7,12 +7,13 @@ new - companies you haven't loaded yet, or companies with newer
 filings than what you have.
 
 Usage:
-    python scripts/13_scan_universe.py --country FR
-    python scripts/13_scan_universe.py --country FR --country IT
-    python scripts/13_scan_universe.py --country FR --show-all
-    python scripts/13_scan_universe.py --country FR --download --out-dir data/raw
+    python scripts/14_scan_universe.py --country FR
+    python scripts/14_scan_universe.py --country FR --country IT
+    python scripts/14_scan_universe.py --country FR --show-all
+    python scripts/14_scan_universe.py --country FR --download --out-dir data/raw
 """
 import argparse
+import importlib.util
 import os
 import re
 import sys
@@ -24,6 +25,17 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
 API_BASE = "https://filings.xbrl.org/api"
+
+
+def _load(name, filename):
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).parent / filename)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# which filing is the trustworthy "latest" lives in one place
+ff = _load("find_filing_00", "00_find_filing.py")
 
 
 def true_identifier(entity: dict) -> str:
@@ -159,6 +171,8 @@ if __name__ == "__main__":
 
     # group filings by entity so we show one row per company
     seen_entities = {}  # identifier -> {name, latest_filing, has_package}
+    entity_filings = {}  # identifier -> [every filing seen for it]
+    entity_meta = {}     # identifier -> {name, country}
 
     entity_name_cache = {}
 
@@ -168,8 +182,6 @@ if __name__ == "__main__":
         print(f"Fetching entity names (this may take a moment)...")
 
         for filing in filings:
-            attrs = filing.get("attributes", {})
-
             # extract the real entity identifier (LEI) from the relationship link
             # e.g. "/api/entities/IOG4E947OATN0KJYSD45" -> "IOG4E947OATN0KJYSD45"
             entity_link = filing.get("relationships", {}).get("entity", {}).get("links", {}).get("related", "")
@@ -179,25 +191,28 @@ if __name__ == "__main__":
             # get the real name from the entity endpoint
             name = get_entity_name(entity_id, entity_name_cache) if entity_id else "Unknown"
 
-            period_end = attrs.get("period_end", "")
-            has_pkg = bool(attrs.get("package_url"))
+            entity_filings.setdefault(entity_id, []).append(filing)
+            entity_meta.setdefault(entity_id, {"name": name, "country": country})
 
-            if entity_id not in seen_entities:
-                seen_entities[entity_id] = {
-                    "name": name,
-                    "identifier": entity_id,
-                    "latest_period": period_end,
-                    "has_package": has_pkg,
-                    "filing": filing,
-                    "country": country,
-                }
-            else:
-                if period_end > seen_entities[entity_id]["latest_period"]:
-                    seen_entities[entity_id].update({
-                        "latest_period": period_end,
-                        "has_package": has_pkg,
-                        "filing": filing,
-                    })
+    # ONE row per company, built from its TRUSTED latest filing. This used to
+    # take the string-max of the archive's own period_end, which ranks a
+    # typo'd label (Recordati FY2022 listed as 2032-12-31) above the real
+    # newest report - see 00_find_filing.py.
+    for entity_id, fl in entity_filings.items():
+        choice = ff.choose_latest_filing(fl)
+        chosen = choice["filing"]
+        if choice["period"]:
+            latest = choice["period"].isoformat()
+        else:
+            latest = "unknown" if chosen else ""
+        seen_entities[entity_id] = {
+            "name": entity_meta[entity_id]["name"],
+            "identifier": entity_id,
+            "latest_period": latest,
+            "has_package": chosen is not None,
+            "filing": chosen or fl[0],
+            "country": entity_meta[entity_id]["country"],
+        }
 
     # split into already-in-DB vs new
     # match on lowercased name - API names like "LVMH MOET HENNESSY LOUIS VUITTON"
@@ -222,7 +237,9 @@ if __name__ == "__main__":
                 new_companies.append(info)
 
     # sort by period_end descending (most recent filer first)
-    new_companies.sort(key=lambda x: x["latest_period"], reverse=True)
+    # ("unknown" = the real period could not be established; sort those last)
+    new_companies.sort(key=lambda x: "" if x["latest_period"] in ("", "unknown") else x["latest_period"],
+                       reverse=True)
 
     print(f"\n{'='*70}")
     print(f"UNIVERSE SCAN RESULTS")
