@@ -587,6 +587,47 @@ income_statement:
     display_label: Profit (loss) from operating activities, recurring (LVMH 2021)
     xbrl_tags:
     - LVM:ProfitLossFromOperatingActivitiesRecurring
+  raw_materials_consumables_and_services:
+    display_label: Raw materials, consumables and services
+    xbrl_tags:
+    - heia:RawMaterialsConsumablesAndServices
+  cost_of_debt:
+    display_label: Coût de l’endettement financier brut
+    xbrl_tags:
+    - schneiderelectric:CostOfDebt
+  depreciation_of_investments_in_associates_and_joint_ventures:
+    display_label: Dépréciation des participations dans les entreprises associées
+      et coentreprises
+    xbrl_tags:
+    - schneiderelectric:DepreciationOfInvestmentsInAssociatesAndJointVentures
+  share_in_income_of_investments_in_associates:
+    display_label: Share in income of investments in associates
+    xbrl_tags:
+    - asm:ShareInIncomeOfInvestmentsInAssociates
+  impairment_of_other_investment:
+    display_label: Impairment of other investment
+    xbrl_tags:
+    - asm:ImpairmentOfOtherInvestment
+  base:
+    display_label: Base
+    xbrl_tags:
+    - Rec:Base
+  diluito:
+    display_label: Diluito
+    xbrl_tags:
+    - Rec:Diluito
+  revenue_less_excise_tax_expense:
+    display_label: Revenue less excise tax expense
+    xbrl_tags:
+    - heia:RevenueLessExciseTaxExpense
+  total_other_expenses:
+    display_label: Total Other Expenses
+    xbrl_tags:
+    - heia:TotalOtherExpenses
+  finance_income_cost_after_foreign_exchange_gain_loss:
+    display_label: Finance income (cost), after foreign exchange gain (loss)
+    xbrl_tags:
+    - asm:FinanceIncomeCostAfterForeignExchangeGainLoss
 balance_sheet:
   accumulated_other_comprehensive_income:
     display_label: Accumulated Other Comprehensive Income
@@ -1219,6 +1260,117 @@ balance_sheet:
     display_label: Property, Plant and Equipment including Right-of-use Assets
     xbrl_tags:
     - shel:PropertyPlantAndEquipmentIncludingRightOfUseAssets
+  loans_and_advances_to_customers:
+    display_label: Loans and advances to customers
+    xbrl_tags:
+    - ifrs-full:LoansAndAdvancesToCustomers
+  investments_other_than_investments_accounted_for_using_equit_etc:
+    display_label: Investments other than investments accounted for using equity method
+    xbrl_tags:
+    - ifrs-full:InvestmentsOtherThanInvestmentsAccountedForUsingEquityMethod
+  returnable_packaging_deposits:
+    display_label: Returnable packaging deposits
+    xbrl_tags:
+    - heia:ReturnablePackagingDeposits
+  other_receivables_and_prepaid_expenses:
+    display_label: Autres créances et charges constatées d’avance
+    xbrl_tags:
+    - schneiderelectric:OtherReceivablesAndPrepaidExpenses
+  consolidated_reserves_and_retained_earnings:
+    display_label: Réserves consolidées et autres réserves
+    xbrl_tags:
+    - schneiderelectric:ConsolidatedReservesAndRetainedEarnings
+  commitments_to_purchase_minority_interests_noncurrent_portio_etc:
+    display_label: Engagements d’achats de titres de minoritaires - part non courante
+    xbrl_tags:
+    - schneiderelectric:CommitmentsToPurchaseMinorityInterestsNoncurrentPortion
+  accrued_taxes_and_payroll_costs:
+    display_label: Dettes fiscales et sociales
+    xbrl_tags:
+    - schneiderelectric:AccruedTaxesAndPayrollCosts
+  commitments_to_purchase_minority_interests_current_portion:
+    display_label: Engagements d’achats de titres de minoritaires - part courante
+    xbrl_tags:
+    - schneiderelectric:CommitmentsToPurchaseMinorityInterestsCurrentPortion
+  noncurrent_financial_assets_at_fair_value_through_profit_or__etc:
+    display_label: Non-current financial assets at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinancialAssetsAtFairValueThroughProfitOrLoss
+  current_receivables_from_merchants_and_financial_institution_etc:
+    display_label: Current Receivables From Merchants And Financial Institutions
+    xbrl_tags:
+    - ady:CurrentReceivablesFromMerchantsAndFinancialInstitutions
+  current_financial_assets_at_amortised_cost:
+    display_label: Current financial assets at amortised cost
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialAssetsAtAmortisedCost
+  liabilities_from_sharebased_payment_transactions2011:
+    display_label: Liabilities from share-based payment transactions
+    xbrl_tags:
+    - ifrs-full:LiabilitiesFromSharebasedPaymentTransactions2011
+  current_payables_to_merchants_and_financial_institutions:
+    display_label: Current Payables To Merchants And Financial Institutions
+    xbrl_tags:
+    - ady:CurrentPayablesToMerchantsAndFinancialInstitutions
+  property_plant_and_equipment_excluding_evaluation_tools_at_c_etc:
+    display_label: Property, plant and equipment, excluding evaluation tools at customers
+    xbrl_tags:
+    - asm:PropertyPlantAndEquipmentExcludingEvaluationToolsAtCustomers
+  evaluation_tools_at_customers:
+    display_label: Evaluation tools at customers
+    xbrl_tags:
+    - asm:EvaluationToolsAtCustomers
+  noncurrent_financial_liabilities_at_fair_value_through_profi_etc:
+    display_label: Non-current financial liabilities at fair value through profit
+      or loss
+    xbrl_tags:
+    - ifrs-full:NoncurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss
+  shortterm_warranty_provision:
+    display_label: Current warranty provision
+    xbrl_tags:
+    - ifrs-full:ShorttermWarrantyProvision
+  current_accrued_expenses_and_other_current_liabilities:
+    display_label: Current accrued expenses and other current liabilities
+    xbrl_tags:
+    - ifrs-full:CurrentAccruedExpensesAndOtherCurrentLiabilities
+  current_financial_liabilities_at_fair_value_through_profit_o_etc:
+    display_label: Current financial liabilities at fair value through profit or loss
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss
+  immobili_impianti_e_macchinari:
+    display_label: immobili, impianti e macchinari
+    xbrl_tags:
+    - Rec:ImmobiliImpiantiEMacchinari
+  noncurrent_investments_in_equity_instruments_designated_at_f_etc:
+    display_label: Non-current investments in equity instruments designated at fair
+      value through other comprehensive income
+    xbrl_tags:
+    - ifrs-full:NoncurrentInvestmentsInEquityInstrumentsDesignatedAtFairValueThroughOtherComprehensiveIncome
+  derivative_financial_assets_held_for_hedging:
+    display_label: Derivative financial assets held for hedging
+    xbrl_tags:
+    - ifrs-full:DerivativeFinancialAssetsHeldForHedging
+  noncurrent_assets_or_disposal_groups_classified_as_held_for__etc_x:
+    display_label: Non-current assets or disposal groups classified as held for distribution
+      to owners
+    xbrl_tags:
+    - ifrs-full:NoncurrentAssetsOrDisposalGroupsClassifiedAsHeldForDistributionToOwners
+  reserve_of_cash_flow_hedges:
+    display_label: Reserve of cash flow hedges
+    xbrl_tags:
+    - ifrs-full:ReserveOfCashFlowHedges
+  finanziamenti_dovuti_oltre_un_anno:
+    display_label: Finanziamenti dovuti oltre un anno
+    xbrl_tags:
+    - Rec:FinanziamentiDovutiOltreUnAnno
+  derivative_financial_liabilities_held_for_hedging:
+    display_label: Derivative financial liabilities held for hedging
+    xbrl_tags:
+    - ifrs-full:DerivativeFinancialLiabilitiesHeldForHedging
+  finanziamenti_dovuti_entro_un_anno:
+    display_label: Finanziamenti dovuti entro un anno
+    xbrl_tags:
+    - Rec:FinanziamentiDovutiEntroUnAnno
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense
@@ -2267,6 +2419,234 @@ cash_flow:
     display_label: Capital Expenditure
     xbrl_tags:
     - shel:CapitalExpenditure
+  proceeds_from_sale_of_property_plant_and_equipment_and_intan_etc:
+    display_label: Proceeds from sale of property, plant and equipment and intangible
+      assets
+    xbrl_tags:
+    - heia:ProceedsFromSaleOfPropertyPlantAndEquipmentAndIntangibleAssets
+  adjustments_for_interest_expense_income_net:
+    display_label: Adjustments for interest expense (income), net
+    xbrl_tags:
+    - heia:AdjustmentsForInterestExpenseIncomeNet
+  adjustment_for_other_income:
+    display_label: Adjustment for other income
+    xbrl_tags:
+    - heia:AdjustmentForOtherIncome
+  adj_for_share_of_profit_of_assoc_and_jvs_and_dividend_income_etc:
+    display_label: Adj for share of profit of assoc and Jvs and dividend income on
+      Fv through Oci invest
+    xbrl_tags:
+    - heia:AdjForShareOfProfitOfAssocAndJvsAndDividendIncomeOnFvThroughOciInvest
+  cash_flows_from_used_in_operations_before_changes_in_working_etc:
+    display_label: Cash flows from (used in) operations before changes in working
+      capital and provisions
+    xbrl_tags:
+    - heia:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapitalAndProvisions
+  acquisition_of_additions_to_associates_joint_ventures_and_ot_etc:
+    display_label: Acquisition of additions to associates, joint ventures and other
+      investments
+    xbrl_tags:
+    - heia:AcquisitionOfAdditionsToAssociatesJointVenturesAndOtherInvestments
+  disposal_of_associates_joint_ventures_and_other_investments:
+    display_label: Disposal of associates, joint ventures and other investments
+    xbrl_tags:
+    - heia:DisposalOfAssociatesJointVenturesAndOtherInvestments
+  adjustments_for_increase_decrease_in_trade_and_other_payable_etc:
+    display_label: Adjustments for increase (decrease) in trade and other payables
+      and returnable packaging deposits
+    xbrl_tags:
+    - heia:AdjustmentsForIncreaseDecreaseInTradeAndOtherPayablesAndReturnablePackagingDeposits
+  payments_for_proceeds_from_shares:
+    display_label: Payments for (proceeds from) shares
+    xbrl_tags:
+    - heia:PaymentsForProceedsFromShares
+  acquisition_of_non_controlling_interests_x:
+    display_label: Acquisition of non-controlling interests
+    xbrl_tags:
+    - heia:AcquisitionOfNonControllingInterests
+  adjustments_for_impairment_of_investments_in_associates_and__etc:
+    display_label: Dépréciation des participations dans les entreprises associées
+      et coentreprises
+    xbrl_tags:
+    - schneiderelectric:AdjustmentsForImpairmentOfInvestmentsInAssociatesAndJointVentures
+  adjustments_for_depreciation_of_property_plant_and_equipment:
+    display_label: Amortissements des immobilisations corporelles
+    xbrl_tags:
+    - schneiderelectric:AdjustmentsForDepreciationOfPropertyPlantAndEquipment
+  adjustments_for_depreciation_of_intangible_assets_other_than_etc:
+    display_label: Amortissements des immobilisations incorporelles (hors goodwill)
+    xbrl_tags:
+    - schneiderelectric:AdjustmentsForDepreciationOfIntangibleAssetsOtherThanGoodwill
+  adjustments_for_decrease_increase_in_other_current_assets_an_etc:
+    display_label: Diminution/(augmentation) des autres actifs et passifs courants
+    xbrl_tags:
+    - schneiderelectric:AdjustmentsForDecreaseIncreaseInOtherCurrentAssetsAndLiabilities
+  acquisitions_and_disposals_of_businesses_net_of_cash_acquire_etc:
+    display_label: Acquisitions et cessions d’actifs, net du cash acquis et cédé
+    xbrl_tags:
+    - schneiderelectric:AcquisitionsAndDisposalsOfBusinessesNetOfCashAcquiredAndDisposed
+  other_longterm_investments:
+    display_label: Autres opérations financières à long terme
+    xbrl_tags:
+    - schneiderelectric:OtherLongtermInvestments
+  increase_in_longterm_pension_assets:
+    display_label: Augmentation des actifs de retraite à long terme
+    xbrl_tags:
+    - schneiderelectric:IncreaseInLongtermPensionAssets
+  sale_purchase_of_own_shares:
+    display_label: Vente/(achat) d’actions propres
+    xbrl_tags:
+    - schneiderelectric:SalePurchaseOfOwnShares
+  increase_decrease_in_other_financial_debt:
+    display_label: Augmentation/(diminution) des autres dettes financières
+    xbrl_tags:
+    - schneiderelectric:IncreaseDecreaseInOtherFinancialDebt
+  issue_and_repurchase_of_o_c_e_a_n_es_equity_component:
+    display_label: Émission et rachat d’OCEANEs (composante capitaux propres)
+    xbrl_tags:
+    - schneiderelectric:IssueAndRepurchaseOfOCEANEsEquityComponent
+  increase_decrease_of_share_capital:
+    display_label: Augmentation/(réduction) de capital en numéraire
+    xbrl_tags:
+    - schneiderelectric:IncreaseDecreaseOfShareCapital
+  impact_of_items_reclassified_for_sale:
+    display_label: Impact des éléments reclassés en vue de la vente
+    xbrl_tags:
+    - schneiderelectric:ImpactOfItemsReclassifiedForSale
+  adjustments_for_interest_income:
+    display_label: Adjustments for interest income
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForInterestIncome
+  adjustments_for_finance_income:
+    display_label: Adjustments for finance income
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForFinanceIncome
+  adjustments_for_other_finance_income_cost:
+    display_label: Adjustments For Other Finance Income (Cost)
+    xbrl_tags:
+    - ady:AdjustmentsForOtherFinanceIncomeCost
+  adjustments_for_other_expense:
+    display_label: Adjustments for Other Expense
+    xbrl_tags:
+    - ady:AdjustmentsForOtherExpense
+  adjustments_for_depreciation_property_plant_and_equipment:
+    display_label: Adjustments For Depreciation Property, Plant And Equipment
+    xbrl_tags:
+    - ady:AdjustmentsForDepreciationPropertyPlantAndEquipment
+  adjustments_for_amortisation_expense:
+    display_label: Adjustments for amortisation expense
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForAmortisationExpense
+  adjustments_for_depreciation_right_of_use_assets_x:
+    display_label: Adjustments For Depreciation Right Of Use Assets
+    xbrl_tags:
+    - ady:AdjustmentsForDepreciationRightOfUseAssets
+  adjustments_for_equity_settled_share_based_compensation:
+    display_label: Adjustments For Equity Settled Share Based Compensation
+    xbrl_tags:
+    - ady:AdjustmentsForEquitySettledShareBasedCompensation
+  adjustments_for_cash_settled_share_based_payment_plan:
+    display_label: Adjustments For Cash Settled Share Based Payment Plan
+    xbrl_tags:
+    - ady:AdjustmentsForCashSettledShareBasedPaymentPlan
+  adjustments_for_decrease_increase_in_current_receivables_fro_etc:
+    display_label: Adjustments For Decrease (Increase) In Current Receivables From
+      Merchants And Financial Institutions
+    xbrl_tags:
+    - ady:AdjustmentsForDecreaseIncreaseInCurrentReceivablesFromMerchantsAndFinancialInstitutions
+  adjustments_for_increase_decrease_in_current_payables_to_mer_etc:
+    display_label: Adjustments For Increase (Decrease) In Current Payables To Merchants
+      And Financial Institutions
+    xbrl_tags:
+    - ady:AdjustmentsForIncreaseDecreaseInCurrentPayablesToMerchantsAndFinancialInstitutions
+  adjustments_for_decrease_increase_in_contract_assets:
+    display_label: Adjustments for decrease (increase) in contract assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInContractAssets
+  finance_income_received_classified_as_operating_activities:
+    display_label: Finance income received, classified as operating activities
+    xbrl_tags:
+    - ifrs-full:FinanceIncomeReceivedClassifiedAsOperatingActivities
+  finance_costs_paid_classified_as_operating_activities:
+    display_label: Finance costs paid, classified as operating activities
+    xbrl_tags:
+    - ifrs-full:FinanceCostsPaidClassifiedAsOperatingActivities
+  increase_decrease_in_intangible_assets_and_goodwill:
+    display_label: Increase (decrease) in intangible assets and goodwill
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseInIntangibleAssetsAndGoodwill
+  adjustments_for_depreciation_and_amortisation_expense_and_im_etc:
+    display_label: Adjustments for depreciation and amortisation expense and impairment
+      loss (reversal of impairment loss) recognised in profit or loss, Excluding Other
+      Investments
+    xbrl_tags:
+    - asm:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossExcludingOtherInvestments
+  adjustments_for_impairment_of_other_investments:
+    display_label: Adjustments for impairment of other investments
+    xbrl_tags:
+    - asm:AdjustmentsForImpairmentOfOtherInvestments
+  adjustments_for_decrease_increase_in_evaluation_tools:
+    display_label: Adjustments for decrease (increase) in evaluation tools
+    xbrl_tags:
+    - asm:AdjustmentsForDecreaseIncreaseInEvaluationTools
+  adjustments_for_decrease_increase_in_other_current_assets:
+    display_label: Adjustments for decrease (increase) in other current assets
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDecreaseIncreaseInOtherCurrentAssets
+  adjustments_for_increase_decrease_in_contract_assets_and_lia_etc:
+    display_label: Adjustments for increase (decrease) in contract assets and liabilities
+    xbrl_tags:
+    - asm:AdjustmentsForIncreaseDecreaseInContractAssetsAndLiabilities
+  adjustments_for_increase_decrease_in_other_current_liabiliti_etc:
+    display_label: Adjustments for increase (decrease) in other current liabilities
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForIncreaseDecreaseInOtherCurrentLiabilities
+  payments_for_development_project_expenditure:
+    display_label: Payments for development project expenditure
+    xbrl_tags:
+    - ifrs-full:PaymentsForDevelopmentProjectExpenditure
+  dividends_received_from_associates_classified_as_investing_a_etc:
+    display_label: Dividends received from associates, classified as investing activities
+    xbrl_tags:
+    - ifrs-full:DividendsReceivedFromAssociatesClassifiedAsInvestingActivities
+  contingent_consideration_paid_in_respect_of_prior_acquisitio_etc:
+    display_label: Contingent consideration paid in respect of prior acquisition of
+      subsidiary, classified as investing activities
+    xbrl_tags:
+    - asm:ContingentConsiderationPaidInRespectOfPriorAcquisitionOfSubsidiaryClassifiedAsInvestingActivities
+  adjustments_for_depreciation_expense:
+    display_label: Adjustments for depreciation expense
+    xbrl_tags:
+    - ifrs-full:AdjustmentsForDepreciationExpense
+  adjustments_for_impairment_losses:
+    display_label: Adjustments for impairment losses
+    xbrl_tags:
+    - Rec:AdjustmentsForImpairmentLosses
+  adjustments_for_decrease_increase_in_other_assets_and_liabil_etc:
+    display_label: Adjustments for decrease increase in other assets and liabilities
+    xbrl_tags:
+    - Rec:AdjustmentsForDecreaseIncreaseInOtherAssetsAndLiabilities
+  proceeds_from_sales_of_intangible_assets_classified_as_inves_etc:
+    display_label: Proceeds from sales of intangible assets, classified as investing
+      activities
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSalesOfIntangibleAssetsClassifiedAsInvestingActivities
+  proceeds_from_sale_or_issue_of_treasury_shares:
+    display_label: Proceeds from sale or issue of treasury shares
+    xbrl_tags:
+    - ifrs-full:ProceedsFromSaleOrIssueOfTreasuryShares
+  effetto_fusione:
+    display_label: Effetto fusione
+    xbrl_tags:
+    - Rec:EffettoFusione
+  net_cash_used_by_investment_in_operating_assets:
+    display_label: Investissement net d’exploitation
+    xbrl_tags:
+    - schneiderelectric:NetCashUsedByInvestmentInOperatingAssets
+  net_cash_used_by_investment_in_other_assets:
+    display_label: Autres investissements nets
+    xbrl_tags:
+    - schneiderelectric:NetCashUsedByInvestmentInOtherAssets
 other:
   income_tax_relating_to_cash_flow_hedges_of_other_comprehe_etc:
     display_label: Income Tax on Cash Flow Hedges (OCI)
@@ -2920,3 +3300,158 @@ other:
     display_label: Other changes in equity
     xbrl_tags:
     - moncler:OtherInflowsOutflowsOfEquity
+  tax_expense_other_than_income_tax_expense:
+    display_label: Tax expense other than income tax expense
+    xbrl_tags:
+    - ifrs-full:TaxExpenseOtherThanIncomeTaxExpense
+  other_income:
+    display_label: Other income
+    xbrl_tags:
+    - ifrs-full:OtherIncome
+  reclassification_adjustments_on_cash_flow_hedges_net_of_tax:
+    display_label: Reclassification adjustments on cash flow hedges, net of tax
+    xbrl_tags:
+    - ifrs-full:ReclassificationAdjustmentsOnCashFlowHedgesNetOfTax
+  gains_losses_on_financial_assets_measured_at_fair_value_thro_etc_x:
+    display_label: Gains (losses) on financial assets measured at fair value through
+      other comprehensive income, net of tax
+    xbrl_tags:
+    - ifrs-full:GainsLossesOnFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncomeNetOfTax
+  cost_of_hedging:
+    display_label: Cost of hedging
+    xbrl_tags:
+    - heia:CostOfHedging
+  sale_or_issue_of_treasury_shares:
+    display_label: Sale or issue of treasury shares
+    xbrl_tags:
+    - ifrs-full:SaleOrIssueOfTreasuryShares
+  revaluation_of_assets_and_liabilities_linked_to_hyperinflati_etc:
+    display_label: Réévaluation des actifs et passifs liée à l’hyperinflation
+    xbrl_tags:
+    - schneiderelectric:RevaluationOfAssetsAndLiabilitiesLinkedToHyperinflation
+  issue_conversion_and_redemption_of_o_c_e_a_n_es:
+    display_label: Émission, conversion et rachat d’OCEANEs
+    xbrl_tags:
+    - schneiderelectric:IssueConversionAndRedemptionOfOCEANEs
+  hyperinflation_i_a_s29:
+    display_label: Hyperinflation IAS 29
+    xbrl_tags:
+    - schneiderelectric:HyperinflationIAS29
+  issue_of_o_c_e_a_n_es:
+    display_label: Émission d’OCEANEs
+    xbrl_tags:
+    - schneiderelectric:IssueOfOCEANEs
+  bank_and_similar_charges:
+    display_label: Bank and similar charges
+    xbrl_tags:
+    - ifrs-full:BankAndSimilarCharges
+  wages_and_salaries:
+    display_label: Wages and salaries
+    xbrl_tags:
+    - ifrs-full:WagesAndSalaries
+  social_security_contributions_and_post_employment_benefit_ex_etc:
+    display_label: Social Security Contributions And Post Employment Benefit Expense
+    xbrl_tags:
+    - ady:SocialSecurityContributionsAndPostEmploymentBenefitExpense
+  depreciation_and_amortisation_expense:
+    display_label: Depreciation and amortisation expense
+    xbrl_tags:
+    - ifrs-full:DepreciationAndAmortisationExpense
+  miscellaneous_other_operating_income:
+    display_label: Miscellaneous other operating income
+    xbrl_tags:
+    - ifrs-full:MiscellaneousOtherOperatingIncome
+  increase_decrease_through_transfers_and_other_changes_intang_etc:
+    display_label: Increase (decrease) through transfers and other changes, intangible
+      assets other than goodwill
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughTransfersAndOtherChangesIntangibleAssetsOtherThanGoodwill
+  increase_decrease_through_adjustments_to_intangible_assets_a_etc:
+    display_label: Increase (Decrease) Through Adjustments To Intangible Assets And
+      Other Adjustments, Equity
+    xbrl_tags:
+    - ady:IncreaseDecreaseThroughAdjustmentsToIntangibleAssetsAndOtherAdjustmentsEquity
+  increase_decrease_through_exercise_of_warrants_equity:
+    display_label: Increase (decrease) through exercise of warrants, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughExerciseOfWarrantsEquity
+  decrease_increase_through_tax_on_sharebased_payment_transact_etc:
+    display_label: Decrease (increase) through tax on share-based payment transactions,
+      equity
+    xbrl_tags:
+    - ifrs-full:DecreaseIncreaseThroughTaxOnSharebasedPaymentTransactions
+  increase_decrease_through_transactions_with_owners:
+    display_label: Increase (decrease) through transactions with owners, equity
+    xbrl_tags:
+    - ifrs-full:IncreaseDecreaseThroughTransactionsWithOwners
+  compensation_expense_share_based_payments:
+    display_label: Compensation expense share-based payments
+    xbrl_tags:
+    - asm:CompensationExpenseShareBasedPayments
+  vesting_restricted_shares_out_of_treasury_shares:
+    display_label: Vesting restricted shares out of treasury shares
+    xbrl_tags:
+    - asm:VestingRestrictedSharesOutOfTreasuryShares
+  issue_of_common_shares_used_for_share_based_performance_prog_etc:
+    display_label: Issue of common shares used for share-based performance programs
+    xbrl_tags:
+    - asm:IssueOfCommonSharesUsedForShareBasedPerformancePrograms
+  acconto_sul_dividendo:
+    display_label: 'Acconto sul dividendo '
+    xbrl_tags:
+    - Rec:AccontoSulDividendo
+  cash_flow_used_in_from_operational_investing_activities:
+    display_label: Cash flow (used in) from operational investing activities
+    xbrl_tags:
+    - heia:CashFlowUsedInFromOperationalInvestingActivities
+  free_operating_cash_flow:
+    display_label: Free operating cash flow
+    xbrl_tags:
+    - heia:FreeOperatingCashFlow
+  cash_flows_related_to_interest_dividend_and_income_tax:
+    display_label: Cash flows related to interest, dividend and income tax
+    xbrl_tags:
+    - heia:CashFlowsRelatedToInterestDividendAndIncomeTax
+  purchase_issue_of_treasury_shares:
+    display_label: Purchase/Issue of treasury shares
+    xbrl_tags:
+    - heia:PurchaseIssueOfTreasuryShares
+  adjusted_ebita:
+    display_label: EBITA ajusté
+    xbrl_tags:
+    - schneiderelectric:AdjustedEbita
+  ebita:
+    display_label: EBITA
+    xbrl_tags:
+    - schneiderelectric:Ebita
+  impairment_loss_recognised_in_profit_or_loss_intangible_asse_etc:
+    display_label: Impairment loss recognised in profit or loss, intangible assets
+      and goodwill
+    xbrl_tags:
+    - ifrs-full:ImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndGoodwill
+  increase_decrease_in_number_of_shares_outstanding_by_issuing_etc:
+    display_label: Changement du nombre d'actions par augmentation de capital
+    xbrl_tags:
+    - schneiderelectric:IncreaseDecreaseInNumberOfSharesOutstandingByIssuingCapital
+  increase_decrease_in_number_of_shares_outstanding_by_issue_c_etc:
+    display_label: Changement du nombre d'actions par emission, conversion et rachat
+      d'OCEANEs
+    xbrl_tags:
+    - schneiderelectric:IncreaseDecreaseInNumberOfSharesOutstandingByIssueConversionAndRedemptionOfOCEANEs
+  net_non_interest_revenue:
+    display_label: Net Non-Interest Revenue
+    xbrl_tags:
+    - ady:NetNonInterestRevenue
+  vesting_restricted_shares_out_of_treasury_shares_shares:
+    display_label: Vesting restricted shares out of treasury shares (in shares)
+    xbrl_tags:
+    - asm:VestingRestrictedSharesOutOfTreasurySharesShares
+  purchase_of_treasury_shares_shares:
+    display_label: Purchase of treasury shares (in shares)
+    xbrl_tags:
+    - asm:PurchaseOfTreasurySharesShares
+  cash_flows_from_used_in_operating_activities_after_cash_flow_etc:
+    display_label: Cash flows from (used in) operating activities after cash flows
+      from (used in) investing activities
+    xbrl_tags:
+    - asm:CashFlowsFromUsedInOperatingActivitiesAfterCashFlowsFromUsedInInvestingActivities

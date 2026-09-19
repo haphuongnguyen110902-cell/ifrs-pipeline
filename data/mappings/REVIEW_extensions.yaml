@@ -1,500 +1,150 @@
-_instructions: All classified - run python scripts/12_apply_review.py
+_instructions: 'Fill in ''statement'' for each entry: income_statement / balance_sheet
+  / cash_flow / other. When done: python scripts/12_apply_review.py'
 needs_review:
-- xbrl_tag: AMP:OtherGainsLossesAndImpairmentLossOnFinancialAssets
-  suggested_key: amp_other_gains_losses_and_impairment_loss_on_financial_assets
-  display_label: Other gains (losses) and impairment loss on financial assets
+- xbrl_tag: heia:RevenueLessExciseTaxExpense
+  suggested_key: revenue_less_excise_tax_expense
+  display_label: Revenue less excise tax expense
   statement: income_statement
   balance: credit
-  reason: ''
-- xbrl_tag: AMP:OtherCashReceiptsFromSalesOfEquityOrDebtInstrumentsOfOtherEntitiesAndOtherCashPaymentsToAcquireEquityOrDebtInstrumentsOfOtherEntitiesClassifiedAsInvestingActivities
-  suggested_key: amp_other_cash_receipts_sales_equity_debt_instruments_etc
-  display_label: Other cash receipts/payments for equity or debt instruments, investing
-  statement: cash_flow
+  reason: role keyword 'comprehensive income'
+  used_by:
+  - heineken
+- xbrl_tag: heia:TotalOtherExpenses
+  suggested_key: total_other_expenses
+  display_label: Total Other Expenses
+  statement: income_statement
   balance: debit
-  reason: ''
-- xbrl_tag: AMP:HedgingDerivativesAndOtherNonCurrentAssetsClassifiedAsFinancingActivities
-  suggested_key: amp_hedging_derivatives_and_other_non_current_assets_financing
-  display_label: Hedging derivatives and other non-current assets, financing
-  statement: cash_flow
+  reason: role keyword 'comprehensive income'
+  used_by:
+  - heineken
+- xbrl_tag: heia:CashFlowUsedInFromOperationalInvestingActivities
+  suggested_key: cash_flow_used_in_from_operational_investing_activities
+  display_label: Cash flow (used in) from operational investing activities
+  statement: other
   balance: credit
-  reason: ''
-- xbrl_tag: DAN:OtherOperatingIncomeExpenseRecurring
-  suggested_key: dan_other_operating_income_expense_recurring
-  display_label: Other operating income (expense), recurring
-  statement: income_statement
+  reason: role keyword 'cash flow'
+  used_by:
+  - heineken
+- xbrl_tag: heia:FreeOperatingCashFlow
+  suggested_key: free_operating_cash_flow
+  display_label: Free operating cash flow
+  statement: other
   balance: credit
-  reason: ''
-- xbrl_tag: DAN:ProfitLossFromOperatingActivitiesRecurring
-  suggested_key: dan_profit_loss_from_operating_activities_recurring
-  display_label: Profit (loss) from operating activities, recurring
-  statement: income_statement
+  reason: role keyword 'cash flow'
+  used_by:
+  - heineken
+- xbrl_tag: heia:CashFlowsRelatedToInterestDividendAndIncomeTax
+  suggested_key: cash_flows_related_to_interest_dividend_and_income_tax
+  display_label: Cash flows related to interest, dividend and income tax
+  statement: other
   balance: credit
-  reason: ''
-- xbrl_tag: DAN:OtherOperatingIncomeExpenseNonRecurring
-  suggested_key: dan_other_operating_income_expense_non_recurring
-  display_label: Other operating income (expense), non-recurring
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:ProfitLossBeforeTaxBeforeShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod
-  suggested_key: dan_profit_loss_before_tax_before_share_associates
-  display_label: Profit (loss) before tax, before share of associates
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:ProfitLossBeforeShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod
-  suggested_key: dan_profit_loss_before_share_associates_jv
-  display_label: Profit (loss) before share of associates and JVs
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:OtherIndividuallyImmaterialComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax
-  suggested_key: dan_other_immaterial_oci_reclassifiable
-  display_label: Other immaterial OCI components reclassifiable to P&L, net of tax
+  reason: role keyword 'cash flow'
+  used_by:
+  - heineken
+- xbrl_tag: heia:PurchaseIssueOfTreasuryShares
+  suggested_key: purchase_issue_of_treasury_shares
+  display_label: Purchase/Issue of treasury shares
+  statement: other
+  balance: debit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - heineken
+- xbrl_tag: schneiderelectric:AdjustedEbita
+  suggested_key: adjusted_ebita
+  display_label: EBITA ajusté
   statement: other
   balance: credit
   reason: ''
-- xbrl_tag: DAN:NonCurrentFinancialAssetsAtFairValueThroughProfitOrLossDesignatedUponInitialRecognitionAndNonCurrentInvestmentsInEquityInstrumentsDesignatedAtFairValueThroughOtherComprehensiveIncome
-  suggested_key: dan_non_current_fv_financial_assets
-  display_label: Non-current financial assets at fair value (FVTPL and FVOCI)
-  statement: balance_sheet
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:MiscellaneousOtherNonCurrentFinancialAssetsAndNonCurrentLoansAndReceivables
-  suggested_key: dan_misc_other_non_current_financial_assets
-  display_label: Other non-current financial assets and loans and receivables
-  statement: balance_sheet
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:CurrentLoans
-  suggested_key: dan_current_loans
-  display_label: Current loans
-  statement: balance_sheet
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:RetainedEarningsAndOtherReserves
-  suggested_key: dan_retained_earnings_and_other_reserves
-  display_label: Retained earnings and other reserves
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:LongTermBorrowingsAndNonCurrentLeaseLiabilities
-  suggested_key: dan_long_term_borrowings_and_non_current_lease_liabilities
-  display_label: Long-term borrowings and non-current lease liabilities
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:NonCurrentPutOptionsGrantedToNonControllingInterests
-  suggested_key: dan_non_current_put_options_nci
-  display_label: Non-current put options granted to non-controlling interests
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:OtherLongTermProvisionsAndOtherNonCurrentNonFinancialLiabilities
-  suggested_key: dan_other_long_term_provisions_non_current
-  display_label: Other long-term provisions and non-current non-financial liabilities
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:CurrentBorrowingsAndCurrentPortionOfNonCurrentBorrowingsAndCurrentLeaseLiabilities
-  suggested_key: dan_current_borrowings_and_current_lease_liabilities
-  display_label: Current borrowings and current lease liabilities
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:CurrentPutOptionsGrantedToNonControllingInterests
-  suggested_key: dan_current_put_options_nci
-  display_label: Current put options granted to non-controlling interests
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:AdjustmentsForUndistributedProfitsOfAssociatesNetOfDividendsReceived
-  suggested_key: dan_adjustments_undistributed_profits_associates_net_dividends
-  display_label: Adjustments for undistributed profits of associates, net of dividends
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:AdjustmentsForInterestExpenseAndAdjustmentsForInterestIncome
-  suggested_key: dan_adjustments_interest_expense_and_income
-  display_label: Adjustments for interest expense and interest income
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:InterestPaidAndInterestReceivedClassifiedAsOperatingActivities
-  suggested_key: dan_interest_paid_and_received_operating
-  display_label: Interest paid and received, operating activities
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:NetChangeInterestIncomeExpenseClassifiedAsOperatingActivities
-  suggested_key: dan_net_change_interest_operating
-  display_label: Net change interest income/expense, operating activities
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivablesAndAdjustmentsForIncreaseDecreaseInOtherOperatingPayables
-  suggested_key: dan_adjustments_other_operating_receivables_payables
-  display_label: Adjustments for changes in other operating receivables and payables
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:PurchaseOfFinancialAssetsClassifiedAsInvestingActivities
-  suggested_key: dan_purchase_financial_assets_investing
-  display_label: Purchase of financial assets, investing activities
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:ProceedsFromSalesOfFinancialAssetsClassifiedAsInvestingActivities
-  suggested_key: dan_proceeds_sales_financial_assets_investing
-  display_label: Proceeds from sales of financial assets, investing activities
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:InterestExpenseAndRepurchasePremiumOnUndatedSubordinatedNotesClassifiedAsFinancingActivities
-  suggested_key: dan_interest_expense_subordinated_notes_financing
-  display_label: Interest expense and repurchase premium on subordinated notes, financing
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: DAN:TransactionsWithNonControllingInterestsClassifiedAsFinancingActivities
-  suggested_key: dan_transactions_nci_financing
-  display_label: Transactions with non-controlling interests, financing
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:CashFlowsFromUsedInHedgingDerivativesClassifiedAsFinancingActivities
-  suggested_key: dan_cash_flows_hedging_derivatives_financing
-  display_label: Cash flows from hedging derivatives, financing
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:ProceedsFromBorrowingsAndRepaymentsOfBorrowingsClassifiedAsFinancingActivities
-  suggested_key: dan_net_proceeds_repayments_borrowings_financing
-  display_label: Net proceeds/repayments of borrowings, financing
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: DAN:TransactionsOnUndatedSubordinatedNotesIncludingInterestExpenseAndRepurchasePremiumNetOfTax
-  suggested_key: dan_transactions_subordinated_notes_net_tax
-  display_label: Transactions on undated subordinated notes, net of tax
+  used_by:
+  - schneider_electric_se
+- xbrl_tag: schneiderelectric:Ebita
+  suggested_key: ebita
+  display_label: EBITA
   statement: other
   balance: credit
   reason: ''
-- xbrl_tag: DAN:InterestPaidOnUndatedSubordinatedLiabilities
-  suggested_key: dan_interest_paid_subordinated_liabilities
-  display_label: Interest paid on undated subordinated liabilities
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: dan:CashFlowsFromUsedInHedgingDerivativesClassifiedAsFinancingActivities
-  suggested_key: dan_cash_flows_hedging_derivatives_financing_v2
-  display_label: Cash flows from hedging derivatives, financing
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: dan:IncreaseDecreaseBankOverdraftsClassifiedAsCashEquivalents
-  suggested_key: dan_increase_decrease_bank_overdrafts_cash_equivalents
-  display_label: Change in bank overdrafts classified as cash equivalents
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: el:OtherOperatingIncomeExpenses
-  suggested_key: el_other_operating_income_expenses
-  display_label: Other operating income expenses
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: el:CostOfNetDebt
-  suggested_key: el_cost_of_net_debt
-  display_label: Cost of net debt
-  statement: income_statement
-  balance: debit
-  reason: ''
-- xbrl_tag: el:RetainEarningsAndOtherReserves
-  suggested_key: el_retain_earnings_and_other_reserves
-  display_label: Retained earnings and other reserves
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: el:RetainedEarningsProfitLossForReportingPeriod
-  suggested_key: el_retained_earnings_profit_loss_period
-  display_label: Retained earnings - profit/loss for reporting period
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: el:ChangesInConsolidationScopeAndNci
-  suggested_key: el_changes_consolidation_scope_and_nci
-  display_label: Changes in consolidation scope and NCI
-  statement: other
-  balance: credit
-  reason: ''
-- xbrl_tag: el:SharesDeliveredToEmployeesAndExerciseOfStockOptions
-  suggested_key: el_shares_delivered_employees_stock_options
-  display_label: Shares delivered to employees and exercise of stock options
-  statement: other
-  balance: credit
-  reason: ''
-- xbrl_tag: el:DepreciationAmortizationImpairment
-  suggested_key: el_depreciation_amortization_impairment
-  display_label: Depreciation, amortization and impairment
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: el:ChangesInTradeWorkingCapital
-  suggested_key: el_changes_in_trade_working_capital
-  display_label: Changes in trade working capital
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: el:ChangesInOtherOperatingReceivablesPayables
-  suggested_key: el_changes_other_operating_receivables_payables
-  display_label: Changes in other operating receivables and payables
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: el:PurchaseOfPpeAndIntangible
-  suggested_key: el_purchase_of_ppe_and_intangible
-  display_label: Purchase of PP&E and intangible assets
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: el:DisposalOfPpeAndIntangible
-  suggested_key: el_disposal_of_ppe_and_intangible
-  display_label: Disposal of PP&E and intangible assets
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: el:ChangesInOtherNonFinancialAssets
-  suggested_key: el_changes_other_non_financial_assets
-  display_label: Changes in other non-financial assets
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: el:ChangesInOtherFinancialAssets
-  suggested_key: el_changes_other_financial_assets
-  display_label: Changes in other financial assets
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: el:OtherComprehensiveIncomeBeforeTaxHyperinflationAccounting
-  suggested_key: el_oci_hyperinflation_accounting
-  display_label: OCI before tax - hyperinflation accounting
-  statement: other
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:CostOfGoodsSold
-  suggested_key: essi_cost_of_goods_sold
-  display_label: Cost of Goods Sold
-  statement: income_statement
-  balance: debit
-  reason: ''
-- xbrl_tag: essi:SalesGeneralAndAdministration
-  suggested_key: essi_sales_general_and_administration
-  display_label: Sales, general and administration
-  statement: income_statement
-  balance: debit
-  reason: ''
-- xbrl_tag: essi:OperatingProfitBeforeAmortizationOfAcquisitionRelatedIntangibleAssetsEbitda
-  suggested_key: essi_ebita_2021
-  display_label: EBITA (Operating profit before acquisition intangible amortization)
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:AmortizationOfAcquisitionRelatedIntangibleAssets
-  suggested_key: essi_amortization_acquisition_intangibles
-  display_label: Amortization of acquisition-related intangible assets
-  statement: income_statement
-  balance: debit
-  reason: ''
-- xbrl_tag: ifrs-full:BasicAndDilutedEarningsLossPerShare
-  suggested_key: basic_and_diluted_earnings_loss_per_share
-  display_label: Basic and diluted earnings (loss) per share
-  statement: income_statement
-  balance: n/a
-  reason: ''
-- xbrl_tag: essi:AquiredCashFlowHedges
-  suggested_key: essi_acquired_cash_flow_hedges
-  display_label: Acquired cash flow hedges
-  statement: other
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:RevaluationEffectUponAcquisitionOfNonControllingInterests
-  suggested_key: essi_revaluation_effect_acquisition_nci
-  display_label: Revaluation effect upon acquisition of non-controlling interests
-  statement: other
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:ProfitLossFromOperatingActivitiesAdjustedForNonCashItems
-  suggested_key: essi_operating_profit_adjusted_non_cash
-  display_label: Operating profit excluding non-cash items
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:NonCashItemsRelatingToEfficencyProgram
-  suggested_key: essi_non_cash_efficiency_program
-  display_label: Non-cash items relating to efficiency program
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:ImpactFromSettlementOfPensionLiability
-  suggested_key: essi_impact_pension_settlement
-  display_label: Impact from settlement of pension liability
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:ChangeInProvisionForOngoingCompetitionCase
-  suggested_key: essi_change_provision_competition_case
-  display_label: Change in provision for ongoing competition case
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:ChangeOneTimeForeignTaxOnNonCurrentAssets
-  suggested_key: essi_change_one_time_foreign_tax
-  display_label: Change one-time foreign tax on non-current assets
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:MeasuresToRaiseTheCapacityLevelOfOperationsStrategicCapitalExpenditures
-  suggested_key: essi_strategic_capex
-  display_label: Strategic capital expenditures
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:MeasuresToUpholdCapacityLevelCurrentCapitalExpenditures
-  suggested_key: essi_current_capex
-  display_label: Current capital expenditures
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:TotalInvestmentsInIntangiblesAndPpeIncludingPaidCapitalizedInterest
-  suggested_key: essi_total_investments_intangibles_ppe
-  display_label: Total investments in intangibles and PP&E including capitalized interest
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:OperatingProfitBeforeAmortizationOfAcquisitionRelatedIntangibleAssetsEbita
-  suggested_key: essi_ebita_2022
-  display_label: EBITA (Operating profit before acquisition intangible amortization)
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: essi:ItemsAffectingComparabilityAcquisitionRelatedIntangibleAssets
-  suggested_key: essi_iac_acquisition_intangibles
-  display_label: Items affecting comparability - acquisition-related intangible assets
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: kering:OtherNon-RecurringOperatingIncomeAndExpenses
-  suggested_key: kering_other_non_recurring_operating_2021
-  display_label: Other non-recurring operating income and expenses
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: kering:NetIncomeFromContinuingOperationsExcludingNon-RecurringItemsAttributableToTheGroup
-  suggested_key: kering_net_income_excl_non_recurring_group
-  display_label: Net income excl. non-recurring items, group share
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: kering:OtherNonrecurringOperatingIncomeAndExpenses
-  suggested_key: kering_other_nonrecurring_operating_2022
-  display_label: Other non-recurring operating income and expenses (2022)
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: loreal:ReservesAutres
-  suggested_key: loreal_reserves_autres
-  display_label: Other reserves (L'Oreal)
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: loreal:ResultatNetPartDuGroupe
-  suggested_key: loreal_resultat_net_part_du_groupe
-  display_label: Net profit, group share (L'Oreal balance sheet)
-  statement: balance_sheet
-  balance: credit
-  reason: ''
-- xbrl_tag: loreal:Hyperinflation
-  suggested_key: loreal_hyperinflation
-  display_label: Hyperinflation adjustment (L'Oreal)
-  statement: other
-  balance: credit
-  reason: ''
-- xbrl_tag: loreal:AugmentationLieeALaDecisionIfricDe2021SurIas19
-  suggested_key: loreal_augmentation_ifric_2021_ias19
-  display_label: Increase related to IFRIC 2021 decision on IAS 19
-  statement: other
-  balance: credit
-  reason: ''
-- xbrl_tag: loreal:EliminationDesChargesEtDesProduitsSansIncidenceSurLaTresorerieOuNonLiesALactiviteAmortissementsProvisionsEtAutresPassifsNonCourants
-  suggested_key: loreal_elimination_charges_sans_incidence_tresorerie
-  display_label: Non-cash charges elimination (D&A, provisions, other non-current)
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: loreal:IncidenceDesVariationsDeCoursDesDevisesEtDeJusteValeur
-  suggested_key: loreal_incidence_variations_devises_juste_valeur
-  display_label: Impact of FX and fair value changes
-  statement: cash_flow
-  balance: debit
-  reason: ''
-- xbrl_tag: LVM:ProfitLossFromOperatingActivitiesRecurring
-  suggested_key: lvm_profit_loss_operating_recurring_2021
-  display_label: Profit (loss) from operating activities, recurring (LVMH 2021)
-  statement: income_statement
-  balance: credit
-  reason: ''
-- xbrl_tag: LVM:IncomeTaxRelatingToExchangeDifferencesOnTranslationOfOtherComprehensiveIncomeAndIncomeTaxRelatingToHedgesOfNetInvestmentsInForeignOperationsOfOtherComprehensiveIncome
-  suggested_key: lvm_tax_oci_translation_hedges
-  display_label: Tax on OCI - translation differences and net investment hedges
-  statement: other
-  balance: debit
-  reason: ''
-- xbrl_tag: LVM:OtherComprehensiveIncomeNetOfTaxExchangeDifferencesOnTranslationAndOtherComprehensiveIncomeNetOfTaxHedgesOfNetInvestmentsInForeignOperations
-  suggested_key: lvm_oci_net_tax_translation_and_hedges
-  display_label: OCI net of tax - translation differences and net investment hedges
-  statement: other
-  balance: credit
-  reason: ''
-- xbrl_tag: LVM:IncreaseDecreaseInNumberOfSharesIssuedThroughExerciseOfOptions
-  suggested_key: lvm_shares_issued_exercise_options
-  display_label: Change in shares issued through exercise of options
+  used_by:
+  - schneider_electric_se
+- xbrl_tag: ifrs-full:ImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndGoodwill
+  suggested_key: impairment_loss_recognised_in_profit_or_loss_intangible_asse_etc
+  display_label: Impairment loss recognised in profit or loss, intangible assets and
+    goodwill
   statement: other
   balance: n/a
   reason: ''
-- xbrl_tag: LVM:GainsLossesOnCashFlowHedgesBeforeTaxPriorToAcquisitionOfTiffanyShares
-  suggested_key: lvm_cash_flow_hedges_pre_tiffany
-  display_label: Cash flow hedge gains/losses before tax, prior to Tiffany acquisition
+  used_by:
+  - schneider_electric_se
+- xbrl_tag: schneiderelectric:NetCashUsedByInvestmentInOperatingAssets
+  suggested_key: net_cash_used_by_investment_in_operating_assets
+  display_label: Investissement net d’exploitation
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'flux de tr'
+  used_by:
+  - schneider_electric_se
+- xbrl_tag: schneiderelectric:NetCashUsedByInvestmentInOtherAssets
+  suggested_key: net_cash_used_by_investment_in_other_assets
+  display_label: Autres investissements nets
+  statement: cash_flow
+  balance: debit
+  reason: role keyword 'flux de tr'
+  used_by:
+  - schneider_electric_se
+- xbrl_tag: schneiderelectric:IncreaseDecreaseInNumberOfSharesOutstandingByIssuingCapital
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_by_issuing_etc
+  display_label: Changement du nombre d'actions par augmentation de capital
+  statement: other
+  balance: n/a
+  reason: ''
+  used_by:
+  - schneider_electric_se
+- xbrl_tag: schneiderelectric:IncreaseDecreaseInNumberOfSharesOutstandingByIssueConversionAndRedemptionOfOCEANEs
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_by_issue_c_etc
+  display_label: Changement du nombre d'actions par emission, conversion et rachat
+    d'OCEANEs
+  statement: other
+  balance: n/a
+  reason: ''
+  used_by:
+  - schneider_electric_se
+- xbrl_tag: ady:NetNonInterestRevenue
+  suggested_key: net_non_interest_revenue
+  display_label: Net Non-Interest Revenue
   statement: other
   balance: credit
-  reason: ''
-- xbrl_tag: moncler:ProceedsFromIssuingSharesAndOtherEquityInstruments
-  suggested_key: moncler_proceeds_issuing_shares_equity
-  display_label: Proceeds from issuing shares and other equity instruments
-  statement: cash_flow
+  reason: role keyword 'comprehensive income'
+  used_by:
+  - adyen
+- xbrl_tag: asm:FinanceIncomeCostAfterForeignExchangeGainLoss
+  suggested_key: finance_income_cost_after_foreign_exchange_gain_loss
+  display_label: Finance income (cost), after foreign exchange gain (loss)
+  statement: income_statement
   balance: credit
-  reason: ''
-- xbrl_tag: moncler:OtherInflowsOutflowsOfEquity
-  suggested_key: moncler_other_inflows_outflows_equity
-  display_label: Other changes in equity
+  reason: role keyword 'comprehensive income'
+  used_by:
+  - asm_international
+- xbrl_tag: asm:VestingRestrictedSharesOutOfTreasurySharesShares
+  suggested_key: vesting_restricted_shares_out_of_treasury_shares_shares
+  display_label: Vesting restricted shares out of treasury shares (in shares)
+  statement: other
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - asm_international
+- xbrl_tag: asm:PurchaseOfTreasurySharesShares
+  suggested_key: purchase_of_treasury_shares_shares
+  display_label: Purchase of treasury shares (in shares)
+  statement: other
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - asm_international
+- xbrl_tag: asm:CashFlowsFromUsedInOperatingActivitiesAfterCashFlowsFromUsedInInvestingActivities
+  suggested_key: cash_flows_from_used_in_operating_activities_after_cash_flow_etc
+  display_label: Cash flows from (used in) operating activities after cash flows from
+    (used in) investing activities
   statement: other
   balance: debit
-  reason: ''
-- xbrl_tag: shel:PropertyPlantAndEquipmentIncludingRightOfUseAssets
-  suggested_key: shel_ppe_including_right_of_use_assets
-  display_label: Property, Plant and Equipment including Right-of-use Assets
-  statement: balance_sheet
-  balance: debit
-  reason: ''
-- xbrl_tag: shel:ShareOfProfitOfJointVenturesAndAssociates
-  suggested_key: shel_share_profit_jv_associates
-  display_label: Share of profit of joint ventures and associates
-  statement: cash_flow
-  balance: credit
-  reason: ''
-- xbrl_tag: shel:CapitalExpenditure
-  suggested_key: shel_capital_expenditure
-  display_label: Capital Expenditure
-  statement: cash_flow
-  balance: credit
-  reason: ''
+  reason: role keyword 'cash flow'
+  used_by:
+  - asm_international
