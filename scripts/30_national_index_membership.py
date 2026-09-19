@@ -38,6 +38,7 @@ USAGE
 """
 import argparse
 import os
+import re
 import sys
 from datetime import date
 from io import StringIO
@@ -86,6 +87,15 @@ def find_constituent_table(tables, expected_size):
     return candidates[0]
 
 
+def clean_company_name(raw: str) -> str:
+    """Strips Wikipedia scrape artifacts from a company name: non-breaking
+    spaces and trailing footnote/language markers like ' [nl]' or '[1]'
+    (found live: 'Melexis\\xa0[nl]', 'WDP [nl]', 'arGEN-X [nl]')."""
+    name = raw.replace("\xa0", " ")
+    name = re.sub(r"(\s*\[[^\]]*\])+\s*$", "", name)
+    return re.sub(r"\s+", " ", name).strip()
+
+
 def normalize_ticker(raw_ticker: str):
     """Returns a yfinance-ready ticker, or None if the format isn't
     recognised - never guesses a suffix for an exchange not in
@@ -122,7 +132,7 @@ def fetch_index_constituents(index_name: str) -> list:
         if not ticker:
             print(f"  *** {index_name}: could not normalize ticker {row[ticker_col]!r} for {row[company_col]!r} - skipped")
             continue
-        rows.append({"company": str(row[company_col]).strip(), "ticker": ticker})
+        rows.append({"company": clean_company_name(str(row[company_col])), "ticker": ticker})
     return rows
 
 
@@ -138,20 +148,32 @@ def save_rows(engine, index_name: str, country: str, rows: list) -> tuple:
     added = skipped = 0
     with engine.begin() as conn:
         for r in rows:
+            # Dedup key is TICKER, not name: the same company is spelled
+            # differently by Wikipedia and by GLEIF (e.g. "AB InBev" vs
+            # "Anheuser-Busch InBev"), which name matching missed - the
+            # source of 5 confirmed double-counted companies.
             existing = conn.execute(text(
-                "SELECT 1 FROM universe_membership WHERE lower(name) = lower(:name) AND as_of = :as_of"
-            ), {"name": r["company"], "as_of": date.today().isoformat()}).fetchone()
+                "SELECT 1 FROM universe_membership WHERE ticker = :ticker AND as_of = :as_of"
+            ), {"ticker": r["ticker"], "as_of": date.today().isoformat()}).fetchone()
             if existing:
                 skipped += 1
                 continue
+            # If another as_of snapshot already resolved this ticker to a
+            # real LEI, reuse that identity instead of minting a NO_LEI one.
+            known = conn.execute(text("""
+                SELECT entity_identifier, name FROM universe_membership
+                WHERE ticker = :ticker AND entity_identifier NOT LIKE 'NO_LEI:%'
+                ORDER BY as_of DESC LIMIT 1
+            """), {"ticker": r["ticker"]}).fetchone()
+            entity_id, name = (known[0], known[1]) if known else (f"NO_LEI:{r['company']}", r["company"])
             conn.execute(text("""
                 INSERT INTO universe_membership
                     (entity_identifier, name, country, inclusion_rule, inclusion_detail, ticker, as_of)
                 VALUES (:entity_identifier, :name, :country, 'national_index', :detail, :ticker, :as_of)
                 ON CONFLICT (entity_identifier, as_of) DO NOTHING
             """), {
-                "entity_identifier": f"NO_LEI:{r['company']}",
-                "name": r["company"],
+                "entity_identifier": entity_id,
+                "name": name,
                 "country": country,
                 "detail": f"{index_name} constituent (Wikipedia, {date.today().isoformat()})",
                 "ticker": r["ticker"],
@@ -161,12 +183,72 @@ def save_rows(engine, index_name: str, country: str, rows: list) -> tuple:
     return added, skipped
 
 
+def repair_legacy_rows(engine, dry_run: bool = True) -> dict:
+    """One-time repair of rows written before the ticker-dedup fix.
+    (1) NO_LEI national_index row whose ticker has a real-LEI row on the
+        SAME as_of -> deleted (the real row already represents the company
+        that day; second qualifying reason is not recorded, per save_rows).
+    (2) NO_LEI row whose ticker has a real-LEI row only on ANOTHER as_of ->
+        re-pointed to that real entity_identifier + name.
+    (3) Remaining NO_LEI rows with scrape artifacts in the name -> cleaned.
+    Only ever touches entity_identifier LIKE 'NO_LEI:%' rows."""
+    stats = {"deleted": [], "repointed": [], "renamed": []}
+    with engine.begin() as conn:
+        legacy = conn.execute(text("""
+            SELECT entity_identifier, name, ticker, as_of FROM universe_membership
+            WHERE entity_identifier LIKE 'NO_LEI:%' ORDER BY ticker
+        """)).fetchall()
+        for eid, name, ticker, as_of in legacy:
+            same_day = conn.execute(text("""
+                SELECT 1 FROM universe_membership WHERE ticker = :t AND as_of = :d
+                  AND entity_identifier NOT LIKE 'NO_LEI:%'
+            """), {"t": ticker, "d": as_of}).fetchone()
+            real = conn.execute(text("""
+                SELECT entity_identifier, name FROM universe_membership
+                WHERE ticker = :t AND entity_identifier NOT LIKE 'NO_LEI:%'
+                ORDER BY as_of DESC LIMIT 1
+            """), {"t": ticker}).fetchone()
+            key = {"e": eid, "d": as_of}
+            if same_day:
+                stats["deleted"].append((name, ticker, as_of))
+                if not dry_run:
+                    conn.execute(text("DELETE FROM universe_membership WHERE entity_identifier=:e AND as_of=:d"), key)
+            elif real:
+                stats["repointed"].append((name, real[1], ticker, as_of))
+                if not dry_run:
+                    conn.execute(text("""UPDATE universe_membership SET entity_identifier=:ne, name=:nn
+                                         WHERE entity_identifier=:e AND as_of=:d"""),
+                                 {**key, "ne": real[0], "nn": real[1]})
+            else:
+                cleaned = clean_company_name(name)
+                if cleaned != name:
+                    stats["renamed"].append((name, cleaned, ticker, as_of))
+                    if not dry_run:
+                        conn.execute(text("""UPDATE universe_membership SET entity_identifier=:ne, name=:nn
+                                             WHERE entity_identifier=:e AND as_of=:d"""),
+                                     {**key, "ne": f"NO_LEI:{cleaned}", "nn": cleaned})
+    return stats
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
+    ap.add_argument("--repair", choices=["dry-run", "apply"],
+                     help="One-time repair of legacy duplicate/artifact rows, then exit")
     ap.add_argument("--index", action="append", choices=list(INDEX_SOURCES),
                      help="Repeat for multiple indices; default: all")
     ap.add_argument("--no-db", action="store_true", help="Fetch and print only, write nothing")
     args = ap.parse_args()
+
+    if args.repair:
+        load_dotenv()
+        engine = create_engine(os.environ["DATABASE_URL"])
+        result = repair_legacy_rows(engine, dry_run=(args.repair == "dry-run"))
+        for kind, items in result.items():
+            print(f"{kind}: {len(items)}")
+            for it in items:
+                print(f"  {it}")
+        print("\n(dry run - nothing changed)" if args.repair == "dry-run" else "\nApplied.")
+        sys.exit(0)
 
     indices = args.index or list(INDEX_SOURCES)
     all_rows = {}

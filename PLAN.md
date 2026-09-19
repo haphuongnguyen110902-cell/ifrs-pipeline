@@ -1282,6 +1282,67 @@ failures - but it should not be assumed to have "fixed Carrefour," and
 whoever revisits this should not spend another multi-hour session on
 this one company without new evidence pointing somewhere specific.
 
+### 2026-09-17, later the same day: full batch re-run, retry count tuned 3→2, real numbers
+
+First attempt at the real 40-candidate batch (with the 3-attempt company-
+level retry from the morning's fix) was wrapped in `timeout 3600` (1h) and
+**was killed without finishing** - not a crash, a genuine timeout. Root
+cause found, not guessed: ~14-16 companies are *persistently* UNRESOLVED
+(confirmed separately - Carrefour itself failed all 3/3 attempts, back-to-
+back, in the morning's run), so every one of them paid the full 3x retry
+cost for zero chance of succeeding. That's the dominant cost in the batch,
+not the successful resolutions.
+
+**Fix:** `max_attempts` dropped from 3 to 2 in `resolve_company_with_retry()`
+(scripts/29_universe_membership.py) - still gives a genuinely transient
+failure one real retry chance, at ~2/3 the time cost across every
+persistently-unresolved company. Shipped as PR #19, merged into `main`.
+
+**Re-ran with `timeout 5400` (90 min) - completed this time (`EXIT=0`).**
+Verified against the live DB directly (never trust a single run's own
+printed count, per this same section's own rule above):
+
+```
+Rows for as_of=2026-09-17 (today's run):        21/40 qualify
+Distinct companies ever qualified (all dates):  161
+  by rule: market_cap_gt_2bn  24
+           national_index    139
+```
+
+161 is up from the 160 recorded the night before (2026-09-16) - one net
+new distinct company found today via the market-cap rule. Carrefour failed
+again this run (2/2 attempts) - fully consistent with the still-unsolved
+mystery above, and still not a data-loss concern: its valid 2026-09-13/14/16
+row stands untouched under the upsert-only, never-delete design.
+
+**Status: WP7 Step 1a (market cap) and Step 1b (5 of 8 national indices)
+are both done and DB-verified.** Remaining before Step 1 as a whole is
+"done": the 3 Nordic indices (Copenhagen, Helsinki, Oslo) per item 5 of the
+checklist above. The actual next milestone - loading real filings for these
+161 companies into `company`/`fact_value` so they appear on the live
+dashboard - has not been started.
+
+### 2026-09-19 correction: "161" was 156 - dedup bug found and fixed
+
+Looking at the full list showed the 161 figure double-counted companies.
+`30_national_index_membership.py` deduped against the market-cap rows by
+*name* and minted `NO_LEI:{name}` identities, so the same company under
+two spellings (Wikipedia vs GLEIF) counted twice. Confirmed 5 pairs by
+shared ticker (AB InBev/Anheuser-Busch InBev, Assa Abloy/Assa Abloy B,
+D'Ieteren/D'Ieteren Group, Melexis/Melexis [nl], Hermès/Hermes
+International) plus 2 NO_LEI rows (Eni, Thales) that shadowed a real-LEI
+row on another `as_of`. Also scrape artifacts in names ("[nl]" suffix,
+non-breaking spaces). ("Herm�s" seen in a console was cp1252 display
+only; the DB value is correct.)
+
+**Fix:** `save_rows()` now dedups by ticker and reuses a known real LEI
++ name instead of minting NO_LEI; `clean_company_name()` strips scrape
+artifacts; `--repair dry-run|apply` repaired the 9 legacy rows (5 deleted,
+2 re-pointed, 2 renamed). **Verified: distinct by ticker = by entity = by
+name = 156, zero shared tickers.** Known remaining limit: different share
+classes of one issuer with different tickers (SKF-A market-cap row vs
+SKF-B index row) still count as two - issuer-level grouping is not done.
+
 **Required infrastructure changes at this scale:**
 - **Storage:** change `load_historical.py` to download → parse → **discard the
   zip**, storing the source URL + SHA256 for provenance instead. Otherwise
