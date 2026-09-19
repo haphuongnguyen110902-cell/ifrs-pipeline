@@ -65,3 +65,28 @@ companies:
     expected_currency: EUR
     sector: Consumer Health Retail
     country: Italy
+  heineken:
+    name: "Heineken"
+    expected_currency: EUR
+    sector: Consumer / Beverages
+    country: Netherlands
+  schneider_electric_se:
+    name: "Schneider Electric"
+    expected_currency: EUR
+    sector: Industrials / Electrical Equipment
+    country: France
+  adyen:
+    name: "Adyen"
+    expected_currency: EUR
+    sector: Financials / Payments
+    country: Netherlands
+  asm_international:
+    name: "ASM International"
+    expected_currency: EUR
+    sector: Technology / Semiconductor Equipment
+    country: Netherlands
+  recordati:
+    name: "Recordati"
+    expected_currency: EUR
+    sector: Healthcare / Pharmaceuticals
+    country: Italy

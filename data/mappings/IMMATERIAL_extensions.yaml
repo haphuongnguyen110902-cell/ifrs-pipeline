@@ -1,0 +1,137 @@
+_instructions: Tags found but judged too small (< 1% of this filing's own revenue/assets
+  scale) to be worth classifying - deliberately left UNKNOWN, per this project's own
+  rule for an explicit 'not available' state. NOT applied anywhere. Spot-check a few
+  if you want to sanity-check the screen itself; nothing here needs action.
+left_unknown:
+- xbrl_tag: heia:LoansIssuedToCustomersAndOtherInvestments
+  suggested_key: loans_issued_to_customers_and_other_investments
+  display_label: Loans issued to customers and other investments
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'cash flow'
+  used_by:
+  - heineken
+  materiality_ratio: 0.00615
+  materiality_denominator: revenue
+  materiality_note: 0.61% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: heia:RepaymentOnLoansToCustomersAndOtherInvestments
+  suggested_key: repayment_on_loans_to_customers_and_other_investments
+  display_label: Repayment on loans to customers and other investments
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'cash flow'
+  used_by:
+  - heineken
+  materiality_ratio: 0.00248
+  materiality_denominator: revenue
+  materiality_note: 0.25% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: heia:CashFlowUsedInFromAcquisitionsAndDisposals
+  suggested_key: cash_flow_used_in_from_acquisitions_and_disposals
+  display_label: Cash flow (used in) / from acquisitions and disposals
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'cash flow'
+  used_by:
+  - heineken
+  materiality_ratio: 0.00125
+  materiality_denominator: revenue
+  materiality_note: 0.13% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: heia:RealisedHedgeResultsFromNonFinancialAssets
+  suggested_key: realised_hedge_results_from_non_financial_assets
+  display_label: Realised hedge results from non-financial assets
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - heineken
+  materiality_ratio: 0.0012
+  materiality_denominator: revenue
+  materiality_note: 0.12% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: heia:IncreaseForHyperinflationImpactEquity
+  suggested_key: increase_for_hyperinflation_impact_equity
+  display_label: Increase For Hyperinflation Impact, Equity
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - heineken
+  materiality_ratio: 0.00209
+  materiality_denominator: revenue
+  materiality_note: 0.21% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: heia:ChangesInConsolidation
+  suggested_key: changes_in_consolidation
+  display_label: Changes in consolidation
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - heineken
+  materiality_ratio: 0.00019
+  materiality_denominator: revenue
+  materiality_note: 0.02% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: ifrs-full:ExpenseOfRestructuringActivities
+  suggested_key: expense_of_restructuring_activities
+  display_label: Expense of restructuring activities
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - schneider_electric_se
+  materiality_ratio: 0.00715
+  materiality_denominator: revenue
+  materiality_note: 0.71% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: schneiderelectric:FinanceCostsNet
+  suggested_key: finance_costs_net
+  display_label: Coût de la dette financière nette
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - schneider_electric_se
+  materiality_ratio: 0.00799
+  materiality_denominator: revenue
+  materiality_note: 0.80% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: ady:RedemptionOfFinancialAssetsAtFairValueThroughProfitOrLoss
+  suggested_key: redemption_of_financial_assets_at_fair_value_through_profit__etc
+  display_label: Redemption Of Financial Assets at Fair Value Through Profit or Loss
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'cash flow'
+  used_by:
+  - adyen
+  materiality_ratio: 0.00333
+  materiality_denominator: revenue
+  materiality_note: 0.33% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: ady:RedemptionOfOtherFinancialAssetsAtAmortizedCost
+  suggested_key: redemption_of_other_financial_assets_at_amortized_cost
+  display_label: Redemption Of Other Financial Assets At Amortized Cost
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'cash flow'
+  used_by:
+  - adyen
+  materiality_ratio: 0.00911
+  materiality_denominator: revenue
+  materiality_note: 0.91% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN
+- xbrl_tag: asm:IncreaseDecreaseDueToChangesInInvestmentsInAssociates
+  suggested_key: increase_decrease_due_to_changes_in_investments_in_associate_etc
+  display_label: Increase (decrease) due to changes in investments in associates
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - asm_international
+  materiality_ratio: 0.0011
+  materiality_denominator: revenue
+  materiality_note: 0.11% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN

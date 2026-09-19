@@ -1343,13 +1343,87 @@ name = 156, zero shared tickers.** Known remaining limit: different share
 classes of one issuer with different tickers (SKF-A market-cap row vs
 SKF-B index row) still count as two - issuer-level grouping is not done.
 
+### 2026-09-19: WP7 Step 2 - first filing batch (5 companies), half-integrated, plus a cohesion audit
+
+**What was done.** Heineken, Schneider Electric, Adyen, ASM International and
+Recordati (filings already in `data/raw/gate40/`) went through
+`13_batch_prep.py`: 139 extension tags, **121 (87.1%) handled without a human**
+(110 auto-classified incl. anchoring, 11 screened immaterial - audit trail in
+the new `data/mappings/IMMATERIAL_extensions.yaml`), 18 reviewed. Those 18 were
+*proposed by the AI assistant and approved by the user* (not independently
+derived): company-defined subtotals/KPIs and share-count movements -> `other`
+(Schneider EBITA/AdjustedEBITA, Heineken FreeOperatingCashFlow, ASM/Schneider
+share counts, IFRS impairment *note* tag - a note figure in the income statement
+could double-count); four genuine face-statement lines -> their statement
+(Heineken RevenueLessExciseTax + TotalOtherExpenses, ASM FinanceIncomeCost ->
+income_statement; Schneider's two NetCashUsedByInvestment* -> cash_flow). Mapping
+grew 715 -> 843 entries, additive only (0 lines removed). Loaded one at a time
+via `09_batch_load.py --raw-dir data/raw/gate40 --only <stem>`, **never**
+`--reset-facts`: 231 / 253 / 204 / 206 / 221 facts stored.
+
+**Verified.** Re-loading Recordati added 0 rows (221 -> 221; the loader IS
+idempotent - its own docstring saying otherwise is stale). "Loaded N" prints
+insert *attempts*, not rows (Heineken: 435 parsed -> 283 attempted -> 231 stored;
+the 43 collapsed groups all held identical values). `08_validate.py`: identity
+checks pass 4/4 for Heineken, Schneider, ASM; 6/6 Recordati; **Adyen FAILS
+Gross Profit = Revenue - CoS in both years** (2024: 1,996M stored vs 2,136M
+expected) - a real mapping/interpretation problem, **not yet investigated**.
+Dashboard: all 5 appear automatically ("16 of 16 companies"); the weekly
+`--mode analyze` survives them (forecast skips "only 2 year(s), need >= 3").
+
+**NOT integrated (the honest state).** No ticker/ISIN/LEI/`sector_std`/FYE for
+any of the 5 -> 0 rows in valuation, dcf_valuation, market_risk, credit_profile,
+three_statement_projection, forecast, backtest. Dashboard shows them with
+Sector "None" (excluded by any sector filter) and blank valuation columns. Two
+live-DB tests now fail *because they hard-code the 11-company universe*:
+`test_screener::test_no_unexpected_nulls...` and
+`test_forensics::...documented_flag_count` (62 -> 69 flags). CI is green only
+because those 34 live-DB tests skip there (206 pass / 34 skip with no DB).
+Note: running that forensics test **writes to the live `forensics_flag` table**.
+
+**Audit findings, each verified by a command (fixes NOT done - candidates for
+their own WPs; severity is my judgement):**
+- HIGH - `11_ratio_engine.py` pivots with `aggfunc="first"` over a query with no
+  `ORDER BY`; 223 (company, concept, period) keys hold *different* values across
+  filings, many exact sign flips (Essity D&A -7,671M vs +7,671M). Winner undefined.
+- HIGH - `00_find_filing.py` picks "latest" by archive `period_end`; the archive
+  has typos: Recordati lists a FY2022 package as `2032-12-31` (ranked first ->
+  we downloaded FY2022, not FY2025 added 2026-04-07); Carrefour/Hermes carry
+  2026-12-31. Use `date_added` + a `<= today` guard.
+- HIGH - no financial-sector gating: Adyen shows DIO 275d / DPO 1,018d / CCC
+  -713d. ~20% of the universe by name (my rough read) are banks/insurers/holdings.
+- MED - 73 XBRL tags are mapped to two concept keys (`_x` suffix, from
+  `12_apply_review.py` not de-duping by tag); pre-existing (642 distinct tags in
+  HEAD). Facts are stored consistently under the `_x` name (no split found), but
+  DB `concept_mapping` disagrees with the YAML for those 73 and nothing reads it.
+- MED - provenance: 0 of 53 filings have `source_url`; `source_file` is a
+  Windows path; the planned "discard zip, keep URL+SHA256" is not yet possible.
+- MED - adding a company touches `companies.yaml` + `TICKER_MAP` +
+  `download_historical.COMPANIES` + `load_historical.COMPANY_MAP` (11/11/10
+  entries); `04_create_schema.py` applies only `schema.sql` (migrations 001-003
+  are not applied by any script); valuation/DCF/etc. (19-25) are not in
+  `run_pipeline.py`; `universe_membership.company_id` is NULL for 217/217 rows.
+- MED - `keep_dashboard_awake.yml` reports success but its curl gets `HTTP 303`
+  (no `-L`); the public app was asleep when checked.
+- LOW - doc drift: README (11 companies / 13,997 facts / 62 flags / "714 tags" /
+  "192 tests" and "87 tests"), CLAUDE.md ("no test touches the live DB", "Two CI
+  workflows" - there are three; ROADMAP "single source of truth" while PLAN.md
+  holds all WP status), ROADMAP Phase 10 not marked done, "642-tag" label.
+- Coverage of the universe in the free archive: **136/156 found by name/LEI
+  search - an estimate with errors both ways** (false positives seen: Generali ->
+  Banca Generali, SCA -> Scandi Standard; false negatives: L'Oreal, Ferrari);
+  the 24 companies with a real LEI matched 24/24. 742 filing entries for the 136.
+
 **Required infrastructure changes at this scale:**
 - **Storage:** change `load_historical.py` to download → parse → **discard the
   zip**, storing the source URL + SHA256 for provenance instead. Otherwise
   ~2,700 filings × ~20MB ≈ 54GB locally. filings.xbrl.org is a stable public
   archive, so provenance survives without the file.
-- **Incremental loading:** skip filings already in the DB. At ~45s/filing,
-  2,700 filings is 30+ hours single-threaded — you cannot afford to re-parse.
+- **Incremental loading:** skip filings already in the DB. (The old "~45s/filing,
+  30+ hours" figure here was a guess; measured since: GATE parse = 7.1s/filing,
+  and on 2026-09-19 the DB *write* measured ~84 ms/fact = ~19s per 231-fact
+  filing, so writes, not Arelle, dominate - one filing sample, see the
+  2026-09-19 audit section above.)
 - **Retire `data/companies.yaml`** as the universe definition. 300 hand-written
   entries is not viable; it becomes the `universe_membership` table.
 - **Sector-relative forensics thresholds.** Current thresholds are fixed and
