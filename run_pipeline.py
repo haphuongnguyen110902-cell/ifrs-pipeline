@@ -21,8 +21,8 @@ Modes:
 Usage:
     python run_pipeline.py --mode full
     python run_pipeline.py --mode full --country FR --country IT
-    python run_pipeline.py --mode full --skip-historical   # V1 only, skip the 37 historical filings
-    python run_pipeline.py --mode load --only danone.zip essity.zip
+    python run_pipeline.py --mode full --skip-historical   # V1 only, skip data/raw/historical/
+    python run_pipeline.py --mode load --only danone essity     # ".zip" is accepted too
     python run_pipeline.py --mode historical --only loreal
     python run_pipeline.py --mode ratios
     python run_pipeline.py --mode analyze
@@ -110,15 +110,24 @@ def step_discover(countries: list):
         )
 
 
-def step_load(only: list = None, reset: bool = True):
-    """Parse and load all companies (or a subset)."""
+def build_load_command(only: list = None, reset: bool = False) -> list:
+    """The 09_batch_load.py command for a load step. reset defaults to FALSE:
+    this used to default to True, so `--mode full` - the README's headline
+    command - deleted and reloaded every company's V1 facts on every run,
+    which is the flag behind the project's one data-loss incident. Re-loading
+    is idempotent; --reset-facts is now opt-in and needs a named company."""
     cmd = [sys.executable, "scripts/09_batch_load.py"]
     if reset:
         cmd.append("--reset-facts")
     if only:
-        for stem in only:
-            cmd.extend(["--only", stem])
-    run(cmd, "Load companies into database")
+        cmd.append("--only")
+        cmd.extend(only)          # 09_batch_load.py's --only takes several stems
+    return cmd
+
+
+def step_load(only: list = None, reset: bool = False):
+    """Parse and load all companies (or a subset)."""
+    run(build_load_command(only, reset), "Load companies into database")
 
 
 def step_load_historical(only: str = None, reset: bool = False):
@@ -199,7 +208,7 @@ def step_statements(companies: list = None):
 
 # ---------------------------------------------------------------- main
 
-def main():
+def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         description="IFRS pipeline orchestrator",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -208,14 +217,18 @@ def main():
     ap.add_argument("--mode", choices=["full", "discover", "load", "historical",
                                         "validate", "ratios", "analyze", "report"],
                     default="full", help="Which part of the pipeline to run")
-    ap.add_argument("--country", action="append", default=["FR"],
+    # default=None, NOT ["FR"]: argparse's "append" extends a default list, so
+    # `--country IT` used to give ["FR", "IT"] and IT could never be scanned alone
+    ap.add_argument("--country", action="append", default=None,
                     help="Country code(s) for discovery (default: FR)")
     ap.add_argument("--only", nargs="+",
                     help="Only process these zip file stems (for load mode) or "
                          "one company key (for historical mode)")
     ap.add_argument("--company", help="Only analyse this one company (for analyze mode)")
-    ap.add_argument("--no-reset", action="store_true",
-                    help="Don't clear existing facts before loading (faster but may miss updates)")
+    ap.add_argument("--reset-facts", action="store_true",
+                    help="Delete the named companies' existing facts before loading (needs --only). "
+                         "Off by default: re-loading is idempotent")
+    ap.add_argument("--no-reset", action="store_true", help=argparse.SUPPRESS)  # deprecated no-op: reset is off by default
     ap.add_argument("--reset-historical", action="store_true",
                     help="Clear previously-loaded historical facts before reloading "
                          "(only needed after a mapping change, not for routine runs)")
@@ -227,7 +240,18 @@ def main():
                     help="Skip forensics/forecast/backtest in full mode (ratios only)")
     ap.add_argument("--skip-statements", action="store_true",
                     help="Skip statement generation (saves time if only ratios needed)")
+    return ap
+
+
+def main():
+    ap = build_parser()
     args = ap.parse_args()
+    if args.reset_facts and not args.only:
+        ap.error("--reset-facts needs --only <company> (it deletes existing facts; "
+                 "re-loading without it is safe and does not duplicate anything)")
+    if args.no_reset:
+        log("--no-reset is deprecated and does nothing: facts are no longer reset by default", "WARN")
+    countries = args.country or ["FR"]
 
     log("=" * 60)
     log(f"IFRS Pipeline — mode={args.mode}")
@@ -242,10 +266,10 @@ def main():
     # ---- run the requested mode
 
     if args.mode == "discover":
-        step_discover(args.country)
+        step_discover(countries)
 
     elif args.mode == "load":
-        step_load(only=args.only, reset=not args.no_reset)
+        step_load(only=args.only, reset=args.reset_facts)
         if not args.skip_validate:
             step_validate()
 
@@ -290,7 +314,7 @@ def main():
         log("Running full pipeline", "STEP")
 
         # 1. load V1 (latest filing per company)
-        step_load(only=args.only, reset=not args.no_reset)
+        step_load(only=args.only, reset=args.reset_facts)
 
         # 2. load V2 historical filings (non-fatal: V1 pipeline still valid without it)
         if not args.skip_historical:
