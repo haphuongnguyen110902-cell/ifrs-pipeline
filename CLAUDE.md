@@ -4,17 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An IFRS/XBRL financial analysis pipeline: parses ESEF/XBRL filings for 11
-European listed companies via Arelle, normalises raw tags to standardised
+An IFRS/XBRL financial analysis pipeline: parses ESEF/XBRL filings for the
+European listed companies in `data/companies.yaml` (the current count is
+generated into README.md's status table) via Arelle, normalises raw tags to standardised
 IFRS concepts, stores everything in PostgreSQL (Neon), and computes ratios,
 earnings-quality forensics, forecasts, trading comps, a linked 3-statement
 model, and a DCF valuation on top. A public Streamlit dashboard
 (`webapp/app.py`) reads live from the database. See `README.md` for the full
-feature list and `ROADMAP.md` for current phase status — **ROADMAP.md is the
-single source of truth for project direction**; update it when finishing a
-phase or fixing a notable bug, following its existing per-phase style (what
+feature list. **PLAN.md is the live status document** — work-package (WP)
+status, the audit findings and what is deliberately deferred; update it when
+finishing a work package or fixing a notable bug, in its existing style (what
 was built, what real bug was found running it on live data, what's
-deliberately deferred and why).
+deliberately deferred and why). `ROADMAP.md` is the older phase-by-phase
+engineering log (last updated 2026-09-09) and no longer the place to look for
+current status. Numbers in README.md's status table are generated
+(`python scripts/doc_facts.py --write`), never typed by hand.
 
 ## Commands
 
@@ -31,8 +35,10 @@ Requires a `.env` with `DATABASE_URL=postgresql://...` (Neon). Most scripts
 deep in SQLAlchemy.
 
 ```bash
-# full test suite - no DATABASE_URL needed, every test uses synthetic data
-python -m pytest tests/ -v
+# full test suite, the way CI runs it: no database. Setting DATABASE_URL to EMPTY matters -
+# several test files call load_dotenv(), so with a .env present an unset variable is simply
+# re-read and the live-DB tests run against the production Neon database
+DATABASE_URL= python -m pytest tests/ -v          # PowerShell: $env:DATABASE_URL=""; python -m pytest tests/ -v
 
 # a single test file / test
 python -m pytest tests/test_dcf.py -v
@@ -112,14 +118,20 @@ Cloud auto-detects a requirements file by searching the entrypoint's own
 directory first, so keeping `webapp/app.py` as the entrypoint and this file
 alongside it avoids a slow/failed Cloud build. Don't merge these back into one.
 
-**Tests are synthetic and DB-free.** Everything under `tests/` builds an
-in-memory DataFrame (see `make_wide_row()`-style helpers per test file) and
-asserts against a hand-calculated expected value — no test touches the live
-database, which is why `tests.yml` runs on every push with no `DATABASE_URL`
-secret. Each test file's docstring/tests document the real bug or real-data
-case being locked in; when fixing a bug found by running a script against
-live data, add the regression test at this synthetic-data layer rather than
-asserting against a live DB call.
+**Tests are almost all synthetic and DB-free — but not all.** Most of `tests/`
+builds an in-memory DataFrame (see `make_wide_row()`-style helpers per test
+file) and asserts against a hand-calculated expected value; that is why
+`tests.yml` runs on every push with no `DATABASE_URL` secret. A minority
+(`test_screener`, `test_baseline_regression`, `test_migration_company_id`, and the
+live classes in `test_forensics`, `test_onepager` and `test_valuation`; the exact
+number is in README's status table) need the real database and are *skipped* when
+`DATABASE_URL` is empty. Run locally with a `.env` present and they hit the
+production Neon database — read-only except where a test's docstring says
+otherwise — so use the empty-variable form in the Commands section for the
+CI-equivalent run. Each test file's docstring/tests document the real bug or
+real-data case being locked in; when fixing a bug found by running a script
+against live data, add the regression test at this synthetic-data layer rather
+than asserting against a live DB call.
 
 **Two independent CI workflows**, deliberately not merged:
 `.github/workflows/tests.yml` (pytest on every push, no DB) and
