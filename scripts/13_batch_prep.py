@@ -490,5 +490,5 @@ if __name__ == "__main__":
 
         print(f"\n*** Open {args.review_out}, fill in statements, then run:")
         print("*** python scripts/12_apply_review.py")
-        print("*** Then reload ALL companies:")
-        print("*** python scripts/09_batch_load.py --reset-facts")
+        print("*** Then load the companies (re-loading is idempotent; no reset needed):")
+        print("*** python scripts/09_batch_load.py --only <company> [<company> ...]")

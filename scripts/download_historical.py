@@ -152,4 +152,4 @@ if __name__ == "__main__":
         print(f"\nNext step:")
         print(f"  python scripts/13_batch_prep.py --raw-dir {out_dir}")
         print(f"  python scripts/12_apply_review.py")
-        print(f"  python scripts/09_batch_load.py --raw-dir {out_dir} --reset-facts")
+        print(f"  python scripts/09_batch_load.py --raw-dir {out_dir} --only <company> [<company> ...]")
