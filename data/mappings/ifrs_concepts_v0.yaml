@@ -717,6 +717,8 @@ balance_sheet:
     display_label: Long-term Borrowings
     xbrl_tags:
     - ifrs-full:LongtermBorrowings
+    - Rec:LoansDueAfterOneYear
+    - Rec:LongtermBorrowingsAndNoncurrentLeaseLiabilities
   noncontrolling_interests:
     display_label: Non-controlling Interests
     xbrl_tags:
@@ -1026,6 +1028,8 @@ balance_sheet:
     display_label: Current borrowings
     xbrl_tags:
     - ifrs-full:ShorttermBorrowings
+    - Rec:LoansDueWithinOneYear
+    - Rec:ShorttermBorrowingsAndCurrentLeaseLiabilities
   rightofuse_assets_that_do_not_meet_definition_of_investment__etc:
     display_label: Right-of-use assets that do not meet definition of investment property
     xbrl_tags:
