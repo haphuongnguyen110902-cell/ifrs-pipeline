@@ -152,6 +152,10 @@ class TestRecordatiMapping:
         ("Rec:LongtermBorrowingsAndNoncurrentLeaseLiabilities", "longterm_borrowings"),
         ("Rec:LoansDueWithinOneYear", "shortterm_borrowings"),
         ("Rec:ShorttermBorrowingsAndCurrentLeaseLiabilities", "shortterm_borrowings"),
+        # the Italian-language editions (FY2022, FY2023) carry the same anchors under Italian tag names; an earlier
+        # classification pass had given each its own one-off concept the engine could not see
+        ("Rec:FinanziamentiDovutiOltreUnAnno", "longterm_borrowings"),
+        ("Rec:FinanziamentiDovutiEntroUnAnno", "shortterm_borrowings"),
     ])
     def test_tags_follow_the_companys_own_anchors(self, lookup, tag, concept):
         assert lookup[tag][0] == concept
