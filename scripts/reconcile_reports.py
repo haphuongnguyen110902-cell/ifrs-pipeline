@@ -240,8 +240,13 @@ def reconcile(lines: list, facts: list, date: str, stored: dict, tolerance: floa
     rows = []
     for tag in lines:
         if tag not in printed and tag in wrong_period:
-            # printed, but the FILER's own period is not a year: never silently drop it
-            rows.append({"tag": tag, "printed": wrong_period[tag], "stored": None, "status": "BAD_PERIOD"})
+            # printed, but the FILER's own period is not a year (Recordati tags its P&L and cash flow this way,
+            # every year). Never silently drop it - and say whether we still hold the printed figure:
+            # OK_BAD_PERIOD = stored and equal (the pipeline coped), BAD_PERIOD = not stored / different.
+            sv = stored.get((tag, date))
+            ok = sv is not None and abs(sv - wrong_period[tag]) <= tolerance
+            rows.append({"tag": tag, "printed": wrong_period[tag], "stored": sv,
+                         "status": "OK_BAD_PERIOD" if ok else "BAD_PERIOD"})
             continue
         if tag not in printed:
             continue                                        # an abstract/header node or a line with no figure
@@ -289,11 +294,12 @@ def fetch_stored(engine, source_basename: str) -> dict:
 
 
 def summarize(rows: list) -> dict:
-    n = {"OK": 0, "DIFFERENT": 0, "MISSING": 0, "BAD_PERIOD": 0}
+    n = {"OK": 0, "DIFFERENT": 0, "MISSING": 0, "BAD_PERIOD": 0, "OK_BAD_PERIOD": 0}
     for r in rows:
         n[r["status"]] += 1
     n["lines"] = len(rows)
-    n["share_ok"] = round(100 * n["OK"] / n["lines"], 1) if n["lines"] else None
+    # a figure we hold and that equals the printed one is a match, even when the filer's own period is malformed
+    n["share_ok"] = round(100 * (n["OK"] + n["OK_BAD_PERIOD"]) / n["lines"], 1) if n["lines"] else None
     return n
 
 
@@ -355,8 +361,8 @@ if __name__ == "__main__":
                 print(f"{os.path.basename(z):46s} {kind:9s} STATEMENT NOT LOCATED (role names not recognised)", flush=True)
                 continue
             s = summarize(krows)
-            print(f"{os.path.basename(z):46s} {kind:9s} lines={s['lines']:3d} OK={s['OK']:3d} DIFFERENT={s['DIFFERENT']:2d} "
-                  f"MISSING={s['MISSING']:3d} BAD_PERIOD={s['BAD_PERIOD']:2d}  share OK={s['share_ok']}%", flush=True)
+            print(f"{os.path.basename(z):46s} {kind:9s} lines={s['lines']:3d} OK={s['OK']:3d} OK(filer period malformed)={s['OK_BAD_PERIOD']:2d} "
+                  f"DIFFERENT={s['DIFFERENT']:2d} MISSING={s['MISSING']:3d} BAD_PERIOD={s['BAD_PERIOD']:2d}  share matching={s['share_ok']}%", flush=True)
     if args.csv:
         with open(args.csv, "w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=["package", "date", "statement", "tag", "label", "printed", "stored", "status"])

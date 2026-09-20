@@ -166,9 +166,19 @@ class TestReconcile:
         assert rr.reconcile(lines, self.facts(rr), self.D, {("ifrs-full:Assets", self.D): 5_134_456_000.0})[0]["status"] == "DIFFERENT"
 
     def test_a_filers_one_day_period_is_reported_not_dropped(self, rr):
-        """Recordati FY2022: the income statement was tagged start == end."""
+        """Recordati tags its income statement and cash flow with start == end, every year."""
         row = rr.reconcile(["ifrs-full:OtherIncome"], self.facts(rr), self.D, {})[0]
         assert row["status"] == "BAD_PERIOD" and row["printed"] == 9_000.0
+
+    def test_a_malformed_period_still_matches_when_we_hold_the_printed_figure(self, rr):
+        row = rr.reconcile(["ifrs-full:OtherIncome"], self.facts(rr), self.D, {("ifrs-full:OtherIncome", self.D): 9_000.0})[0]
+        assert row["status"] == "OK_BAD_PERIOD"
+        row = rr.reconcile(["ifrs-full:OtherIncome"], self.facts(rr), self.D, {("ifrs-full:OtherIncome", self.D): 1.0})[0]
+        assert row["status"] == "BAD_PERIOD" and row["stored"] == 1.0
+
+    def test_summary_counts_a_held_figure_as_matching_even_with_a_malformed_period(self, rr):
+        s = rr.summarize([{"status": "OK"}, {"status": "OK_BAD_PERIOD"}, {"status": "BAD_PERIOD"}, {"status": "MISSING"}])
+        assert s["share_ok"] == 50.0 and s["OK_BAD_PERIOD"] == 1
 
     def test_abstract_and_unprinted_lines_are_not_counted_as_missing(self, rr):
         assert rr.reconcile(["ifrs-full:StatementAbstract", "x:NeverPrinted"], self.facts(rr), self.D, {}) == []
