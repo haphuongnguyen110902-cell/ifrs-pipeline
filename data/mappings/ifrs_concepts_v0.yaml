@@ -677,6 +677,7 @@ balance_sheet:
     display_label: Trade Receivables
     xbrl_tags:
     - ifrs-full:CurrentTradeReceivables
+    - ifrs-full:TradeReceivables
   deferred_tax_assets:
     display_label: Deferred Tax Assets
     xbrl_tags:
