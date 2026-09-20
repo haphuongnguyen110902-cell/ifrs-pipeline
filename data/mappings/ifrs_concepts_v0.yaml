@@ -717,6 +717,9 @@ balance_sheet:
     display_label: Long-term Borrowings
     xbrl_tags:
     - ifrs-full:LongtermBorrowings
+    - Rec:LoansDueAfterOneYear
+    - Rec:LongtermBorrowingsAndNoncurrentLeaseLiabilities
+    - Rec:FinanziamentiDovutiOltreUnAnno
   noncontrolling_interests:
     display_label: Non-controlling Interests
     xbrl_tags:
@@ -1026,6 +1029,9 @@ balance_sheet:
     display_label: Current borrowings
     xbrl_tags:
     - ifrs-full:ShorttermBorrowings
+    - Rec:LoansDueWithinOneYear
+    - Rec:ShorttermBorrowingsAndCurrentLeaseLiabilities
+    - Rec:FinanziamentiDovutiEntroUnAnno
   rightofuse_assets_that_do_not_meet_definition_of_investment__etc:
     display_label: Right-of-use assets that do not meet definition of investment property
     xbrl_tags:
@@ -1359,18 +1365,10 @@ balance_sheet:
     display_label: Reserve of cash flow hedges
     xbrl_tags:
     - ifrs-full:ReserveOfCashFlowHedges
-  finanziamenti_dovuti_oltre_un_anno:
-    display_label: Finanziamenti dovuti oltre un anno
-    xbrl_tags:
-    - Rec:FinanziamentiDovutiOltreUnAnno
   derivative_financial_liabilities_held_for_hedging:
     display_label: Derivative financial liabilities held for hedging
     xbrl_tags:
     - ifrs-full:DerivativeFinancialLiabilitiesHeldForHedging
-  finanziamenti_dovuti_entro_un_anno:
-    display_label: Finanziamenti dovuti entro un anno
-    xbrl_tags:
-    - Rec:FinanziamentiDovutiEntroUnAnno
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense
