@@ -84,6 +84,24 @@ _r11_spec.loader.exec_module(r11)
 
 CREDIT_SCHEMA = Path(__file__).parent.parent / "sql" / "schema_credit.sql"
 
+
+def split_financial(companies: list, financial_names: dict):
+    """(companies to compute, [(name, reason)] skipped). `financial_names` is {name: reason} as
+    11_ratio_engine.financial_company_reasons resolves it - the same classification that blanks that company's
+    ratios. WHY: Net Debt/EBITDA measures a corporate's borrowings against its earnings; for a lender, insurer
+    or payment processor the balance sheet is client money and lending. Found live: once Adyen's history was
+    loaded this stage produced seven rows saying "Net cash -9.5x" for it - a plausible-looking number that
+    describes merchants' funds, not surplus."""
+    kept = [c for c in companies if c not in financial_names]
+    return kept, [(c, financial_names[c]) for c in companies if c in financial_names]
+
+
+def financial_company_names(engine) -> dict:
+    profiles = r11.fetch_company_profiles(engine)
+    reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
+    return {row["name"]: reasons[int(row["company_id"])] for _, row in profiles.iterrows()
+            if int(row["company_id"]) in reasons}
+
 # Fixed, sector-agnostic Net Debt/EBITDA bands - see module docstring for
 # why these are a rough heuristic, not a real agency methodology.
 LEVERAGE_BANDS = [
@@ -223,6 +241,10 @@ if __name__ == "__main__":
         companies = [args.company]
     else:
         companies = pd.read_sql(text("SELECT name FROM company ORDER BY name"), engine)["name"].tolist()
+
+    companies, skipped = split_financial(companies, financial_company_names(engine))
+    for name, reason in skipped:
+        print(f"{name}: skipped - financial company ({reason}); Net Debt/EBITDA is not meaningful for it")
 
     all_results = []
     for company in companies:
