@@ -197,6 +197,39 @@ def format_eur(value) -> str:
     return f"€{value:,.0f}"
 
 
+NOT_SHOWN = "n/a*"
+
+LEVERAGE_FOOTNOTE = (
+    "* n/a*: this company's statements do not print depreciation and amortisation separately, so EBITDA "
+    "cannot be derived. A multiple built on EBIT but labelled EBITDA would overstate leverage, so it is not "
+    "shown; net debt and EBIT are still shown, and \"Net Debt vs Op. Profit\" on the Ratios tab is on an "
+    "EBIT basis. Net debt here includes IFRS 16 lease liabilities, whereas many companies' own headline "
+    "\"net financial debt\" excludes them (LVMH 2024: about €9.2bn as reported, about €31bn here, of which "
+    "€17.8bn is leases), so figures can differ from a company's press release."
+)
+
+
+def _is_true(value) -> bool:
+    return bool(value) if pd.notna(value) else False
+
+
+def ebitda_multiple_text(value, is_da_fallback, fmt: str = "{:.1f}x") -> str:
+    """A multiple whose denominator is EBITDA, as a visitor sees it. Where D&A is not printed separately the
+    pipeline's "EBITDA" is really EBIT (flagged is_da_fallback), so the multiple is overstated - LVMH showed
+    1.65x on EBIT against roughly 1.0x on its own operating cash flow. Shown as n/a* instead of a figure that
+    reads as EBITDA-based but is not."""
+    if _is_true(is_da_fallback):
+        return NOT_SHOWN
+    return fmt.format(value) if pd.notna(value) else "n/a"
+
+
+def leverage_label(label, is_da_fallback) -> str:
+    """A band / trend derived from such a multiple: hidden for the same reason."""
+    if _is_true(is_da_fallback):
+        return NOT_SHOWN
+    return str(label) if pd.notna(label) else "n/a"
+
+
 def format_pct_fraction(value) -> str:
     """For columns stored as a FRACTION (0.0713, not 7.13) - dcf_valuation's
     wacc/cost_of_equity/pct_ev_from_terminal are all fractions."""
@@ -468,17 +501,18 @@ def render_credit_profile(df: pd.DataFrame):
     latest = df.iloc[-1]
     c1, c2, c3 = st.columns(3)
     c1.metric("Latest Net Debt/EBITDA",
-              f"{latest['net_debt_ebitda']:.2f}x" if pd.notna(latest["net_debt_ebitda"]) else "n/a")
-    c2.metric("Band", latest["band"])
-    c3.metric("Trend", latest["trend"])
+              ebitda_multiple_text(latest["net_debt_ebitda"], latest["is_da_fallback"], "{:.2f}x"))
+    c2.metric("Band", leverage_label(latest["band"], latest["is_da_fallback"]))
+    c3.metric("Trend", leverage_label(latest["trend"], latest["is_da_fallback"]))
 
     display = df.copy()
-    display["net_debt_ebitda"] = display["net_debt_ebitda"].apply(
-        lambda v: f"{v:.2f}x" if pd.notna(v) else "n/a")
+    flags = df["is_da_fallback"]
+    display["net_debt_ebitda"] = [ebitda_multiple_text(v, f, "{:.2f}x") for v, f in zip(df["net_debt_ebitda"], flags)]
+    display["band"] = [leverage_label(v, f) for v, f in zip(df["band"], flags)]
+    display["trend"] = [leverage_label(v, f) for v, f in zip(df["trend"], flags)]
     display["net_debt"] = display["net_debt"].apply(format_eur)
     display["ebitda"] = display["ebitda"].apply(format_eur)
-    display["is_da_fallback"] = display["is_da_fallback"].map(
-        {True: "⚠ EBITDA=EBIT (overstated)", False: ""})
+    display["is_da_fallback"] = flags.map(lambda f: "⚠ D&A not found: EBITDA is EBIT" if _is_true(f) else "")
     display = display[["year", "net_debt", "ebitda", "net_debt_ebitda", "band", "trend", "is_da_fallback"]].rename(
         columns={"year": "Year", "net_debt": "Net Debt", "ebitda": "EBITDA",
                  "net_debt_ebitda": "Net Debt/EBITDA", "band": "Band", "trend": "Trend",
@@ -486,8 +520,7 @@ def render_credit_profile(df: pd.DataFrame):
     st.dataframe(display, width="stretch", hide_index=True)
 
     if df["is_da_fallback"].any():
-        st.caption("⚠ Years marked above have no D&A tag matched for this company - EBITDA "
-                   "silently equals EBIT for those years, so leverage is likely overstated.")
+        st.caption(LEVERAGE_FOOTNOTE)
 
 
 def render_backtest(df: pd.DataFrame):
@@ -590,9 +623,12 @@ display_screener = pd.DataFrame({
     "Sector": screener_filtered["sector_std"].fillna("Unclassified"),
     "Op. Margin": screener_filtered["operating_margin"].map(lambda v: f"{v:.1f}%" if pd.notna(v) else "n/a"),
     "ROIC": screener_filtered["roic"].map(lambda v: f"{v:.1f}%" if pd.notna(v) else "n/a"),
-    "EV/EBITDA": screener_filtered["ev_ebitda"].map(lambda v: f"{v:.1f}x" if pd.notna(v) else "n/a"),
-    "Net Debt/EBITDA": screener_filtered["net_debt_ebitda"].map(lambda v: f"{v:.1f}x" if pd.notna(v) else "n/a"),
-    "Credit Band": screener_filtered["credit_band"].fillna("n/a"),
+    "EV/EBITDA": [ebitda_multiple_text(v, f) for v, f in
+                  zip(screener_filtered["ev_ebitda"], screener_filtered["credit_is_da_fallback"])],
+    "Net Debt/EBITDA": [ebitda_multiple_text(v, f) for v, f in
+                        zip(screener_filtered["net_debt_ebitda"], screener_filtered["credit_is_da_fallback"])],
+    "Credit Band": [leverage_label(v, f) for v, f in
+                    zip(screener_filtered["credit_band"], screener_filtered["credit_is_da_fallback"])],
     "High Flags": screener_filtered["high_flag_count"],
 })
 
@@ -603,6 +639,8 @@ selection_event = st.dataframe(
     display_screener, width="stretch", hide_index=True,
     on_select="rerun", selection_mode="single-row",
 )
+if any(_is_true(f) for f in screener_filtered["credit_is_da_fallback"]):
+    st.caption(LEVERAGE_FOOTNOTE)
 
 selected_positions = selection_event.selection.rows if selection_event and selection_event.selection else []
 # Default to the first row so the detail view below always shows
