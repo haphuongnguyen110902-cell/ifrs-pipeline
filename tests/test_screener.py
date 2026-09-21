@@ -68,8 +68,9 @@ def test_the_pernod_ricard_null_year_case_is_skipped_not_selected(engine):
 EXPECTED_BLANKS = {
     # a payment processor: its "net cash" is merchants' money, so ROIC, comps, EV and credit are skipped on purpose
     "Adyen": {"roic", "ev_ebitda", "net_debt_ebitda", "credit_band", "credit_is_da_fallback"},
-    # no debt line is stored for ASM, so net debt is blank rather than assumed (needs a reviewed zero-debt override)
-    "ASM International": {"roic", "ev_ebitda", "net_debt_ebitda", "credit_band", "credit_is_da_fallback"},
+    # ASM prints only TOTAL equity, not "equity attributable to owners of the parent", so ROIC (equity + net debt) stays blank
+    # rather than assumed (net debt itself is now filled from its reviewed zero-debt evidence and IFRS 16 leases)
+    "ASM International": {"roic"},
 }
 
 

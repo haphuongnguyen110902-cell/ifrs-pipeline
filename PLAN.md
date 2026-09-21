@@ -1632,7 +1632,7 @@ L'Oreal, LVMH and Essity (D&A not separable).
 - Recordati capex 2023/2024 (383M / 851M) come from its printed intangible-purchase line (product-rights deals);
   compared with the printed statements only for FY2022.
 
-**Still open:** ASM zero-debt override (D&A for Kering / LVMH / L'Oreal / Essity: done, see the next section);
+**Still open:** (ASM zero-debt: done, see the last section; D&A for Kering / LVMH / L'Oreal / Essity: done);
 statement hierarchy not stored; one-off `_x` concepts (70 tags still mapped twice) and 6 stale `concept_mapping` rows;
 `19_valuation --company` overwrites peer medians with the single company's own (run it for the whole universe);
 Pernod forecast (2 years of history); Heineken / Amplifon / Shell have no 3-statement/DCF (costs by nature).
@@ -1669,3 +1669,26 @@ conservative. Not covered by any report on this machine: L'Oreal 2019-2021 and L
 127bn -> 93bn (2023 capex 2.6bn includes real-estate purchases, above D&A 1.8bn), L'Oreal 144 -> 148bn, Essity 42.8 -> 43.2bn.
 The inputs are the printed ones; the levels are still driven by the growth assumption (historical CAGR incl. acquisitions:
 LVMH 17.4%), so LVMH's DCF stays far above its ~232bn market EV. The DCF is illustrative.
+
+### 2026-09-21 (later still): ASM International - reviewed zero-debt evidence and lease liabilities (PR #65, applied to the live DB)
+
+**Problem:** ASM prints no borrowing line, so the net-debt rule (blank unless both sides are stored: "never a guess") left net
+debt, net debt/EBITDA, the credit band, the valuation EV and the DCF blank, although the company says plainly that it has no debt.
+
+**Evidence, read from ASM's FY2025 report:** "As per December 31, 2025, ASM was debt-free"; the EUR 150M revolving facility
+"amount outstanding ... was nil" (and the EUR 15M overdraft line); note 18 "the company had no debt"; cash 1,026.9M. The balance
+sheet, the five-year summary (2021-2025) and the financing cash flows (2025, 2024) have no borrowing line or flow. The only
+financial-debt items are IFRS 16 lease liabilities: current 13.9 / 11.7M (note 15) and non-current 19.6 / 25.0M (note 18
+maturity table), each proved by a neighbouring total that equals a TAGGED balance-sheet line. Contingent consideration for
+acquisitions is a payable, not borrowing, and is not counted.
+
+**Tool:** `33_load_note_facts.py` now handles balances at a year end (instants), a per-year column cross-check, `min_values`,
+and a `stated_zero` kind (stored only while the report still contains the stating sentence and its balance sheet still has no
+line of that nature). Result: net cash 993.4M (2025) / 890.3M (2024); net debt/EBITDA -0.84x / -0.89x; EV/EBITDA 33.1x; a DCF now
+exists (EV 9.2bn vs a market EV of about 30bn+, driven by the 16.3% historical CAGR at a 9.8% all-equity WACC: illustrative).
+
+**Limits:** 2024's zero rests on the statements' structure (the FY2025 report has no sentence about 31 Dec 2024); only
+2024-2025 are covered (ASM's older reports are not on this machine - downloading them needs a go-ahead); the non-current lease
+figure comes from a maturity table, so it can be slightly above the carrying amount (about 3% of cash, immaterial). ASM's ROIC
+and ROE stay blank: it prints only total equity, not equity attributable to owners (the same tool can carry a reviewed
+"no non-controlling interests" statement if wanted).
