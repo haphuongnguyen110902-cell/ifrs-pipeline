@@ -100,6 +100,37 @@ def load_mapping(path: str) -> dict:
     return lookup
 
 
+OVERRIDES_PATH = Path(__file__).parent.parent / "data" / "mappings" / "company_tag_overrides.yaml"
+OVERRIDE_KEYS = ("company", "tag", "concept", "statement", "label", "printed_label", "evidence")
+
+
+def load_overrides(path=OVERRIDES_PATH) -> dict:
+    """{(company name, tag): (normalized_name, statement, display_label)} - reviewed corrections for a filer that
+    uses a tag for something other than its meaning (Puig prints TRADE PAYABLES under the income-tax-liability tag and
+    its income-tax payable under the trade-payables tag). Each entry carries the label the company itself prints and
+    the evidence; it applies to that company only and never changes the global mapping."""
+    p = Path(path)
+    if not p.exists():
+        return {}
+    data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    out = {}
+    for e in data.get("overrides", []):
+        missing = [k for k in OVERRIDE_KEYS if not str(e.get(k, "")).strip()]
+        if missing:
+            raise ValueError(f"override {e.get('company')}/{e.get('tag')} is missing {missing}")
+        key = (e["company"], e["tag"])
+        if key in out:
+            raise ValueError(f"override {key} is listed twice")
+        out[key] = (e["concept"], e["statement"], e["label"])
+    return out
+
+
+def tag_lookup_for(company: str, lookup: dict, overrides: dict) -> dict:
+    """The tag -> concept mapping to use for ONE company: the global mapping with that company's reviewed overrides on top."""
+    mine = {tag: v for (co, tag), v in overrides.items() if co == company}
+    return {**lookup, **mine} if mine else lookup
+
+
 # ---------------------------------------------------------------- database
 
 def _parse_fiscal_year_end(fye_str):
@@ -288,7 +319,8 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)["companies"]
 
     tag_lookup = load_mapping(args.mapping)
-    print(f"Mapping covers {len(tag_lookup)} XBRL tags\n")
+    overrides = load_overrides()
+    print(f"Mapping covers {len(tag_lookup)} XBRL tags; {len(overrides)} reviewed per-company override(s)\n")
 
     conn = None
     if not args.dry_run:
@@ -364,7 +396,8 @@ if __name__ == "__main__":
         df_clean = df[df["dimensions"].apply(
             lambda d: len(ast.literal_eval(d)) == 0 if isinstance(d, str) else len(d) == 0)]
         clean_tags = set(df_clean["concept_qname"].unique())
-        unmapped = sorted(clean_tags - set(tag_lookup))
+        co_lookup = tag_lookup_for(company, tag_lookup, overrides)
+        unmapped = sorted(clean_tags - set(co_lookup))
         if unmapped:
             print(f"  *** {len(unmapped)} unmapped concepts (these will NOT load):")
             for t in unmapped[:5]:
@@ -379,7 +412,7 @@ if __name__ == "__main__":
                 sys.exit(1)
 
         if args.dry_run:
-            mappable = sum(1 for _, r in df.iterrows() if r["concept_qname"] in tag_lookup)
+            mappable = sum(1 for _, r in df.iterrows() if r["concept_qname"] in co_lookup)
             print(f"  DRY RUN - would load ~{mappable} facts")
             summary.append((company, "dry run", len(df), mappable, cur_str))
             continue
@@ -402,7 +435,7 @@ if __name__ == "__main__":
 
                 for _, row in df.iterrows():
                     tag = row["concept_qname"]
-                    if tag not in tag_lookup:
+                    if tag not in co_lookup:
                         skipped_unmapped += 1
                         continue
                     dims = row.get("dimensions", "[]")
@@ -414,9 +447,10 @@ if __name__ == "__main__":
                         skipped_dim += 1
                         continue
 
-                    name, statement, label = tag_lookup[tag]
+                    name, statement, label = co_lookup[tag]
                     concept_id = get_or_create_concept(cur, name, statement, label)
-                    get_or_create_mapping_row(cur, concept_id, tag)
+                    if (company, tag) not in overrides:      # concept_mapping is the GLOBAL tag -> concept table
+                        get_or_create_mapping_row(cur, concept_id, tag)
 
                     p_start = row.get("period_start")
                     if pd.isna(p_start):
