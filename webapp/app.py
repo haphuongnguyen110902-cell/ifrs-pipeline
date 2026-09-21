@@ -58,7 +58,14 @@ def get_engine():
             "On Streamlit Cloud: add it under this app's Settings → Secrets."
         )
         st.stop()
-    return create_engine(db_url)
+    # This engine is cached for the life of the app, but Neon (serverless
+    # Postgres) closes idle connections. Without pre-ping the pool hands out
+    # a dead one and the first click after a quiet spell raises
+    # OperationalError / "connection already closed" - seen live: selecting a
+    # company crashed the Ratios tab, then worked after a reload. pre_ping
+    # tests the connection on checkout and transparently reconnects;
+    # pool_recycle retires connections before Neon's idle timeout would.
+    return create_engine(db_url, pool_pre_ping=True, pool_recycle=300)
 
 
 @st.cache_data(ttl=3600)
