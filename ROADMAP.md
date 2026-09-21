@@ -1,10 +1,14 @@
 # Roadmap
 
-This file is the single source of truth for what's built, what's in
-progress, and what's next. Earlier plans (the original `Detailed_roadmap`
-doc, and various revisions discussed in chat) are superseded by this file
-- if something here conflicts with an older doc or an old chat message,
-this file wins.
+> **Read this as history, not current status.** Last updated 2026-09-09.
+> The live status - work-package (WP) progress, the audit findings and what is
+> deferred - is in [`PLAN.md`](PLAN.md); the README's status table is generated
+> from the database. Where this file and `PLAN.md` disagree, `PLAN.md` is newer.
+
+This file is the phase-by-phase engineering log: what was built, what real bug
+each phase found on live data, and what was deferred. Earlier plans (the original
+`Detailed_roadmap` doc, and various revisions discussed in chat) are superseded by
+it.
 
 **Two goals, equal priority, always** - every phase below states which
 goal(s) it serves. Neither goal is worth more than the other:
