@@ -71,3 +71,19 @@ class TestPickRevenuePerYear:
         monkeypatch.setattr(f15.pd, "read_sql", lambda *a, **k: frame.sample(frac=1, random_state=7))
         g = f15.fetch_revenue_growth(engine=None)
         assert g.loc[g["year"] == 2023, "revenue_growth"].iloc[0] == pytest.approx((160_000 / 156_173 - 1) * 100)
+
+
+class TestSaveExcelWithNoFlags:
+    """A scoped run for a company nothing triggers for used to crash in save_excel (missing columns on an empty frame),
+    before save_to_db ran - so flags that had stopped triggering stayed in forensics_flag. Found applying the audit fixes."""
+
+    def test_an_empty_flags_frame_writes_a_header_only_workbook(self, f15, tmp_path):
+        import openpyxl
+        out = tmp_path / "f.xlsx"
+        f15.save_excel(pd.DataFrame(), str(out))
+        ws = openpyxl.load_workbook(out)["All Flags"]
+        assert [c.value for c in ws[1]][:3] == ["severity", "company", "year"] and ws.max_row == 1
+
+    def test_a_frame_with_columns_but_no_rows_too(self, f15, tmp_path):
+        f15.save_excel(pd.DataFrame(columns=["severity", "company", "year", "label", "detail", "what_to_check", "value"]),
+                       str(tmp_path / "g.xlsx"))
