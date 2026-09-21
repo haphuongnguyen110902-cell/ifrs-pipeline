@@ -269,6 +269,25 @@ def gating_caption(ratios: pd.DataFrame):
     return f"Blank on purpose, not missing data: {labels}. {reasons}."
 
 
+BROADER_PAYABLES = ("trade_and_other_current_payables", "other_current_payables")
+
+
+def payables_basis_caption(ratios: pd.DataFrame):
+    """A caption when this company's days-payables figures are built on a broader line than trade payables, or None.
+    `source_concepts` (which stored line DPO was read from) exists once the ratio calculation has run since that was
+    added; a database without it, or a company on trade payables alone, just has no caption."""
+    if "source_concepts" not in ratios.columns:
+        return None
+    dpo = ratios[ratios["ratio_name"] == "dpo"].dropna(subset=["source_concepts"])
+    broader = [r for r in dpo["source_concepts"] if any(c in BROADER_PAYABLES for c in r)]
+    if not broader:
+        return None
+    return ("Days payables outstanding and the cash conversion cycle are built on the balance-sheet line tagged \"trade "
+            "and other payables\". Depending on the company that line holds trade payables only or also other operating "
+            "payables (accruals, taxes, social charges), so these two figures may not be comparable with companies that "
+            "report trade payables on their own line.")
+
+
 def render_ratio_table(ratios: pd.DataFrame):
     if ratios.empty:
         st.info("No ratios computed yet for this company.")
@@ -295,6 +314,9 @@ def render_ratio_table(ratios: pd.DataFrame):
     caption = gating_caption(ratios)
     if caption:
         st.caption(caption)
+    payables_caption = payables_basis_caption(ratios)
+    if payables_caption:
+        st.caption(payables_caption)
 
 
 @st.cache_data(ttl=3600)
