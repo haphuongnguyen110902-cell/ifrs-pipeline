@@ -276,9 +276,29 @@ def resolve_ticker_currency(company: str, db_ticker=None, db_currency=None):
     reliable enough to retire it (see PLAN.md WP4's gate)."""
     if company in TICKER_MAP:
         return TICKER_MAP[company]
-    if db_ticker:
-        return db_ticker, db_currency
+    # A missing ticker arrives from pandas as NaN, which is truthy: `if db_ticker:` used to send NaN to yfinance
+    # ("'float' object has no attribute 'upper'", reported as "market data failed") instead of "no ticker mapped".
+    if isinstance(db_ticker, str) and db_ticker.strip():
+        return db_ticker.strip(), (db_currency if isinstance(db_currency, str) and db_currency.strip() else None)
     return None, None
+
+
+def drop_financial(fundamentals: pd.DataFrame, financial_names: dict):
+    """(fundamentals without the financial companies, [names dropped]). `financial_names` is {name: reason} from
+    11_ratio_engine.financial_company_reasons - the classification that blanks such a company's ratios. An
+    enterprise value is market cap + net debt; for a lender, insurer or payment processor 'net debt' is client
+    money (Adyen: about -EUR 10.5bn of merchants' funds), so the resulting EV and multiples would be meaningless."""
+    if fundamentals.empty or not financial_names:
+        return fundamentals, []
+    mask = fundamentals["company"].isin(list(financial_names))
+    return fundamentals[~mask].reset_index(drop=True), sorted(fundamentals.loc[mask, "company"].unique())
+
+
+def financial_company_names(engine) -> dict:
+    profiles = r11.fetch_company_profiles(engine)
+    reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
+    return {row["name"]: reasons[int(row["company_id"])] for _, row in profiles.iterrows()
+            if int(row["company_id"]) in reasons}
 
 
 # ---------------------------------------------------------------- comps
@@ -628,6 +648,10 @@ if __name__ == "__main__":
 
     print("Fetching fundamentals (most recent complete fiscal year per company)...")
     fundamentals = fetch_latest_fundamentals(engine, args.company)
+    financial = financial_company_names(engine)
+    fundamentals, skipped_financial = drop_financial(fundamentals, financial)
+    for name in skipped_financial:
+        print(f"{name}: skipped - financial company ({financial[name]}); EV and trading multiples are not meaningful for it")
     if fundamentals.empty:
         print("No company has complete revenue/EBITDA/net debt data - nothing to value.")
         sys.exit(1)
