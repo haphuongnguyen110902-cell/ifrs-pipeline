@@ -587,25 +587,42 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # "_and_etc" suffix) as a third, LOWER-priority candidate - verified
     # sane (3.9-14.0% of revenue, in line with each company's known
     # capital intensity) for Pernod Ricard, Moncler and Puig Brands.
-    # Deliberately NOT extended to cover L'Oreal, LVMH, Kering,
-    # EssilorLuxottica or Essity even though they also show _da_total=0:
-    # each has only AMBIGUOUS tags available (bundled with provisions,
-    # impairment, or split across several overlapping concepts - e.g.
-    # Essity has both the "_and_etc" and bare variants POPULATED with
-    # different values, LVMH's only candidates are "...provisions_and_
-    # adjustments_for_depreciation..." or ROU-leases-only). Guessing
-    # which one is the clean total risks quietly corrupting EBITDA/FCFF
-    # for those companies - the da_total_is_fallback flag below (not a
-    # guess) is the honest fix for them; a real fix needs a human to
-    # read each filing's cash-flow statement and confirm which tag is
-    # the true total, not an agent pattern-matching tag names.
-    da_combined = get_best(
-        wide,
+    # Deliberately NOT extended to cover L'Oreal, LVMH or Kering: their
+    # only cash-flow line is BUNDLED with provisions (checked in each
+    # company's own statement and against the anchors in its definition
+    # linkbase), so no clean D&A exists on the face of the statements and
+    # the da_total_is_fallback flag below is the honest answer.
+    da_combined_names = (
         "adjustments_for_depreciation_and_amortisation_expense_and_etc",
         "depreciation_amortisation_and_impairment_loss_reversal_of_etc",
         "adjustments_for_depreciation_and_amortisation_expense",
-    ).abs()
-    r["_da_total"] = da_combined.where(da_combined.notna(), granular_da_sum)
+    )
+    da_combined = get_best(wide, *da_combined_names).abs()
+
+    # Third style, found reading the printed statements (2026-09-21): the cash flow splits the adjustment into
+    # a "depreciation" line and an "amortisation" line (Recordati, every year FY2020-FY2025; Schneider once its
+    # extension lines are mapped to the same two concepts - their own anchors point at the D&A total). The two
+    # printed lines ARE the D&A. Used only when BOTH are stored: one line alone (e.g. depreciation without the
+    # amortisation) must never pass for the total.
+    da_dep = get_col(wide, "adjustments_for_depreciation_expense").abs()
+    da_amo = get_col(wide, "adjustments_for_amortisation_expense").abs()
+    da_pair = da_dep + da_amo                                  # NaN unless both are stored
+    da_printed = da_combined.combine_first(da_pair)
+    r["_da_total"] = da_printed.where(da_printed.notna(), granular_da_sum)
+    # which lines the D&A was built from, for the audit trail (never persisted: the leading underscore)
+    basis = []
+    for i in wide.index:
+        combined = next((n for n in da_combined_names if n in wide.columns and pd.notna(wide.at[i, n])), None)
+        if combined is not None:
+            basis.append(combined)
+        elif pd.notna(da_pair[i]):
+            basis.append("adjustments_for_depreciation_expense+adjustments_for_amortisation_expense")
+        else:
+            parts = [n for n in ("depreciation_property_plant_and_equipment", "depreciation_rightofuse_assets",
+                                 "amortisation_intangible_assets_other_than_goodwill")
+                     if n in wide.columns and pd.notna(wide.at[i, n])]
+            basis.append("+".join(parts))
+    r["_da_basis"] = basis
     r["_ebitda"] = ebit + r["_da_total"]
     return r
 

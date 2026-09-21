@@ -252,6 +252,52 @@ class TestAbsoluteValuesForValuation:
         assert r["_da_total"].iloc[0] == pytest.approx(7529.0)
         assert r["_ebitda"].iloc[0] == pytest.approx(100.0 + 7529.0)
 
+    @staticmethod
+    def _no_granular(r):
+        return r.drop(columns=["depreciation_property_plant_and_equipment", "depreciation_rightofuse_assets",
+                               "amortisation_intangible_assets_other_than_goodwill"])
+
+    def test_printed_depreciation_and_amortisation_lines_are_the_da(self, r11):
+        """Recordati prints two cash-flow lines and no combined one (FY2025, EUR thousands: depreciation 36,4xx,
+        amortisation 170,0xx; all six years FY2020-FY2025 have both). D&A 206.4M = 7.9% of revenue, in line with a
+        specialty-pharma group that carries acquired product rights. It was read as 0 (EBITDA = EBIT, flagged)."""
+        wide = self._no_granular(make_wide_row())
+        wide["adjustments_for_depreciation_expense"] = 36.4
+        wide["adjustments_for_amortisation_expense"] = 170.0
+        r = r11.compute_ratios(wide)
+        assert r["_da_total"].iloc[0] == pytest.approx(206.4)
+        assert r["_ebitda"].iloc[0] == pytest.approx(100.0 + 206.4)
+        assert r["_da_basis"].iloc[0] == "adjustments_for_depreciation_expense+adjustments_for_amortisation_expense"
+
+    def test_a_lone_depreciation_or_amortisation_line_never_passes_for_the_total(self, r11):
+        """LVMH prints right-of-use depreciation on its own (3,228M) next to a line bundled with provisions: one
+        half of a pair is not D&A."""
+        for name in ("adjustments_for_depreciation_expense", "adjustments_for_amortisation_expense"):
+            wide = self._no_granular(make_wide_row())
+            wide[name] = 3228.0
+            r = r11.compute_ratios(wide)
+            assert r["_da_total"].iloc[0] == 0.0 and r["_da_basis"].iloc[0] == ""
+
+    def test_a_combined_line_still_beats_the_pair_and_the_pair_beats_the_granular_sum(self, r11):
+        wide = make_wide_row()      # granular 25 + 5 + 10
+        wide["adjustments_for_depreciation_expense"] = 60.0
+        wide["adjustments_for_amortisation_expense"] = 40.0
+        assert r11.compute_ratios(wide)["_da_total"].iloc[0] == pytest.approx(100.0)
+        wide["adjustments_for_depreciation_and_amortisation_expense_and_etc"] = 777.0
+        r = r11.compute_ratios(wide)
+        assert r["_da_total"].iloc[0] == pytest.approx(777.0)
+        assert r["_da_basis"].iloc[0] == "adjustments_for_depreciation_and_amortisation_expense_and_etc"
+
+    def test_the_pair_is_sign_insensitive(self, r11):
+        wide = self._no_granular(make_wide_row())
+        wide["adjustments_for_depreciation_expense"] = -36.4
+        wide["adjustments_for_amortisation_expense"] = -170.0
+        assert r11.compute_ratios(wide)["_da_total"].iloc[0] == pytest.approx(206.4)
+
+    def test_the_basis_names_the_granular_lines_or_is_blank(self, r11):
+        assert r11.compute_ratios(make_wide_row())["_da_basis"].iloc[0] ==             "depreciation_property_plant_and_equipment+depreciation_rightofuse_assets+amortisation_intangible_assets_other_than_goodwill"
+        assert r11.compute_ratios(self._no_granular(make_wide_row()))["_da_basis"].iloc[0] == ""
+
     def test_granular_da_components_are_abs_too(self, r11):
         wide = make_wide_row()
         wide["depreciation_property_plant_and_equipment"] = -25.0
