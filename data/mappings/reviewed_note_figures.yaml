@@ -134,3 +134,139 @@ figures:
       FY2024 report, cash flow statement: 7,505 (2024), 7,998 (2023), 9,012 (2022) SEK millions. EBITDA reconciliation:
       operating profit 18,295 / 15,148 / 8,491 + amortisation of acquisition-related intangibles 1,110 + depreciation 5,028
       + right-of-use 1,089 + impairment 56 + IAC impairment 152 + IAC acquisition-related 70 = EBITDA 25,800 / 23,146 / 17,502.
+
+  # ----------------------------------------------------------------------------------------------- ASM International
+  # ASM has no borrowings: its FY2025 report says "As per December 31, 2025, ASM was debt-free" and "the amount outstanding as at
+  # December 31, 2025 was nil" (the EUR 150M revolving facility and the EUR 15M overdraft line are undrawn), and its balance
+  # sheet has no line of that nature in any year. Without a debt line the net-debt rule stayed blank ("never a guess"), so ASM
+  # had no net debt / EBITDA, ROIC, credit band or DCF although its cash (1,026.9M) is printed. The only financial-debt items
+  # are its IFRS 16 lease liabilities: current 13.9 / 11.7M (printed in note 15, accrued expenses and other payables) and
+  # non-current 19.6 / 25.0M (printed as "Non-current lease liabilities" in the contractual-obligations table of note 18; that
+  # table is a maturity analysis, so the figure can be slightly above the discounted carrying amount, which sits inside
+  # "Other liabilities" 64.0 / 23.6M and is not printed separately - immaterial: about 3% of cash). Contingent consideration
+  # payable (18.4M non-current, 97.0M current in 2024) is a payable for an acquisition, not borrowing, and is not counted.
+  # Only FY2025 and FY2024 are covered: the older reports are not on this machine, so 2019-2023 stay blank.
+  - id: asm_lease_current_fy2025
+    company: "ASM International"
+    report: asm_international.zip
+    row: '^Current lease liabilities$'
+    years: header
+    column: all
+    scale: 1000000
+    decimal: "."
+    currency: EUR
+    period: instant
+    concept: current_lease_liabilities
+    statement: balance_sheet
+    label: Current lease liabilities
+    perimeter: "IFRS 16 lease liabilities due within one year, as printed in note 15 (accrued expenses and other payables)"
+    checks:
+      - sane_pct_of_tagged_fact: {tag: "ifrs-full:Assets", range: [0, 3]}
+      - cross_row_equals_tagged_fact: {row: '^Total accrued expenses and other payables$', tag: "ifrs-full:CurrentAccruedExpensesAndOtherCurrentLiabilities", row_offset: 3, tolerance: 0.001}
+    evidence: >-
+      FY2025 report, note 15: current lease liabilities 13.9 (2025) and 11.7 (2024) EUR millions, inside "Accrued expenses and
+      other payables" 197.0 / 235.3 (the note's total equals the tagged balance-sheet line).
+
+  - id: asm_lease_noncurrent_fy2025
+    company: "ASM International"
+    report: asm_international.zip
+    row: '^Non-current lease liabilities$'
+    min_values: 3
+    years: [2025, 2024]
+    column: first
+    scale: 1000000
+    decimal: "."
+    currency: EUR
+    period: instant
+    concept: noncurrent_lease_liabilities
+    statement: balance_sheet
+    label: Non-current lease liabilities
+    perimeter: "IFRS 16 lease liabilities due after one year, as printed in the contractual-obligations table of note 18 (maturity analysis)"
+    checks:
+      - sane_pct_of_tagged_fact: {tag: "ifrs-full:Assets", range: [0, 3]}
+      - cross_row_equals_tagged_fact: {row: '^Accrued expenses and other payables$', tag: "ifrs-full:CurrentAccruedExpensesAndOtherCurrentLiabilities", row_offset: -1, column: first, tolerance: 0.001}
+    evidence: >-
+      FY2025 report, note 18 contractual obligations: non-current lease liabilities 19.6 (2025; 16.7 in 1-5 years, 2.9 later)
+      and 25.0 (2024; 21.4, 3.7). The row above each (accrued expenses and other payables 197.0 / 235.3) equals the tagged
+      balance-sheet line, which proves which table belongs to which year.
+
+  - id: asm_no_noncurrent_borrowings_2025
+    kind: stated_zero
+    company: "ASM International"
+    report: asm_international.zip
+    years: [2025]
+    period: instant
+    currency: EUR
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Long-term borrowings
+    perimeter: "no borrowings: the company states it was debt-free at 31 December 2025"
+    checks:
+      - report_states: 'ASM was debt-free'
+      - report_states: 'amount outstanding as at December 31, 2025 was nil'
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'borrow|loan|debt|bond|overdraft|credit facilit'}
+    evidence: >-
+      FY2025 report: note 17 "As per December 31, 2025, ASM was debt-free ... The amount outstanding as at December 31, 2025
+      was nil, so the undrawn portion totaled EUR 150 million" (revolving credit facility) and EUR 15 million overdraft line
+      also nil; note 18 "the company had no debt and was not exposed to interest rate risk on borrowings"; key figures "EUR
+      1,027 million cash position, no debt". The balance sheet has no borrowing line.
+
+  - id: asm_no_current_borrowings_2025
+    kind: stated_zero
+    company: "ASM International"
+    report: asm_international.zip
+    years: [2025]
+    period: instant
+    currency: EUR
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Short-term borrowings
+    perimeter: "no borrowings: the company states it was debt-free at 31 December 2025"
+    checks:
+      - report_states: 'ASM was debt-free'
+      - report_states: 'amount outstanding as at December 31, 2025 was nil'
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'borrow|loan|debt|bond|overdraft|credit facilit'}
+    evidence: >-
+      Same statements as asm_no_noncurrent_borrowings_2025 (revolving facility and overdraft line undrawn at 31 December 2025).
+
+  # 2024: the FY2025 report has no sentence about 31 December 2024, so the zero rests on the structure of its own statements:
+  # the balance sheet (2025 and 2024 columns) and the five-year summary (2021-2025) have no borrowing line, and the cash-flow
+  # statement shows no borrowing or repayment in 2025 or 2024 (financing: lease payments, treasury shares, dividends only).
+  - id: asm_no_noncurrent_borrowings_2024
+    kind: stated_zero
+    company: "ASM International"
+    report: asm_international.zip
+    years: [2024]
+    period: instant
+    currency: EUR
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Long-term borrowings
+    perimeter: "no borrowing line on the balance sheet at 31 December 2024 and no borrowing flow in 2024-2025 (IAS 1.54(m) requires financial liabilities on the face)"
+    checks:
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'borrow|loan|debt|bond|overdraft|credit facilit'}
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'borrow|loan|debt|bond|overdraft|credit facilit', occurrence: 2}
+      - no_row_matching: {from: '^Cash flows from financing activities$', to: '^Net cash used in financing activities$', pattern: 'borrow|loan|debt|repay|proceeds|credit facilit'}
+    evidence: >-
+      FY2025 report: balance sheet 31 Dec 2025 / 2024 (liabilities: other liabilities, contingent consideration, deferred tax,
+      accounts payable, warranty, income taxes, contract liabilities, accrued expenses); five-year summary 2021-2025 likewise
+      without a borrowing line; financing cash flows 2025 / 2024: payment of lease liabilities, purchase of treasury shares,
+      dividends - no borrowing or repayment. The 2024 financial-instruments table lists no borrowings either.
+
+  - id: asm_no_current_borrowings_2024
+    kind: stated_zero
+    company: "ASM International"
+    report: asm_international.zip
+    years: [2024]
+    period: instant
+    currency: EUR
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Short-term borrowings
+    perimeter: "no borrowing line on the balance sheet at 31 December 2024 and no borrowing flow in 2024-2025"
+    checks:
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'borrow|loan|debt|bond|overdraft|credit facilit'}
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'borrow|loan|debt|bond|overdraft|credit facilit', occurrence: 2}
+      - no_row_matching: {from: '^Cash flows from financing activities$', to: '^Net cash used in financing activities$', pattern: 'borrow|loan|debt|repay|proceeds|credit facilit'}
+    evidence: >-
+      Same structural evidence as asm_no_noncurrent_borrowings_2024.
