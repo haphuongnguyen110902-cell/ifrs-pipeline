@@ -10,17 +10,19 @@ instant dates - one day ahead of the real reporting date. This is
 because XBRL treats a calendar day as a whole span, so "as of Dec 31
 2023" and "up through Dec 31 2023" both get normalized internally to
 "before Jan 1 2024". So for BOTH duration and instant facts, the true
-date is (stored_end_date - 1 day). Duration facts are labeled by
-start_date's year instead (which isn't shifted and is simpler), while
-instant facts have no start_date, so we correct end_date directly.
+date is (stored_end_date - 1 day). Every fact is labeled by the year its
+period ENDS (see fiscal_year_label in 11_ratio_engine.py, the one place
+this rule lives) so a fiscal year's flows and balances share one column,
+also for a broken fiscal year such as Pernod Ricard's 30 June.
 
 Usage:
     python scripts/07_generate_statements.py --company "L'Oreal"
 """
 import argparse
+import importlib.util
 import os
 import sys
-from datetime import timedelta
+from pathlib import Path
 
 import pandas as pd
 from sqlalchemy import create_engine
@@ -143,13 +145,12 @@ def fetch_facts(engine, company_name: str) -> pd.DataFrame:
     if df.empty:
         return df
 
-    # correct year labeling - see module docstring for why these differ
-    def get_year(row):
-        if row["period_type"] == "instant":
-            return (row["end_date"] - timedelta(days=1)).year
-        return row["start_date"].year
-
-    df["year"] = df.apply(get_year, axis=1)
+    # correct year labeling - the rule lives in the ratio engine so the two can never drift apart again
+    _spec = importlib.util.spec_from_file_location("ratio_engine_11", Path(__file__).parent / "11_ratio_engine.py")
+    r11 = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(r11)
+    df["year"] = [r11.fiscal_year_label(pt, s, e)
+                  for pt, s, e in zip(df["period_type"], df["start_date"], df["end_date"])]
     return df
 
 

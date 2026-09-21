@@ -397,6 +397,20 @@ def compute_flags(wide: pd.DataFrame, off_calendar_fye: dict = None) -> pd.DataF
 
 # ---------------------------------------------------------------- fetch revenue for growth
 
+_RATIO_ENGINE = None
+
+
+def _ratio_engine():
+    """11_ratio_engine.py, loaded once (its filename cannot be imported normally)."""
+    global _RATIO_ENGINE
+    if _RATIO_ENGINE is None:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("ratio_engine_11", Path(__file__).parent / "11_ratio_engine.py")
+        _RATIO_ENGINE = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_RATIO_ENGINE)
+    return _RATIO_ENGINE
+
+
 def pick_revenue_per_year(df: pd.DataFrame) -> pd.DataFrame:
     """One revenue per (company, year) from rows of (company, start_date, revenue, filing_id,
     filing_end). When several filings report the same year - originals and later restatements,
@@ -407,7 +421,15 @@ def pick_revenue_per_year(df: pd.DataFrame) -> pd.DataFrame:
     different revenues (131,320M and 156,173M SEK) and the choice was left to chance. Sorting
     here, not in SQL, makes the result independent of the order the rows arrive in."""
     d = df.copy()
-    d["year"] = pd.to_datetime(d["start_date"]).dt.year
+    start = pd.to_datetime(d["start_date"])
+    if "end_date" in d.columns:
+        # the fiscal year is the year the period ENDS (see fiscal_year_label in 11_ratio_engine.py):
+        # start-year labelling put Pernod Ricard's FY2025 revenue (1 Jul 2024 - 30 Jun 2025) under 2024
+        r11 = _ratio_engine()
+        d["year"] = [r11.fiscal_year_label("duration", s.date(), e.date())
+                     for s, e in zip(start, pd.to_datetime(d["end_date"]))]
+    else:
+        d["year"] = start.dt.year
     d["revenue"] = pd.to_numeric(d["revenue"], errors="coerce")
     d["filing_end"] = pd.to_datetime(d["filing_end"]).fillna(pd.Timestamp.min)
     d = d.sort_values(["company", "year", "filing_end", "filing_id", "revenue"],
@@ -422,6 +444,7 @@ def fetch_revenue_growth(engine, company_filter=None) -> pd.DataFrame:
         SELECT
             c.name AS company,
             p.start_date,
+            p.end_date,
             fv.value::numeric AS revenue,
             fi.filing_id,
             (SELECT MAX(p2.end_date) FROM period p2 WHERE p2.filing_id = fi.filing_id) AS filing_end
@@ -669,10 +692,7 @@ if __name__ == "__main__":
 
     # not meaningful for lenders / insurers / payment processors (see the function's docstring);
     # the classification is the ratio engine's, so the two stages can never disagree on who is financial
-    import importlib.util
-    _spec = importlib.util.spec_from_file_location("ratio_engine_11", Path(__file__).parent / "11_ratio_engine.py")
-    r11 = importlib.util.module_from_spec(_spec)
-    _spec.loader.exec_module(r11)
+    r11 = _ratio_engine()
     profiles = r11.fetch_company_profiles(engine)
     reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
     financial_names = {row["name"]: reasons[int(row["company_id"])]
