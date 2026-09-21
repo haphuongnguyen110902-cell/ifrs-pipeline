@@ -1463,10 +1463,6 @@ cash_flow:
     display_label: Repayments of Non-current Borrowings
     xbrl_tags:
     - ifrs-full:RepaymentsOfNoncurrentBorrowings
-  acquisitions_d_immobilisations_corporelles_et_incorporelles:
-    display_label: Purchases of PP&E and Intangible Assets (Capex)
-    xbrl_tags:
-    - loreal:AcquisitionsDImmobilisationsCorporellesEtIncorporelles
   cessions_d_immobilisations_corporelles_et_incorporelle:
     display_label: Proceeds from Disposal of PP&E and Intangible Assets
     xbrl_tags:
@@ -1935,6 +1931,11 @@ cash_flow:
     display_label: Purchase of property plant and equipment and intangible assets
     xbrl_tags:
     - puig:PurchaseOfPropertyPlantAndEquipmentAndIntangibleAssetsClassifiedAsInvestingActivities
+    - el:AcquisitionsDimmobilisationsCorporellesEtIncorporelles
+    - el:PurchaseOfPpeAndIntangible
+    - kering:PurchaseOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
+    - loreal:AcquisitionsDImmobilisationsCorporellesEtIncorporelles
+    - pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
   other_inflows_outflows_of_cash_classified_as_investing_activ_etc:
     display_label: Other inflows (outflows) of cash, classified as investing activities
     xbrl_tags:
@@ -2037,10 +2038,6 @@ cash_flow:
     display_label: Cash Flows from Operations after Net Debt Cost and Tax
     xbrl_tags:
     - kering:CashFlowsFromUsedInOperationsAfterCostOfNetDebtAndIncomeTaxExpense
-  purchase_of_property_plant_equipment_and_intangible_assets_o_etc:
-    display_label: Purchase of PP&E and Intangibles (excl. Goodwill)
-    xbrl_tags:
-    - kering:PurchaseOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
   proceeds_of_property_plant_equipment_and_intangible_assets_o_etc:
     display_label: Proceeds from Disposal of PP&E and Intangibles
     xbrl_tags:
@@ -2073,10 +2070,6 @@ cash_flow:
     display_label: Change in Other Operating Receivables and Payables
     xbrl_tags:
     - el:VariationDesAutresCréancesEtDettesOpérationnelles
-  acquisitions_dimmobilisations_corporelles_et_incorporelles_el:
-    display_label: Purchases of PP&E and Intangible Assets (EssilorLuxottica)
-    xbrl_tags:
-    - el:AcquisitionsDimmobilisationsCorporellesEtIncorporelles
   cession_dimmobilisations_corporelles_et_incorporelles:
     display_label: Proceeds from Disposal of PP&E and Intangibles (EssilorLuxottica)
     xbrl_tags:
@@ -2093,10 +2086,6 @@ cash_flow:
     display_label: Share of Net Profit/Loss of Equity-method Investments (net of dividends)
     xbrl_tags:
     - pernod:QuotePartDuResultatNetPerteDeLinvestissementComptabiliseSelonLaMethodeDeLaMiseEnEquivalenceNetteDesDividendesRecus
-  acquisition_dimmobilisations_corporelles_et_incorporelles_au_etc:
-    display_label: Purchases of PP&E and Intangibles excl. Goodwill (Pernod Ricard)
-    xbrl_tags:
-    - pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
   produits_des_immobilisations_corporelles_etc:
     display_label: Proceeds from Disposal of PP&E and Intangibles excl. Goodwill
     xbrl_tags:
@@ -2153,10 +2142,6 @@ cash_flow:
     display_label: Cash Flows from Operations after Net Debt Cost and Tax
     xbrl_tags:
     - kering:CashFlowsFromUsedInOperationsAfterCostOfNetDebtAndIncomeTaxExpense
-  purchase_of_property_plant_equipment_and_intangible_assets_o_etc_x:
-    display_label: Purchase of PP&E and Intangibles (excl. Goodwill)
-    xbrl_tags:
-    - kering:PurchaseOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
   proceeds_of_property_plant_equipment_and_intangible_assets_o_etc_x:
     display_label: Proceeds from Disposal of PP&E and Intangibles
     xbrl_tags:
@@ -2189,10 +2174,6 @@ cash_flow:
     display_label: Change in Other Operating Receivables and Payables
     xbrl_tags:
     - el:VariationDesAutresCréancesEtDettesOpérationnelles
-  acquisitions_dimmobilisations_corporelles_et_incorporelles_el_x:
-    display_label: Purchases of PP&E and Intangible Assets (EssilorLuxottica)
-    xbrl_tags:
-    - el:AcquisitionsDimmobilisationsCorporellesEtIncorporelles
   cession_dimmobilisations_corporelles_et_incorporelles_x:
     display_label: Proceeds from Disposal of PP&E and Intangibles (EssilorLuxottica)
     xbrl_tags:
@@ -2209,10 +2190,6 @@ cash_flow:
     display_label: Share of Net Profit/Loss of Equity-method Investments (net of dividends)
     xbrl_tags:
     - pernod:QuotePartDuResultatNetPerteDeLinvestissementComptabiliseSelonLaMethodeDeLaMiseEnEquivalenceNetteDesDividendesRecus
-  acquisition_dimmobilisations_corporelles_et_incorporelles_au_etc_x:
-    display_label: Purchases of PP&E and Intangibles excl. Goodwill (Pernod Ricard)
-    xbrl_tags:
-    - pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
   produits_des_immobilisations_corporelles_etc_x:
     display_label: Proceeds from Disposal of PP&E and Intangibles excl. Goodwill
     xbrl_tags:
@@ -2349,10 +2326,6 @@ cash_flow:
     display_label: Changes in other operating receivables and payables
     xbrl_tags:
     - el:ChangesInOtherOperatingReceivablesPayables
-  el_purchase_of_ppe_and_intangible:
-    display_label: Purchase of PP&E and intangible assets
-    xbrl_tags:
-    - el:PurchaseOfPpeAndIntangible
   el_disposal_of_ppe_and_intangible:
     display_label: Disposal of PP&E and intangible assets
     xbrl_tags:
