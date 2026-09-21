@@ -240,6 +240,24 @@ class TestAbsoluteValuesForValuation:
         r = r11.compute_ratios(wide)
         assert r["_da_total"].iloc[0] == pytest.approx(31290.0)
 
+    def test_da_addback_is_never_negative_whatever_sign_the_filer_used(self, r11):
+        """Essity's FY2020 filing stores its 2019 D&A as -7,529M (2020: -7,671M); only the later FY2021
+        filing carries +7,671M for 2020, so 2019 has no positive twin to win the conflict. The negative value
+        went straight into EBITDA (EBIT - 7,529 instead of + 7,529: ~SEK 15bn too low in 2019)."""
+        wide = make_wide_row().drop(columns=["depreciation_property_plant_and_equipment",
+                                             "depreciation_rightofuse_assets",
+                                             "amortisation_intangible_assets_other_than_goodwill"])
+        wide["adjustments_for_depreciation_and_amortisation_expense_and_etc"] = -7529.0
+        r = r11.compute_ratios(wide)
+        assert r["_da_total"].iloc[0] == pytest.approx(7529.0)
+        assert r["_ebitda"].iloc[0] == pytest.approx(100.0 + 7529.0)
+
+    def test_granular_da_components_are_abs_too(self, r11):
+        wide = make_wide_row()
+        wide["depreciation_property_plant_and_equipment"] = -25.0
+        r = r11.compute_ratios(wide)
+        assert r["_da_total"].iloc[0] == pytest.approx(40.0)   # 25 + 5 + 10
+
 
 class TestExcelSheetNameSanitizer:
     """Found via a real crash: 'DSO (Days Sales O/S)' has a '/', which
@@ -360,7 +378,8 @@ class TestDeterministicFactResolution:
 
     def test_sign_flip_is_reported_and_the_later_filing_sign_used(self, r11):
         """Essity 2020 D&A: -7,671M in the 2021 filing, +7,671M in the 2022
-        filing. _da_total feeds EBITDA and is NOT abs()'d, so the sign matters."""
+        filing. (_da_total itself is abs()'d, see test_da_addback_is_never_negative...; the conflict is
+        still reported so a sign flip stays visible.)"""
         df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)),
                     _fact("da", -7671.0, 1), _fact("da", 7671.0, 2))
         assert _value(r11, df, "da") == 7671.0
