@@ -110,6 +110,16 @@ plausible range) — guessing wrong here silently corrupts EBITDA/FCFF, and
 ambiguous cases (a tag that bundles the concept with something else, or no
 tag at all) should stay flagged as a fallback rather than be guessed at.
 
+**Which line a company prints is decided by its own report, not by a tag name.**
+A tag can be used for something else (Puig files its trade payables under the
+income-tax-liability tag): such a case is a reviewed entry in
+`data/mappings/company_tag_overrides.yaml` (printed label + evidence mandatory,
+one company only), never a condition in core analytics. When a mapping is
+corrected, `scripts/32_remap_facts.py` re-points the facts already loaded
+(dry run first; `fact_value.raw_xbrl_tag` keeps the original tag). A fact's
+fiscal year is the year its period ENDS (`fiscal_year_label` in
+`11_ratio_engine.py`, the only place the rule lives).
+
 **Two separate `requirements.txt` on purpose.** The root one (used by
 pipeline scripts and CI's `tests.yml`/`pipeline.yml`) includes `arelle-release`,
 a heavy XBRL-parsing dependency `webapp/app.py` never needs. `webapp/requirements.txt`

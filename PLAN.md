@@ -1570,5 +1570,64 @@ statement figures are faithful; the errors were in what the ENGINE reads.
   does not de-duplicate by tag (73 duplicates).
 - `19_valuation` still uses a hand-verified `TICKER_MAP` first; forecast save only upserts, so extending a history
   leaves stale rows (cleaned by hand for Recordati); Heineken has no 3-statement/DCF (costs by nature).
-- Not verified: the engine's concept choice for inventory, payables, D&A and capex has not been audited against the
-  reports the way debt and receivables were.
+- (Audited 2026-09-21 - see the next section.)
+
+### 2026-09-21: inventory / payables / D&A / capex audited against the reports (PRs #47-#59, applied to the live DB)
+
+**How:** for every company-year, the concept the engine reads for these four inputs was matched to the value AND the row
+label the company prints in its own ESEF report (`report_check` on the inline-XBRL, `reconcile_reports.py`, the anchors
+in each definition linkbase). Stored figures were faithful (every chosen value equals a printed line); the errors were
+in WHICH line the engine read, in labelling, and in mapping.
+
+**Found and fixed (one PR each):**
+- **Inventory:** correct for all 16 companies (42 of 85 company-years have a report that covers them; the rest are
+  comparatives). Essity 2022 (28,888) looked odd and is exactly what is printed.
+- **Puig payables (#53):** the filer swapped two tags - trade payables ("Proveedores y acreedores" 229.5M) sit under
+  `CurrentTaxLiabilitiesCurrent`, the income-tax payable (47.6M) under `TradeAndOtherCurrentPayables`. DPO 14 -> 70 days
+  (live), CCC 248 -> 192. New reviewed per-company override file `data/mappings/company_tag_overrides.yaml` (printed
+  label + evidence mandatory; the loader refuses an entry without them; applies to that company only).
+- **Capex (#49, #50):** the model read the first of five concepts, i.e. PP&E only where intangibles are printed on a
+  separate line (Schneider 1,072 vs 1,543 printed; Amplifon, ASM, Recordati, Heineken), and fell back to a flat 3% of
+  revenue where the combined line sits under an extension tag (EssilorLuxottica 795 vs 1,522; Kering 587 vs 2,611;
+  L'Oreal, Pernod). `resolve_capex()` reads a combined line else adds every printed component; the extension tags now
+  map to one canonical concept through the filers' own anchors. LVMH's "operating investments" (5,531M) is NOT mapped:
+  its anchors include disposal proceeds, so it is net of disposals - ambiguous as capex, stays the flagged fallback.
+- **D&A (#47, #51, #52):** Essity 2019 was stored negative (EBITDA ~SEK 15bn too low, credit row 7.2x -> 2.25x live);
+  the depreciation + amortisation pair of Recordati is now the D&A; Schneider, EssilorLuxottica and ASM print D&A under
+  extension tags (anchored to the IFRS D&A / impairment elements) that are now mapped. Kering, LVMH, L'Oreal bundle D&A
+  with provisions on the face of the statement - no clean D&A exists, they stay `n/a*` (Essity 2023-24 prints none).
+  New `_da_basis` records which lines built each D&A. The perimeter differs by company: some lines include
+  impairment (Danone, Heineken, Shell, EssilorLuxottica, ASM, Amplifon - whose own printed EBITDA 511.6 equals ours),
+  Moncler / Puig / Pernod are D&A only.
+- **Fiscal-year label (#48):** durations were labelled by START year, instants by END year; Pernod Ricard (FYE 30 June)
+  paired FY2025 flows with FY2024 balances. One rule in `11_ratio_engine.fiscal_year_label` (year the period ends);
+  only Pernod changes (43 ratio values), the other 15 companies are identical.
+- **DPO / CCC basis (#54):** the IFRS "trade and other payables" element holds trade payables alone for LVMH / Kering /
+  Moncler and a broader line for Heineken, Shell, Schneider (Adyen): recorded in `ratio.source_concepts` and captioned
+  on the dashboard as "may not be comparable".
+- **Keep-alive (#55):** the HTTP check could not see the sleep page (the app is drawn in an iframe by JavaScript) and was
+  green while the app was asleep; a real headless browser now wakes and verifies it (`scripts/wake_dashboard.py`; the
+  awake path ran green on the GitHub runner; the wake-button path is unit-tested only, it needs a sleeping app).
+- **Tooling:** `scripts/32_remap_facts.py` re-points already-loaded facts to the concept the mapping now assigns
+  (dry-run by default, clash-aware, swap-aware); forensics no longer crashes on a run with no flags (#56, #57); the live
+  forensics test no longer asserts a hard-coded 62 flags (#59).
+
+**Applied to the live DB** (snapshot before/after; 76 facts re-pointed and proven `concept_id`-only; 8 Recordati
+duplicates left in place): ratios recomputed; forensics / valuation / 3-statement / DCF / credit refreshed for the
+affected companies; Pernod's rows under the old year label removed. Untouched companies: identical in every table except
+valuation (market data and peer medians). Golden files re-baselined (#58). Screener: EssilorLuxottica, Recordati and
+Schneider now show EV/EBITDA and net debt/EBITDA (11.6x/1.7x, 14.6x/2.3x, 21.5x/1.6x); `n/a*` remains for Kering,
+L'Oreal, LVMH and Essity (D&A not separable).
+
+**Judgement calls a reviewer should look at:**
+- EssilorLuxottica's DCF EV moved 120bn -> 211bn: capex and D&A are now the printed 1,522M / 3,098M instead of both
+  being the 3% fallback, so D&A (incl. right-of-use depreciation and impairment) exceeds capex by ~1.6bn a year, growing
+  at the 16.4% historical CAGR. The inputs are the printed ones; the growth assumption (CAGR including acquisitions)
+  is what makes the level implausible against a 76bn market EV. The DCF stays illustrative.
+- Recordati capex 2023/2024 (383M / 851M) come from its printed intangible-purchase line (product-rights deals);
+  compared with the printed statements only for FY2022.
+
+**Still open:** D&A for Kering / LVMH / L'Oreal / Essity (notes only); LVMH capex definition; ASM zero-debt override;
+statement hierarchy not stored; one-off `_x` concepts (70 tags still mapped twice) and 6 stale `concept_mapping` rows;
+`19_valuation --company` overwrites peer medians with the single company's own (run it for the whole universe);
+Pernod forecast (2 years of history); Heineken / Amplifon / Shell have no 3-statement/DCF (costs by nature).
