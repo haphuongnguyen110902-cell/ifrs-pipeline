@@ -82,13 +82,23 @@ _f16_spec.loader.exec_module(f16)
 
 MODEL_SCHEMA = Path(__file__).parent.parent / "sql" / "schema_three_statement.sql"
 
-CAPEX_CONCEPTS = (
+# Capex is what the cash-flow statement prints for buying long-lived assets, and filers print it two ways.
+# ONE line that already covers PP&E and intangibles (or the company's own total): read that.
+CAPEX_COMBINED = (
     "cash_outflow_for_total_cash_capital_expenditure",
     "purchase_of_property_plant_and_equipment_and_intangible_asse_etc",
     "purchase_of_property_plant_equipment_and_intangible_assets_o_etc",
     "purchase_of_property_plant_and_equipment_intangible_asset_etc",
-    "purchase_of_property_plant_and_equipment_classified_as_inves_etc",
 )
+# ... or SEPARATE lines - add up every one that is printed. Reading only the PP&E line (as this used to)
+# left out the intangibles/capitalised development: -31% Schneider, -52% Amplifon, -53% ASM, -54% Recordati,
+# -11% Heineken against the printed statements (2025).
+CAPEX_COMPONENTS = (
+    "purchase_of_property_plant_and_equipment_classified_as_inves_etc",
+    "purchase_of_intangible_assets_classified_as_investing_activi_etc",
+    "payments_for_development_project_expenditure",
+)
+CAPEX_CONCEPTS = CAPEX_COMBINED + CAPEX_COMPONENTS[:1]     # kept for callers that import the old name
 
 DIVIDEND_CONCEPTS = (
     "dividends_paid_classified_as_financing_activities",
@@ -116,6 +126,26 @@ def select_base_year_row(ratios: pd.DataFrame):
     return ratios.loc[latest_idx]
 
 
+def resolve_capex(wide: pd.DataFrame) -> pd.DataFrame:
+    """Per company-year row: capex (positive) and the basis it was read from, or NaN / "" when no capex line is
+    stored. A combined line wins; otherwise the printed component lines are summed (a component that is not
+    printed adds nothing - it is not a zero the company reported, and `basis` names exactly what was added)."""
+    n = len(wide)
+    capex = pd.Series([float("nan")] * n, index=wide.index)
+    basis = pd.Series([""] * n, index=wide.index, dtype=object)
+    for i in wide.index:
+        row = wide.loc[i]
+        combined = next((c for c in CAPEX_COMBINED if c in wide.columns and pd.notna(row[c])), None)
+        if combined is not None:
+            capex[i], basis[i] = abs(row[combined]), combined
+            continue
+        parts = [c for c in CAPEX_COMPONENTS if c in wide.columns and pd.notna(row[c])]
+        if parts:
+            capex[i] = sum(abs(row[c]) for c in parts)
+            basis[i] = "+".join(parts)
+    return pd.DataFrame({"capex": capex, "basis": basis})
+
+
 def fetch_base_year(engine, company: str) -> dict:
     """Everything needed to project forward, from the company's latest
     actual fiscal year: growth rate (from history), margins, working
@@ -130,9 +160,9 @@ def fetch_base_year(engine, company: str) -> dict:
     latest = select_base_year_row(ratios)
     latest_year = int(latest["year"])
 
-    capex = r11.get_best(wide, *CAPEX_CONCEPTS)
-    capex_latest = capex.loc[wide["year"] == latest_year]
-    capex_value = abs(capex_latest.iloc[0]) if not capex_latest.empty and pd.notna(capex_latest.iloc[0]) else None
+    capex_rows = resolve_capex(wide).loc[wide["year"] == latest_year]
+    capex_value = capex_rows["capex"].iloc[0] if not capex_rows.empty and pd.notna(capex_rows["capex"].iloc[0]) else None
+    capex_basis = capex_rows["basis"].iloc[0] if capex_value is not None else ""
 
     dividends = r11.get_best(wide, *DIVIDEND_CONCEPTS)
     dividends_latest = dividends.loc[wide["year"] == latest_year]
@@ -187,6 +217,7 @@ def fetch_base_year(engine, company: str) -> dict:
         "dpo": latest["dpo"],
         "capex": capex_final,
         "capex_is_fallback": capex_value is None,
+        "capex_basis": capex_basis,
         "payout_ratio": payout_ratio, "payout_ratio_is_fallback": payout_ratio_is_fallback,
         "receivables": latest["_revenue"] * latest["dso"] / 365,
         "inventory": cogs_latest * latest["dio"] / 365,
@@ -382,6 +413,8 @@ if __name__ == "__main__":
     print(f"Base year: {base['base_year']} | Growth: {growth:.1%} "
           f"({'CAGR from history' if args.growth is None else 'user override'}) | "
           f"Interest rate: {args.interest_rate:.1%} | Payout ratio: {base['payout_ratio']:.1%}")
+    if not base["capex_is_fallback"]:
+        print(f"Capex {base['capex']:,.0f} read from: {base['capex_basis']}")
     if base["capex_is_fallback"]:
         print("*** No capex figure found in filings - using generic 3% of revenue fallback. "
               "Treat FCF/DCF outputs as illustrative only for this company.")
