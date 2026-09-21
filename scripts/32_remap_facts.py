@@ -129,6 +129,8 @@ def main():
     ap.add_argument("--all", action="store_true", help="move every drifted tag (still only with --apply)")
     ap.add_argument("--apply", action="store_true", help="write; without it nothing changes")
     args = ap.parse_args()
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")     # accented tags (el:...Dépréciations...) on a cp1252 console
 
     from dotenv import load_dotenv
     load_dotenv()
