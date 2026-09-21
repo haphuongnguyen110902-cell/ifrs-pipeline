@@ -40,3 +40,33 @@ overrides:
       Balance sheet 31 Dec 2024 / 2023 (EUR thousands): the row "Impuesto sobre sociedades a pagar" (corporate income tax
       payable) 47,625 / 55,319 is tagged ifrs-full:TradeAndOtherCurrentPayables. Read 2026-09-21 with
       scripts/reconcile_reports.py and the report's row labels.
+
+  # LVMH - FY2024 universal registration document, consolidated cash flow statement and note 15.3 "Investissements
+  # d'exploitation" (French ESEF report IOG4E947OATN0KJYSD45-2024-12-31-0-fr.xhtml). LVMH's face statement prints ONE line,
+  # "Investissements d'exploitation" (operating investments), and note 15.3 breaks it down (EUR millions):
+  #                                                              2024     2023     2022
+  #   Acquisitions of intangible assets (note 3)                 (837)  (1,000)    (685)
+  #   Acquisitions of PP&E (note 6)                            (4,715)  (6,807)  (4,397)
+  #   Cash effect of fixed-asset acquisitions (after the change in fixed-asset suppliers)
+  #                                                            (5,519)  (7,536)  (4,948)   <- IAS 7.16(a) gross payments
+  #   Cash effect of fixed-asset disposals                          21      136       73
+  #   Guarantee deposits and other operating investing flows      (33)     (78)     (94)
+  #   Operating investments (the line tagged below)            (5,531)  (7,478)  (4,969)
+  # So the company-defined line differs from the gross IAS 7.16(a) payments by +12 / -58 / +21 (0.2% / 0.8% / 0.4%):
+  # disposals and deposits are tiny. Used as capex because it is what the company defines and reports (it drives its
+  # own "cash flow disponible d'exploitation"), it is within 1% of the gross measure IAS 7.16(a) / 7.21 ask for, and
+  # the gross figure itself is not XBRL-tagged (note 15.3 has no tags), so it cannot be read from the facts. Note that
+  # IAS 7.21 asks for gross receipts and payments to be reported separately: LVMH's face line is net and its gross
+  # split is in the note - a presentation point for the company and its auditors, not something this pipeline judges.
+  - company: "LVMH"
+    tag: "LVM:OperatingInvestmentsClassifiedAsInvestingActivities"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Investissements d'exploitation"
+    evidence: >-
+      Cash flow statement and note 15.3 of the FY2024 report: operating investments (5,531) = cash effect of fixed-asset
+      acquisitions (5,519) + cash effect of disposals 21 + guarantee deposits and other (33); acquisitions of
+      intangibles (837) and PP&E (4,715) before the change in fixed-asset suppliers. 2023: (7,478) vs (7,536) gross;
+      2022: (4,969) vs (4,948) gross. Company-defined, within 1% of the IAS 7.16(a) gross payments in all three years.
+      Read 2026-09-21 from the report's own rows.

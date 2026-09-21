@@ -149,3 +149,38 @@ class TestRemapWithOverrides:
             m32.apply_drift(c, self.LOOKUP, m32.find_drift(c, self.LOOKUP, overrides=self.OV), overrides=self.OV)
         with db.connect() as c:
             assert m32.find_drift(c, self.LOOKUP, overrides=self.OV).empty
+
+
+class TestLvmhOperatingInvestmentsAsCapex:
+    """LVMH prints one net line, "Investissements d'exploitation" (5,531M in 2024). Its note 15.3 gives the gross split, so
+    the line can be checked against the IAS 7.16(a) gross payments for acquiring PP&E and intangibles: within 1% in each of
+    2022-2024. That is what justifies reading it as LVMH's capex (company-defined), and it is not XBRL-tagged in the note."""
+
+    TAG = "LVM:OperatingInvestmentsClassifiedAsInvestingActivities"
+    CANON = "purchase_of_property_plant_and_equipment_and_intangible_asse_etc"
+
+    # EUR millions from note 15.3: (operating investments, cash effect of acquisitions, disposals, deposits and other)
+    NOTE_15_3 = {2024: (5_531, 5_519, 21, -33), 2023: (7_478, 7_536, 136, -78), 2022: (4_969, 4_948, 73, -94)}
+
+    def test_the_note_adds_up_and_the_line_is_within_one_percent_of_the_gross_payments(self):
+        for year, (line, gross, disposals, deposits) in self.NOTE_15_3.items():
+            assert -gross + disposals + deposits == -line, year          # (5,519) + 21 + (-33) = (5,531)
+            assert abs(line - gross) / gross < 0.01, year
+
+    def test_the_override_applies_to_lvmh_only(self, m09):
+        lookup = m09.load_mapping(str(MAPPING))
+        ov = m09.load_overrides(OVERRIDES)
+        assert m09.tag_lookup_for("LVMH", lookup, ov)[self.TAG][0] == self.CANON
+        assert m09.tag_lookup_for("Kering", lookup, ov)[self.TAG][0] == "operating_investments_classified_as_investing_activities"
+
+    def test_the_entry_states_its_evidence(self, m09):
+        import yaml
+        entry = next(e for e in yaml.safe_load(OVERRIDES.read_text(encoding="utf-8"))["overrides"] if e["company"] == "LVMH")
+        assert "5,519" in entry["evidence"] and "5,531" in entry["evidence"] and "IAS 7.16(a)" in entry["evidence"]
+        assert entry["printed_label"] == "Investissements d'exploitation"
+
+    def test_the_capex_logic_reads_it(self, load_script):
+        m21 = load_script("21_three_statement_model.py")
+        w = pd.DataFrame([{"year": 2024, self.CANON: 5_531e6}])
+        r = m21.resolve_capex(w)
+        assert r["capex"].iloc[0] == pytest.approx(5_531e6) and r["basis"].iloc[0] == self.CANON
