@@ -284,6 +284,77 @@ def safe_div(numerator, denominator, scale=1):
         return pd.Series([float("nan")] * len(numerator))
 
 
+# The balance-sheet lines that make up financial debt, by normalized concept. Every one is a line a company
+# prints (verified with scripts/reconcile_reports.py); the set follows the IFRS taxonomy's own elements.
+NONCURRENT_DEBT_LINES = (
+    "longterm_borrowings", "noncurrent_portion_of_noncurrent_bonds_issued",
+    "noncurrent_portion_of_other_noncurrent_borrowings", "other_noncurrent_financial_liabilities",
+    "noncurrent_lease_liabilities",
+)
+CURRENT_DEBT_LINES = (
+    "shortterm_borrowings", "current_borrowings_and_current_portion_of_noncurrent_borr_etc",
+    "current_bonds_issued_and_current_portion_of_noncurrent_bonds_etc",
+    "other_current_borrowings_and_current_portion_of_other_noncur_etc", "other_current_financial_liabilities",
+    "current_lease_liabilities",
+)
+# IFRS "financial liabilities" SUBTOTALS (IAS 1.54(m)). Whether a printed subtotal CONTAINS the detail lines
+# or sits BESIDE them (Amplifon prints 984M of non-current financial liabilities beside 364M of lease
+# liabilities; Kering 13M beside 10,026M of borrowings) cannot be told from the numbers - only from the
+# statement structure. So the rule is deliberately one-directional: a subtotal is used ONLY when no borrowing
+# line is present on its side. It can understate (a small sibling is left out) but can never double count.
+FINANCIAL_LIABILITY_TOTALS = {
+    "noncurrent_financial_liabilities": ("longterm_borrowings", "noncurrent_portion_of_noncurrent_bonds_issued",
+                                         "noncurrent_portion_of_other_noncurrent_borrowings"),
+    "current_financial_liabilities": ("shortterm_borrowings", "current_borrowings_and_current_portion_of_noncurrent_borr_etc",
+                                      "current_bonds_issued_and_current_portion_of_noncurrent_bonds_etc",
+                                      "other_current_borrowings_and_current_portion_of_other_noncur_etc"),
+}
+# parent -> child: the taxonomy's "current borrowings and current portion of non-current borrowings" contains
+# short-term borrowings, so counting both would double count (no company stores both today)
+CONTAINS = {"current_borrowings_and_current_portion_of_noncurrent_borr_etc": ("shortterm_borrowings",)}
+
+
+def _financial_debt_row(row: pd.Series):
+    """(financial debt, basis) for one company-year, or (NaN, '') when no debt line is stored."""
+    used = {}
+    for name in NONCURRENT_DEBT_LINES + CURRENT_DEBT_LINES:
+        v = row.get(name)
+        if pd.notna(v):
+            used[name] = abs(float(v))
+    for total, borrowing_lines in FINANCIAL_LIABILITY_TOTALS.items():
+        t = row.get(total)
+        if pd.notna(t) and not any(b in used for b in borrowing_lines):
+            used[total] = abs(float(t))
+    for parent, children in CONTAINS.items():
+        if parent in used:
+            for child in children:
+                if child in used and used[parent] >= used[child]:
+                    del used[child]
+    if not used:
+        return float("nan"), "", False
+    non_current = set(NONCURRENT_DEBT_LINES) | {t for t in FINANCIAL_LIABILITY_TOTALS if t.startswith("noncurrent")}
+    current = set(CURRENT_DEBT_LINES) | {t for t in FINANCIAL_LIABILITY_TOTALS if t.startswith("current")}
+    complete = any(k in non_current for k in used) and any(k in current for k in used)
+    return sum(used.values()), "+".join(sorted(used)), complete
+
+
+def compute_financial_debt(wide: pd.DataFrame) -> pd.DataFrame:
+    """Per row of the wide table: `financial_debt` (sum of the printed financial-liability lines, absolute
+    values), `basis` (the concepts summed, for audit) and `complete` - True only when debt lines are stored on
+    BOTH the non-current and the current side. Lease liabilities are included: they are IFRS 16 financial
+    liabilities and EBIT/EBITDA are already stated after IFRS 16.
+
+    `complete` exists because partial input yields a plausible-looking WRONG number: Recordati with only a
+    24M current line stored looked like a net-cash company (-405M) while its printed loans make it about
+    EUR 2.0bn of net debt. Where a side is missing, downstream net debt is blank, not a guess."""
+    results = [_financial_debt_row(row) for _, row in wide.iterrows()]
+    return pd.DataFrame({
+        "financial_debt": pd.Series([r[0] for r in results], index=wide.index, dtype="float64"),
+        "basis": pd.Series([r[1] for r in results], index=wide.index, dtype="object"),
+        "complete": pd.Series([r[2] for r in results], index=wide.index, dtype="bool"),
+    })
+
+
 def get_col(wide: pd.DataFrame, name: str) -> pd.Series:
     """Return a column if it exists, else a NaN series of the same length."""
     if name in wide.columns:
@@ -425,21 +496,18 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["tax_rate"] = safe_div(tax.abs(), pbt.abs(), scale=100).clip(0, 60)
 
     # --- net debt ---
-    # Long-term borrowings: standard tag > generic non-current borrowings
-    lt_debt = get_best(wide,
-        "longterm_borrowings",           # ifrs-full:LongtermBorrowings - 6 companies
-        "noncurrent_liabilities",        # fallback: use total non-current liabilities
-                                         # (overestimates debt but better than n/a)
-    ).abs()
-    st_debt = get_col(wide,
-        "current_borrowings_and_current_portion_of_noncurrent_borr_etc").abs()
+    # Financial debt = the financial-liability lines the company PRINTS on its balance sheet (IAS 1.54(m):
+    # borrowings, bonds, lease liabilities, other financial liabilities; NOT derivatives, trade payables,
+    # provisions or deferred tax), less cash and cash equivalents. See compute_financial_debt. Where no such
+    # line is stored the result is blank - the old "use total non-current liabilities" fallback is gone: it
+    # both included non-debt liabilities and missed all current debt (Recordati 2025: -8%, Danone 2024: -4% by
+    # two offsetting mistakes) and ignored lease liabilities altogether (LVMH: EUR 17.8bn).
+    debt = compute_financial_debt(wide)
     cash = get_col(wide, "cash_and_cash_equivalents").abs()
-
-    # Only compute net debt where we have at least one debt figure
-    has_debt = lt_debt.notna() | st_debt.notna()
-    net_debt = lt_debt.fillna(0) + st_debt.fillna(0) - cash.fillna(0)
-    net_debt[~has_debt] = float("nan")
+    # blank unless debt lines are stored on both sides; NaN stays NaN: debt unknown -> net debt unknown
+    net_debt = debt["financial_debt"].where(debt["complete"]) - cash.fillna(0)
     r["_net_debt"] = net_debt
+    r["_debt_basis"] = debt["basis"].where(debt["complete"], "incomplete: " + debt["basis"])   # audit trail
 
     # --- ROIC ---
     equity_parent = get_col(wide, "equity_attributable_to_owners_of_parent")

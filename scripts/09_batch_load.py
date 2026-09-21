@@ -15,12 +15,17 @@ Usage:
     python scripts/09_batch_load.py --dry-run   # parse + report, no DB writes
     python scripts/09_batch_load.py             # parse + load
     python scripts/09_batch_load.py --only essity   # just one company
+    python scripts/09_batch_load.py --only essity heineken.zip   # several ("x.zip" is fine)
     python scripts/09_batch_load.py --strict    # stop on first unmapped concept
 
 Safe to re-run: the loader uses get_or_create for company/filing/period/
-concept, so re-running does not duplicate those. NOTE: fact_value rows are
-inserted unconditionally, so re-loading the SAME filing twice WILL create
-duplicate fact rows. Use --reset-facts to clear a company's facts first.
+concept, and fact_value has UNIQUE(filing_id, period_id, concept_id) with an
+ON CONFLICT upsert - so re-loading the SAME filing does NOT duplicate facts
+(verified: re-loading Recordati left its row count unchanged at 221). An older
+version of this note claimed the opposite, which is what pushed people toward
+--reset-facts. You rarely need it: it deletes a company's existing facts first,
+which is only for a mapping change that must REMOVE facts. It therefore
+requires --only (one named company at a time), or an explicit --yes-reset-all.
 """
 import argparse
 import ast
@@ -222,17 +227,62 @@ def clear_company_facts(cur, company_name):
 
 # ---------------------------------------------------------------- main
 
+def select_stems(only, config: dict):
+    """Which companies.yaml entries to process. `only` is a list of stems;
+    "essity", "essity.zip" and "ESSITY" all select the entry `essity`
+    (README and run_pipeline.py used to pass "x.zip", which matched nothing and
+    silently loaded nothing). Returns (stems, unknown) - unknown names are
+    reported, never silently dropped."""
+    if not only:
+        return list(config), []
+    by_lower = {k.lower(): k for k in config}
+    stems, unknown = [], []
+    for raw in only:
+        name = os.path.basename(str(raw).strip())
+        if name.lower().endswith(".zip"):
+            name = name[:-4]
+        key = by_lower.get(name.lower())
+        if key is None:
+            unknown.append(raw)
+        elif key not in stems:
+            stems.append(key)
+    return stems, unknown
+
+
+def reset_scope_error(reset_facts: bool, only, confirm_all: bool):
+    """--reset-facts DELETES existing facts before reloading (the flag behind
+    the project's one data-loss incident). Refuse to apply it to every company
+    at once unless that is explicitly confirmed. Returns an error message, or
+    None when the combination is fine."""
+    if reset_facts and not only and not confirm_all:
+        return ("--reset-facts without --only would delete and reload the facts of EVERY "
+                "company that has a zip. Name the company (--only essity), or pass "
+                "--yes-reset-all if you really mean all of them. Re-loading without "
+                "--reset-facts is safe and does not duplicate facts.")
+    return None
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="data/companies.yaml")
     ap.add_argument("--mapping", default="data/mappings/ifrs_concepts_v0.yaml")
     ap.add_argument("--raw-dir", default="data/raw")
-    ap.add_argument("--only", help="Process just this one zip stem, e.g. 'essity'")
+    ap.add_argument("--only", nargs="+", metavar="STEM",
+                    help="Process just these companies (zip stems, e.g. essity heineken; a "
+                         "trailing .zip is accepted)")
     ap.add_argument("--dry-run", action="store_true", help="Parse and report, write nothing to the DB")
     ap.add_argument("--strict", action="store_true", help="Stop if a company has unmapped concepts")
     ap.add_argument("--reset-facts", action="store_true",
-                    help="Delete a company's existing facts before loading (avoids duplicates on re-run)")
+                    help="Delete a company's existing facts before loading. Rarely needed (re-loading "
+                         "is idempotent); requires --only or --yes-reset-all")
+    ap.add_argument("--yes-reset-all", action="store_true",
+                    help="Confirm --reset-facts for every company")
     args = ap.parse_args()
+
+    scope_error = reset_scope_error(args.reset_facts, args.only, args.yes_reset_all)
+    if scope_error:
+        print(f"REFUSED: {scope_error}")
+        sys.exit(2)
 
     with open(args.config, encoding="utf-8") as f:
         config = yaml.safe_load(f)["companies"]
@@ -253,7 +303,9 @@ if __name__ == "__main__":
     summary = []
     all_unmapped = {}
 
-    stems = [args.only] if args.only else list(config.keys())
+    stems, unknown = select_stems(args.only, config)
+    for name in unknown:
+        print(f"'{name}' is not in {args.config} - skipping (known: {', '.join(sorted(config))})")
 
     for stem in stems:
         if stem not in config:

@@ -397,6 +397,24 @@ def compute_flags(wide: pd.DataFrame, off_calendar_fye: dict = None) -> pd.DataF
 
 # ---------------------------------------------------------------- fetch revenue for growth
 
+def pick_revenue_per_year(df: pd.DataFrame) -> pd.DataFrame:
+    """One revenue per (company, year) from rows of (company, start_date, revenue, filing_id,
+    filing_end). When several filings report the same year - originals and later restatements,
+    or a year and its comparative - the value comes from the LATEST filing (the greatest own
+    period end), then the highest filing_id, then the larger value. This used to be `.first()`
+    over a query ordered only by (company, start_date), so which value won depended on row
+    order: 10 repeated calls happened to agree on today's data, but Essity 2022 holds two
+    different revenues (131,320M and 156,173M SEK) and the choice was left to chance. Sorting
+    here, not in SQL, makes the result independent of the order the rows arrive in."""
+    d = df.copy()
+    d["year"] = pd.to_datetime(d["start_date"]).dt.year
+    d["revenue"] = pd.to_numeric(d["revenue"], errors="coerce")
+    d["filing_end"] = pd.to_datetime(d["filing_end"]).fillna(pd.Timestamp.min)
+    d = d.sort_values(["company", "year", "filing_end", "filing_id", "revenue"],
+                      ascending=[True, True, False, False, False], kind="mergesort")
+    return d.groupby(["company", "year"], as_index=False).first()[["company", "year", "revenue"]]
+
+
 def fetch_revenue_growth(engine, company_filter=None) -> pd.DataFrame:
     """Compute YoY revenue growth directly from fact_value."""
     where = "AND c.name = :company" if company_filter else ""
@@ -404,7 +422,9 @@ def fetch_revenue_growth(engine, company_filter=None) -> pd.DataFrame:
         SELECT
             c.name AS company,
             p.start_date,
-            fv.value::numeric AS revenue
+            fv.value::numeric AS revenue,
+            fi.filing_id,
+            (SELECT MAX(p2.end_date) FROM period p2 WHERE p2.filing_id = fi.filing_id) AS filing_end
         FROM fact_value fv
         JOIN ifrs_concept ic ON fv.concept_id = ic.concept_id
         JOIN period p ON fv.period_id = p.period_id
@@ -413,15 +433,12 @@ def fetch_revenue_growth(engine, company_filter=None) -> pd.DataFrame:
         WHERE ic.normalized_name = 'revenue'
         AND p.period_type = 'duration'
         {where}
-        ORDER BY c.name, p.start_date
     """
     params = {"company": company_filter} if company_filter else {}
     df = pd.read_sql(text(query), engine, params=params)
     if df.empty:
         return pd.DataFrame()
-    df["year"] = pd.to_datetime(df["start_date"]).dt.year
-    df["revenue"] = pd.to_numeric(df["revenue"], errors="coerce")
-    df = df.groupby(["company", "year"])["revenue"].first().reset_index()
+    df = pick_revenue_per_year(df)
     df["revenue_growth"] = df.groupby("company")["revenue"].pct_change() * 100
     return df[["company", "year", "revenue_growth"]]
 
@@ -475,19 +492,54 @@ def _company_id_map(conn) -> dict:
     return {name: cid for cid, name in rows}
 
 
-def save_to_db(engine, flags: pd.DataFrame) -> int:
-    """Delete-then-insert, scoped to the companies present in `flags` -
-    see this module's docstring for why an upsert alone isn't enough (a
-    flag that stops triggering needs to actually disappear, not just
-    never get updated)."""
-    if flags.empty:
+def drop_flags_for_financial_companies(flags: pd.DataFrame, financial_names: dict):
+    """(flags without the financial companies', [names dropped]). `financial_names` is
+    {company name: reason} as 11_ratio_engine.financial_company_reasons resolves it.
+
+    WHY: the rules read revenue growth, margins, cash conversion and net debt - none of which
+    mean what they say for a lender, insurer or payment processor. Found live: Adyen's stored
+    revenue is EUR 8,936M for FY2022 and EUR 1,863M for FY2023 (gross before, net after), so
+    the rules raised "revenue -79.1%" and "operating margin 7.4% -> 35.3%", and "net cash 11x
+    operating profit" describes client money, not surplus. A plausible-looking flag on a
+    definition break is worse than no flag - the same reasoning as the ratio gating."""
+    if flags.empty or not financial_names:
+        return flags, []
+    mask = flags["company"].isin(list(financial_names))
+    return flags[~mask].reset_index(drop=True), sorted(flags.loc[mask, "company"].unique())
+
+
+def ensure_printable_output(stream=None) -> None:
+    """Never let a print() die on an emoji. print_summary writes severity emoji; with piped or
+    redirected output on Windows the stream is cp1252 and the run crashed with UnicodeEncodeError
+    AFTER the flags were computed but BEFORE they were saved - silently, if the caller filtered
+    the output. Unencodable characters become '?' instead."""
+    stream = stream or sys.stdout
+    if hasattr(stream, "reconfigure"):
+        stream.reconfigure(errors="replace")
+
+
+def save_to_db(engine, flags: pd.DataFrame, evaluated_companies=None) -> int:
+    """Delete-then-insert - see this module's docstring for why an upsert
+    alone isn't enough (a flag that stops triggering needs to actually
+    disappear, not just never get updated).
+
+    The DELETE covers `evaluated_companies` (every company this run computed
+    flags FOR, including any that now have none) plus every company present
+    in `flags`. Scoped to `flags` alone, a company whose flags ALL stop
+    triggering is simply absent from it, so its old rows were never deleted:
+    found live, Adyen kept three flags (one HIGH) computed from ratios that
+    had since been blanked, through a clean re-run. `None` keeps the old,
+    narrower scope."""
+    in_flags = set(flags["company"].unique()) if "company" in flags.columns else set()
+    scope = in_flags | set(evaluated_companies if evaluated_companies is not None else [])
+    if not scope:
         return 0
 
     with engine.begin() as conn:
         company_ids = _company_id_map(conn)
 
         resolved_ids = []
-        for company in flags["company"].unique():
+        for company in sorted(scope):
             company_id = company_ids.get(company)
             if company_id is None:
                 print(f"  *** no company_id found for '{company}' - its flags were not saved (run the loader first)")
@@ -615,13 +667,29 @@ if __name__ == "__main__":
     if not rev_growth.empty:
         flags = add_revenue_flags(flags, rev_growth)
 
+    # not meaningful for lenders / insurers / payment processors (see the function's docstring);
+    # the classification is the ratio engine's, so the two stages can never disagree on who is financial
+    import importlib.util
+    _spec = importlib.util.spec_from_file_location("ratio_engine_11", Path(__file__).parent / "11_ratio_engine.py")
+    r11 = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(r11)
+    profiles = r11.fetch_company_profiles(engine)
+    reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
+    financial_names = {row["name"]: reasons[int(row["company_id"])]
+                       for _, row in profiles.iterrows() if int(row["company_id"]) in reasons}
+    flags, suppressed = drop_flags_for_financial_companies(flags, financial_names)
+    for name in suppressed:
+        print(f"  {name}: flags suppressed - treated as a financial company ({financial_names[name]}); "
+              f"revenue, margin, cash-conversion and net-debt rules are not meaningful for it")
+
     # output
+    ensure_printable_output()
     print_summary(flags, min_severity=args.min_severity)
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     save_excel(flags, args.out)
 
-    n_saved = save_to_db(engine, flags)
+    n_saved = save_to_db(engine, flags, evaluated_companies=wide["company"].unique())
     print(f"\nSaved {n_saved} flags to forensics_flag table.")
 
     # summary counts

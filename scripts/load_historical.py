@@ -103,6 +103,13 @@ COMPANY_MAP = {
     "shell": ("Shell", "USD", "Energy", "United Kingdom"),
     "amplifon": ("Amplifon", "EUR", "Consumer Health Retail", "Italy"),
     "puig": ("Puig Brands", "EUR", "Consumer / Beauty", "Spain"),
+    # Loaded from the universe after the first eleven (depth pass). Values are
+    # data/companies.yaml's own; download_historical.py's COMPANIES uses the same keys.
+    "heineken": ("Heineken", "EUR", "Consumer / Beverages", "Netherlands"),
+    "schneider": ("Schneider Electric", "EUR", "Industrials / Electrical Equipment", "France"),
+    "adyen": ("Adyen", "EUR", "Financials / Payments", "Netherlands"),
+    "asm": ("ASM International", "EUR", "Technology / Semiconductor Equipment", "Netherlands"),
+    "recordati": ("Recordati", "EUR", "Healthcare / Pharmaceuticals", "Italy"),
     # Pernod Ricard intentionally excluded: its June 30 fiscal year end
     # is not comparable to the December filers above without extra work
     # (see NOTES.md / roadmap "known architectural issue").

@@ -1,37 +1,35 @@
-# Keep-alive ping for the Streamlit Community Cloud dashboard.
+# Health check (and best-effort keep-alive) for the Streamlit Community Cloud
+# dashboard.
 #
-# WHY THIS EXISTS: Streamlit Community Cloud's free tier puts an app to
-# sleep after a period of inactivity - a cold visitor (e.g. a recruiter
-# clicking the README's live-demo link) hits a "Zzzz... this app has gone
-# to sleep" page instead of the dashboard, with a ~20-30s cold start even
-# after clicking "wake up". That first impression is worse than the
-# dashboard having a bug.
+# WHY THIS EXISTS: Streamlit Community Cloud's free tier puts an app to sleep
+# after a period of inactivity - a cold visitor (e.g. a recruiter clicking the
+# README's live-demo link) hits a "Zzzz... this app has gone to sleep" page.
 #
-# STOPGAP, NOT A FIX: this just pings the URL often enough that Streamlit
-# never considers the app idle. It does not solve the underlying problem
-# (a free-tier host that sleeps at all) - see ROADMAP.md / CLAUDE.md's
-# review notes for the real fix (migrate to a host that doesn't sleep,
-# e.g. Render/Fly.io/Hugging Face Spaces). Delete this workflow once
-# that migration happens; a ping cron is a permanent minor guilt tax on
-# a free tier, not something to keep running forever if a better host is
-# in place.
+# WHAT CHANGED (2026-09-19): the old version ran a plain `curl <url>` and never
+# checked the result. The app answers a cookie-less request with a 303 redirect
+# into Streamlit's auth handshake, so that curl never reached the app and the job
+# reported success every 12 hours while the app was asleep. It now loads the page
+# the way a browser does (scripts/check_dashboard.sh: cookie jar, follows
+# redirects) and FAILS - so GitHub emails you - if the app is asleep or down.
 #
-# Runs less often than Streamlit's idle timeout to be safe, but not so
-# often it looks like abuse of the free tier.
+# HONEST LIMITS: a page load is the best a free workflow can do, and I could not
+# verify that it is enough to stop hibernation (only that it detects it). If the
+# job keeps going red, the real fix is a host that does not sleep (e.g. Render,
+# Fly.io, Hugging Face Spaces); delete this workflow once that migration happens.
 
 name: Keep Dashboard Awake
 
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: '0 */12 * * *'  # every 12 hours
+    - cron: '0 */6 * * *'  # every 6 hours
 
 jobs:
-  ping:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping the Streamlit app
-        run: |
-          curl -sS -o /dev/null -w "HTTP %{http_code}\n" \
-            "https://haphuongnguyen110902-cell-ifrs-pipeline-webappapp-iwnn9s.streamlit.app/" \
-            || echo "Ping failed - app may be asleep or URL changed. Not a fatal CI error."
+      - name: Checkout (for the check script)
+        uses: actions/checkout@v4
+
+      - name: Load the dashboard like a browser and fail if it is asleep or down
+        run: bash scripts/check_dashboard.sh "https://haphuongnguyen110902-cell-ifrs-pipeline-webappapp-iwnn9s.streamlit.app/"
