@@ -475,19 +475,28 @@ def _company_id_map(conn) -> dict:
     return {name: cid for cid, name in rows}
 
 
-def save_to_db(engine, flags: pd.DataFrame) -> int:
-    """Delete-then-insert, scoped to the companies present in `flags` -
-    see this module's docstring for why an upsert alone isn't enough (a
-    flag that stops triggering needs to actually disappear, not just
-    never get updated)."""
-    if flags.empty:
+def save_to_db(engine, flags: pd.DataFrame, evaluated_companies=None) -> int:
+    """Delete-then-insert - see this module's docstring for why an upsert
+    alone isn't enough (a flag that stops triggering needs to actually
+    disappear, not just never get updated).
+
+    The DELETE covers `evaluated_companies` (every company this run computed
+    flags FOR, including any that now have none) plus every company present
+    in `flags`. Scoped to `flags` alone, a company whose flags ALL stop
+    triggering is simply absent from it, so its old rows were never deleted:
+    found live, Adyen kept three flags (one HIGH) computed from ratios that
+    had since been blanked, through a clean re-run. `None` keeps the old,
+    narrower scope."""
+    in_flags = set(flags["company"].unique()) if "company" in flags.columns else set()
+    scope = in_flags | set(evaluated_companies if evaluated_companies is not None else [])
+    if not scope:
         return 0
 
     with engine.begin() as conn:
         company_ids = _company_id_map(conn)
 
         resolved_ids = []
-        for company in flags["company"].unique():
+        for company in sorted(scope):
             company_id = company_ids.get(company)
             if company_id is None:
                 print(f"  *** no company_id found for '{company}' - its flags were not saved (run the loader first)")
@@ -621,7 +630,7 @@ if __name__ == "__main__":
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     save_excel(flags, args.out)
 
-    n_saved = save_to_db(engine, flags)
+    n_saved = save_to_db(engine, flags, evaluated_companies=wide["company"].unique())
     print(f"\nSaved {n_saved} flags to forensics_flag table.")
 
     # summary counts
