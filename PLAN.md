@@ -1381,9 +1381,10 @@ live-DB tests now fail *because they hard-code the 11-company universe*:
 because those 34 live-DB tests skip there (206 pass / 34 skip with no DB).
 Note: running that forensics test **writes to the live `forensics_flag` table**.
 
-**Audit findings, each verified by a command (fixes NOT done - candidates for
-their own WPs; severity is my judgement):**
-- HIGH - **FIXED on `fix/ratio-fact-tiebreak`.** `11_ratio_engine.py` pivoted with
+**Audit findings, each verified by a command (the three HIGH items below were
+fixed on 2026-09-19 - PRs #22, #23, #24 - the rest are open candidates; severity
+is my judgement):**
+- HIGH - **FIXED (PR #22).** `11_ratio_engine.py` pivoted with
   `aggfunc="first"` over a query with no `ORDER BY`; 223 (company, concept, period)
   keys held *different* values across filings, many exact sign flips (Essity D&A
   -7,671M vs +7,671M). Measured: shuffling the input rows moved up to **47** ratio
@@ -1391,9 +1392,9 @@ their own WPs; severity is my judgement):**
   real value > NaN; the year's representative period (~365-day duration / latest
   instant); the latest filing (its year read from its own facts, not its filename);
   then filing_id. All 232 contested facts (96 restated, 73 other_period, 36
-  rounding, 27 sign_flip) are reported, never silent. **Real corrections to live
-  values (NOT yet applied - run `python scripts/11_ratio_engine.py` after merge):**
-  Recordati net debt 2021 -9.1% / 2022 -3.1% (its mis-dated opening cash had been
+  rounding, 27 sign_flip) are reported, never silent. **Applied to the live DB on
+  2026-09-19** (39 of 984 ratio values changed, verified by a before/after diff;
+  the 19 frozen baseline rows now match live again): Recordati net debt 2021 -9.1% / 2022 -3.1% (its mis-dated opening cash had been
   picked over the year-end balance), EssilorLuxottica 2021 now on its restated
   basis (operating margin 11.74% -> 11.64%), Kering 2021 < 0.4%. The 19 affected
   frozen `tests/baseline/ratio.csv` rows were re-baselined explicitly. 13 new
@@ -1401,12 +1402,41 @@ their own WPs; severity is my judgement):**
   corrections up (their frozen baselines may need the same explicit re-baseline).
   Still open: D&A and CFO are not abs()'d, so a wrong sign in a company's ONLY
   filing would still flip EBITDA / cash conversion.
-- HIGH - `00_find_filing.py` picks "latest" by archive `period_end`; the archive
-  has typos: Recordati lists a FY2022 package as `2032-12-31` (ranked first ->
-  we downloaded FY2022, not FY2025 added 2026-04-07); Carrefour/Hermes carry
-  2026-12-31. Use `date_added` + a `<= today` guard.
-- HIGH - no financial-sector gating: Adyen shows DIO 275d / DPO 1,018d / CCC
-  -713d. ~20% of the universe by name (my rough read) are banks/insurers/holdings.
+- HIGH - **FIXED (PR #23).** `00_find_filing.py`, `14_scan_universe.py` and
+  `download_historical.py` picked "latest" by the archive's `period_end`, which
+  has typos: Recordati lists a FY2022 package as `2032-12-31` (ranked first -> we
+  downloaded FY2022, not FY2025 added 2026-04-07); Carrefour/Hermes carry
+  2026-12-31, Melexis 2025-12-31 on a report published April 2025. A live survey
+  of 23 entities found 4 (17%) with an impossible label. Now: a declared period is
+  trusted only if it has ended and precedes the publication date; otherwise it is
+  recovered ONLY from a possible date in the package filename, else reported as
+  unknown (never guessed); an impossible-label filing published after the newest
+  trustworthy one is chosen but flagged; same-period duplicates are ranked by the
+  archive's own validation counts. 25 tests built from the real archive records,
+  8 rules mutation-tested. **Recordati's DB data is still FY2022** - the fix picks
+  the right file; re-downloading and loading FY2025 is a separate step.
+- HIGH - **FIXED (PR #24).** No financial-sector gating: Adyen showed DIO 275d /
+  DPO 1,018d / CCC -713d / ROIC -15.9%. `gate_financial_ratios()` blanks 8 ratios
+  (gross margin, cash conversion, DSO/DIO/DPO/CCC, ROIC, net-debt/EBIT) for a
+  company whose `sector_std` is 'Financial Services' OR that declares
+  `reporting_model: financial` in `companies.yaml` (yfinance labels Adyen
+  'Technology'); operating/net margin, tax rate and ROE are kept. The reason is
+  stored in a new additive `ratio.note` column and shown on the dashboard.
+  Applied live 2026-09-19: only Adyen changed (16 values blanked, 24 note rows).
+  Limits: sector gating cannot fire for a company with NULL `sector_std`
+  (`populate_sector_std` only fills the hard-coded `TICKER_MAP` companies);
+  19/21/22/24 don't gate; ~20% of the universe by name (my rough read) are
+  banks/insurers/holdings.
+- HIGH - **FIXED (PR #25, merged 2026-09-20), found while applying the above.**
+  `15_forensics.save_to_db` deleted old flags only for companies present in the NEW
+  flag list, so a company whose flags all stop triggering keeps them (Adyen: 3
+  stale flags incl. one HIGH). Also `test_rerunning_save_to_db_is_idempotent_not_
+  additive` re-saved `compute_flags(wide)` alone into the LIVE table, leaving it 13
+  flags short (revenue flags + Pernod warning) after every local test run - I
+  degraded the live table this way during today's work and restored it with
+  `15_forensics.py` (66 flags). Related, not fixed (measured tiny):
+  `fetch_revenue_growth` uses the same un-ordered `groupby().first()`; shuffling
+  ties moves only 2 Essity growth cells.
 - MED - 73 XBRL tags are mapped to two concept keys (`_x` suffix, from
   `12_apply_review.py` not de-duping by tag); pre-existing (642 distinct tags in
   HEAD). Facts are stored consistently under the `_x` name (no split found), but
@@ -1505,3 +1535,40 @@ breadth, not blocking anything that came before it). WP6 (the one-pager) was the
 last item that serves the Contrôleur de Gestion job search directly -
 everything from here is the Asset Management / breadth bet, per §6's own
 strategic-honesty note.
+
+### 2026-09-20/21: fidelity rule adopted; what was applied, merged and found (supersedes the "NOT integrated" and "FIX OPEN" notes above)
+
+**Rule of record (user):** every figure shown must MATCH the company's own published annual report; where a line's
+meaning is in doubt, IFRS decides. Enforced by `scripts/reconcile_reports.py` (compares each printed statement line
+of the ESEF report with what is stored; states OK / DIFFERENT / MISSING / BAD_PERIOD / NOT_LOADED / NO_STATEMENT).
+Measured: loaded companies 6,052 lines ~99.9% match; the 5 companies given history 2,386 lines 94.1%. The stored
+statement figures are faithful; the errors were in what the ENGINE reads.
+
+**Done and live:**
+- Depth: Heineken 2020-25, Schneider 2019-25, ASM 2019-25, Adyen 2019-25, Recordati 2020-25 (23 filings, sha256-verified
+  downloads, additive loads, snapshot-compared: 0 rows removed/changed anywhere). Forecasts 9 -> 14 of 16 companies.
+  Puig: the archive holds exactly one filing. Pernod Ricard: documented exclusion (June year end).
+- Net debt = the financial-liability lines the company prints (IAS 1.54(m)) INCLUDING IFRS 16 leases, blank unless
+  both the non-current and current side are stored; the "total non-current liabilities" fallback is gone
+  (8 of 16 companies had used it). Recordati matches hand calculation from its printed balance sheets 6/6 years.
+- Universe linked to companies (13 entities), tickers/LEI filled for 8, sector_std for the 5 newer companies.
+- Financial companies (Adyen) are skipped in forensics, credit and valuation (same classification as the ratio gating).
+- Dashboard: EBITDA multiples/band/trend shown as `n/a*` where D&A is not printed separately (L'Oreal, Schneider,
+  Recordati, EssilorLuxottica, LVMH, Kering; Essity in part) because "EBITDA" there is EBIT. LVMH check: net financial
+  debt as reported 9,228 (its definition, excludes leases) vs 31,143 here (+17,832 leases, +3,956 financial
+  investments not netted, +127 derivatives); every stored input equals the printed figure.
+- All earlier audit PRs (#25-#45) merged; `main` CI green.
+
+**Known limits / still open:**
+- HIGH-ish: no clean EBITDA for six companies (D&A only in notes as dimensional facts, or bundled with provisions).
+- ASM: no debt line stored -> net debt blank; needs a reviewed zero-debt override with evidence, not an assumption.
+- Statement hierarchy (parent/child) is not stored: whether a printed subtotal contains or sits beside its detail
+  cannot be decided from numbers, so the debt rule only ever understates (never double counts). Storing the
+  presentation tree per filing at load time is the proper fix.
+- One-off concepts created by classification (`finanziamenti_*`, Danone's `dan:` lines under `_x` keys) are invisible
+  to the engine; the general fix is to read each company's own ESEF anchors at load time. `12_apply_review.py` still
+  does not de-duplicate by tag (73 duplicates).
+- `19_valuation` still uses a hand-verified `TICKER_MAP` first; forecast save only upserts, so extending a history
+  leaves stale rows (cleaned by hand for Recordati); Heineken has no 3-statement/DCF (costs by nature).
+- Not verified: the engine's concept choice for inventory, payables, D&A and capex has not been audited against the
+  reports the way debt and receivables were.
