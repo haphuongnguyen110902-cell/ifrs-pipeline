@@ -184,7 +184,7 @@ class TestSpecFile:
         mapping = yaml.safe_load((ROOT / "data" / "mappings" / "ifrs_concepts_v0.yaml").read_text(encoding="utf-8"))
         known = {(n, st) for st, cs in mapping.items() for n in cs}
         specs = m33.load_specs()
-        assert {s["company"] for s in specs} == {"LVMH", "L'Oreal", "Essity"}
+        assert {s["company"] for s in specs} == {"LVMH", "L'Oreal", "Essity", "ASM International"}
         for s in specs:
             assert (s["concept"], s["statement"]) in known, s["id"]
             assert s["checks"] and len(s["evidence"]) > 40 and s["perimeter"]
@@ -193,7 +193,7 @@ class TestSpecFile:
     def test_the_concepts_are_the_ones_ratio_engine_reads_as_d_and_a(self, m33, load_script):
         r11 = load_script("11_ratio_engine.py")
         import pandas as pd
-        for s in m33.load_specs():
+        for s in [x for x in m33.load_specs() if "depreciation" in x["concept"]]:
             w = pd.DataFrame([{"company": "X", "company_id": 1, "year": 2024, "revenue": 1000.0,
                                "profit_loss_from_operating_activities": 100.0, s["concept"]: 50.0}])
             assert r11.compute_ratios(w)["_da_total"].iloc[0] == 50.0, s["id"]
@@ -286,3 +286,228 @@ class TestRealReports:
             pytest.skip(f"{s['report']} is not on this machine")
         got = run(m33, path, s)
         assert {r["year"]: r["value"] for r in got} == pytest.approx(expected)
+
+
+def text_report(tmp_path, tables, paragraphs=(), facts=(), name="rep.zip"):
+    """Like report(), plus running text paragraphs (for the checks that look for a sentence)."""
+    path = report(tmp_path, tables, facts, name)
+    with zipfile.ZipFile(path) as z:
+        xhtml = z.read("pkg/reports/report.xhtml").decode("utf-8")
+    xhtml = xhtml.replace("</body>", "".join(f"<p>{t}</p>" for t in paragraphs) + "</body>")
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("pkg/reports/report.xhtml", xhtml)
+    return path
+
+
+def run_text(m33, path, sp):
+    return m33.extract(sp, m33.read_rows(path), m33.report_facts(path), m33.read_text(path))
+
+
+class TestStatedZero:
+    """ASM: no borrowings. The zero is stored only while the report still says so and its balance sheet has no debt line."""
+    bs = [["Equity and liabilities"], ["Equity", "4,005.8", "3,747.2"], ["Other liabilities", "64.0", "23.6"],
+          ["Deferred tax liabilities", "207.5", "190.9"], ["Accounts payable", "214.9", "282.6"],
+          ["Total equity and liabilities", "5,337.0", "5,161.9"]]
+    say = ["As per December 31, 2025, ASM was debt-free. The amount outstanding as at December 31, 2025 was nil."]
+
+    def sp(self, **over):
+        s = spec(kind="stated_zero", years=[2025], period="instant", concept="longterm_borrowings", checks=[
+            {"report_states": "ASM was debt-free"},
+            {"no_row_matching": {"from": "^Equity and liabilities$", "to": "^Total equity and liabilities$",
+                                 "pattern": "borrow|loan|debt|bond|overdraft|credit facilit"}}])
+        s.update(over)
+        for k in ("row", "column", "scale", "decimal"):
+            s.pop(k, None)
+        return s
+
+    def test_a_stated_nil_with_a_clean_balance_sheet_is_accepted(self, m33, tmp_path):
+        got = run_text(m33, text_report(tmp_path, self.bs, self.say), self.sp())
+        assert [(r["year"], r["value"], r["row_index"]) for r in got] == [(2025, 0.0, None)]
+        assert any("ASM was debt-free" in c for c in got[0]["checks"])
+
+    def test_without_the_stating_sentence_it_is_refused(self, m33, tmp_path):
+        with pytest.raises(m33.FigureError, match="no longer contains"):
+            run_text(m33, text_report(tmp_path, self.bs, ["Nothing about debt here."]), self.sp())
+
+    def test_a_borrowing_line_on_the_balance_sheet_refuses_it(self, m33, tmp_path):
+        bs = self.bs[:3] + [["Bank loans", "50.0", "0.0"]] + self.bs[3:]
+        with pytest.raises(m33.FigureError, match="line of that nature"):
+            run_text(m33, text_report(tmp_path, bs, self.say), self.sp())
+
+    def test_a_missing_section_is_refused_not_passed(self, m33, tmp_path):
+        with pytest.raises(m33.FigureError, match="cannot locate"):
+            run_text(m33, text_report(tmp_path, [["Something else", "1"]], self.say), self.sp())
+
+    def test_the_nth_occurrence_selects_the_five_year_table(self, m33, tmp_path):
+        five = [["Equity and liabilities"], ["Bank loans", "50.0"], ["Total equity and liabilities", "1"]]
+        chk = {"no_row_matching": {"from": "^Equity and liabilities$", "to": "^Total equity and liabilities$",
+                                   "pattern": "loan", "occurrence": 2}}
+        with pytest.raises(m33.FigureError, match="line of that nature"):
+            run_text(m33, text_report(tmp_path, self.bs + five, self.say), self.sp(checks=[chk]))
+
+    def test_an_unknown_check_is_refused(self, m33, tmp_path):
+        with pytest.raises(m33.FigureError, match="unknown check"):
+            run_text(m33, text_report(tmp_path, self.bs, self.say), self.sp(checks=[{"vibes": "good"}]))
+
+    def test_a_stated_zero_needs_no_row_or_scale_in_its_spec(self, m33, tmp_path):
+        f = tmp_path / "s.yaml"
+        f.write_text(yaml.safe_dump({"figures": [{"id": "z", "kind": "stated_zero", "company": "X", "report": "r.zip",
+                                                  "years": [2025], "currency": "EUR", "concept": "c", "statement": "balance_sheet",
+                                                  "label": "L", "perimeter": "p", "checks": [{"report_states": "x"}],
+                                                  "evidence": "e"}]}), encoding="utf-8")
+        assert m33.load_specs(f)[0]["id"] == "z"
+
+
+class TestBalancesAtYearEnd:
+    """ASM's lease liabilities are balances (instants): a table with year columns and a table per year, each proved by a
+    neighbouring total that equals a TAGGED balance-sheet fact."""
+    accrued = [["December 31, (€ million)", "2025", "2024"], ["Personnel-related items", "122.2", "164.7"],
+               ["Current lease liabilities", "13.9", "11.7"], ["Supplier-related items", "32.4", "32.5"], ["Other", "28.4", "26.4"],
+               ["Total accrued expenses and other payables", "197.0", "235.3"]]
+    maturity = [["Year ended December 31, 2025", "Total", "Less than 1 year", "1-5 years", "More than 5 years"],
+                ["Accounts payable", "214.9", "214.9", "-", "-"], ["Accrued expenses and other payables", "197.0", "197.0", "-", "-"],
+                ["Non-current lease liabilities", "19.6", "-", "16.7", "2.9"],
+                ["Year ended December 31, 2024", "Total", "Less than 1 year", "1-5 years", "More than 5 years"],
+                ["Accounts payable", "282.6", "282.6", "-", "-"], ["Accrued expenses and other payables", "235.3", "235.3", "-", "-"],
+                ["Non-current lease liabilities", "25.0", "-", "21.4", "3.7"],
+                ["Contingent consideration payable", "25.2", "25.2"]]
+    facts = [("ifrs-full:CurrentAccruedExpensesAndOtherCurrentLiabilities", None, "2025-12-31", "197,0", 6),
+             ("ifrs-full:CurrentAccruedExpensesAndOtherCurrentLiabilities", None, "2024-12-31", "235,3", 6),
+             ("ifrs-full:Assets", None, "2025-12-31", "5 337,0", 6), ("ifrs-full:Assets", None, "2024-12-31", "5 161,9", 6)]
+
+    @staticmethod
+    def instants(tmp_path, tables, facts):
+        """report() writes durations; balances need instant contexts."""
+        path = report(tmp_path, tables, [])
+        ctx, fx = [], []
+        for i, (tag, _, day, txt, scale) in enumerate(facts):
+            ctx.append(f'<xbrli:context id="i{i}"><xbrli:entity/><xbrli:period><xbrli:instant>{day}</xbrli:instant></xbrli:period></xbrli:context>')
+            fx.append(f'<ix:nonFraction name="{tag}" contextRef="i{i}" scale="{scale}" format="ixt:num-dot-decimal">{txt.replace(",", ".")}</ix:nonFraction>')
+        with zipfile.ZipFile(path) as z:
+            xhtml = z.read("pkg/reports/report.xhtml").decode("utf-8")
+        xhtml = xhtml.replace("</ix:resources>", "".join(ctx) + "</ix:resources>").replace("</body>", "<p>" + "".join(fx) + "</p></body>")
+        with zipfile.ZipFile(path, "w") as z:
+            z.writestr("pkg/reports/report.xhtml", xhtml)
+        return path
+
+    def cur(self, **over):
+        return spec(row="^Current lease liabilities$", decimal=".", period="instant", concept="current_lease_liabilities", checks=[
+            {"sane_pct_of_tagged_fact": {"tag": "ifrs-full:Assets", "range": [0, 3]}},
+            {"cross_row_equals_tagged_fact": {"row": "^Total accrued expenses and other payables$",
+                                              "tag": "ifrs-full:CurrentAccruedExpensesAndOtherCurrentLiabilities",
+                                              "row_offset": 3, "tolerance": 0.001}}], **over)
+
+    def noncur(self, **over):
+        return spec(row="^Non-current lease liabilities$", min_values=3, years=[2025, 2024], column="first", decimal=".",
+                    period="instant", concept="noncurrent_lease_liabilities", checks=[
+                        {"cross_row_equals_tagged_fact": {"row": "^Accrued expenses and other payables$",
+                                                          "tag": "ifrs-full:CurrentAccruedExpensesAndOtherCurrentLiabilities",
+                                                          "row_offset": -1, "column": "first", "tolerance": 0.001}}], **over)
+
+    def test_header_year_columns_are_matched_year_by_year(self, m33, tmp_path):
+        """A total that is the LAST column for every year used to be compared with the 2024 balance for 2025."""
+        got = run(m33, self.instants(tmp_path, self.accrued, self.facts), self.cur())
+        assert [(r["year"], r["value"]) for r in got] == [(2025, 13.9e6), (2024, 11.7e6)]
+
+    def test_the_wrong_year_column_is_caught(self, m33, tmp_path):
+        facts = [self.facts[0][:2] + ("2025-12-31", "235,3", 6), self.facts[1][:2] + ("2024-12-31", "197,0", 6)] + self.facts[2:]
+        with pytest.raises(m33.FigureError, match="cannot be trusted"):
+            run(m33, self.instants(tmp_path, self.accrued, facts), self.cur())
+
+    def test_min_values_skips_a_row_with_the_same_label_but_one_number(self, m33, tmp_path):
+        acquisition = [["Non-current lease liabilities", "(0.9)"]]
+        got = run(m33, self.instants(tmp_path, self.maturity + acquisition, self.facts), self.noncur())
+        assert [(r["year"], r["value"]) for r in got] == [(2025, 19.6e6), (2024, 25.0e6)]
+
+    def test_without_min_values_the_extra_row_makes_it_ambiguous(self, m33, tmp_path):
+        acquisition = [["Non-current lease liabilities", "(0.9)"]]
+        with pytest.raises(m33.FigureError, match="expected 2 rows"):
+            run(m33, self.instants(tmp_path, self.maturity + acquisition, self.facts), dict(self.noncur(), min_values=1))
+
+    def test_a_balance_out_of_proportion_to_total_assets_is_refused(self, m33, tmp_path):
+        big = [list(r) for r in self.accrued]
+        big[2] = ["Current lease liabilities", "1 900.0", "11.7"]
+        with pytest.raises(m33.FigureError, match="outside the reviewed range"):
+            run(m33, self.instants(tmp_path, big, self.facts), self.cur())
+
+    def test_a_negative_row_offset_reads_the_row_above(self, m33, tmp_path):
+        got = run(m33, self.instants(tmp_path, self.maturity, self.facts), self.noncur())
+        assert "Accrued expenses and other payables 197,000,000 = tagged" in got[0]["checks"][0]
+
+
+class TestStoreInstantsAndZeros:
+    @pytest.fixture
+    def db(self):
+        e = create_engine("sqlite://")
+        with e.begin() as c:
+            for ddl in ("CREATE TABLE company (company_id INTEGER PRIMARY KEY, name TEXT)",
+                        "CREATE TABLE filing (filing_id INTEGER PRIMARY KEY, company_id INTEGER, source_file TEXT)",
+                        "CREATE TABLE period (period_id INTEGER PRIMARY KEY, filing_id INTEGER, start_date TEXT, end_date TEXT, period_type TEXT)",
+                        "CREATE TABLE ifrs_concept (concept_id INTEGER PRIMARY KEY, normalized_name TEXT UNIQUE, statement TEXT, display_label TEXT)",
+                        "CREATE TABLE fact_value (value_id INTEGER PRIMARY KEY, filing_id INTEGER, period_id INTEGER, concept_id INTEGER, "
+                        "raw_xbrl_tag TEXT, value REAL, currency TEXT, decimals INTEGER, context_ref TEXT, dimensions TEXT, "
+                        "UNIQUE(filing_id, period_id, concept_id))"):
+                c.execute(text(ddl))
+            c.execute(text("INSERT INTO company VALUES (1, 'X')"))
+            c.execute(text(r"INSERT INTO filing VALUES (10, 1, 'data\raw\gate40\rep.zip')"))
+            c.execute(text("INSERT INTO period VALUES (7, 10, NULL, '2026-01-01', 'instant')"))      # an existing 31 Dec 2025 instant
+        return e
+
+    def test_a_balance_uses_the_existing_instant_period_and_creates_the_missing_one(self, m33, db):
+        sp = spec(period="instant", concept="current_lease_liabilities", statement="balance_sheet")
+        got = [{"year": 2025, "value": 13.9e6, "row_index": 2739}, {"year": 2024, "value": 11.7e6, "row_index": 2739}]
+        with db.begin() as c:
+            assert m33.store(c, sp, got) == [(2025, "stored"), (2024, "stored")]
+        with db.connect() as c:
+            rows = c.execute(text("SELECT p.start_date, p.end_date, p.period_type, f.value FROM fact_value f JOIN period p "
+                                  "ON p.period_id = f.period_id ORDER BY p.end_date DESC")).fetchall()
+            assert c.execute(text("SELECT COUNT(*) FROM period")).scalar() == 2            # 2025 instant reused, 2024 created
+        assert rows == [(None, "2026-01-01", "instant", 13.9e6), (None, "2025-01-01", "instant", 11.7e6)]
+
+    def test_a_stated_zero_is_stored_as_a_zero_with_a_stated_provenance(self, m33, db):
+        sp = spec(kind="stated_zero", period="instant", concept="longterm_borrowings", statement="balance_sheet")
+        with db.begin() as c:
+            assert m33.store(c, sp, [{"year": 2025, "value": 0.0, "row_index": None}]) == [(2025, "stored")]
+        with db.connect() as c:
+            assert c.execute(text("SELECT value, raw_xbrl_tag, context_ref FROM fact_value")).fetchone() == (0.0, "note:t", "rep.zip#stated")
+
+
+class TestAsmSpec:
+    """The reviewed ASM figures: which ids exist, what they claim, and that nothing beyond the evidence is stored."""
+
+    @pytest.fixture(scope="class")
+    def specs(self, m33):
+        return {s["id"]: s for s in m33.load_specs() if s["company"] == "ASM International"}
+
+    def test_the_lease_lines_and_the_stated_zero_borrowings_are_there_for_both_years(self, specs):
+        assert set(specs) == {"asm_lease_current_fy2025", "asm_lease_noncurrent_fy2025", "asm_no_noncurrent_borrowings_2025",
+                              "asm_no_current_borrowings_2025", "asm_no_noncurrent_borrowings_2024", "asm_no_current_borrowings_2024"}
+        assert {s["concept"] for s in specs.values()} == {"current_lease_liabilities", "noncurrent_lease_liabilities",
+                                                          "longterm_borrowings", "shortterm_borrowings"}
+        assert all(s["period"] == "instant" for s in specs.values())
+
+    def test_2025_rests_on_the_companys_own_sentences_and_2024_only_on_structure(self, specs):
+        say = lambda s: any("report_states" in c for c in s["checks"])
+        assert say(specs["asm_no_noncurrent_borrowings_2025"]) and say(specs["asm_no_current_borrowings_2025"])
+        assert not say(specs["asm_no_noncurrent_borrowings_2024"]) and not say(specs["asm_no_current_borrowings_2024"])
+        assert specs["asm_no_noncurrent_borrowings_2024"]["years"] == [2024]
+
+    def test_the_net_debt_rule_then_gives_net_cash(self, load_script):
+        """31 Dec 2025 (EUR millions): leases 13.9 + 19.6, cash 1,026.9, no borrowings -> net cash of 993.4; 2024: 11.7 + 25.0 vs 926.5."""
+        r11 = load_script("11_ratio_engine.py")
+        import pandas as pd
+        rows = [{"company": "ASM", "company_id": 1, "year": y, "current_lease_liabilities": cl, "noncurrent_lease_liabilities": nl,
+                 "longterm_borrowings": 0.0, "shortterm_borrowings": 0.0, "cash_and_cash_equivalents": cash}
+                for y, cl, nl, cash in ((2025, 13.9e6, 19.6e6, 1026.9e6), (2024, 11.7e6, 25.0e6, 926.5e6))]
+        nd = r11.compute_ratios(pd.DataFrame(rows))["_net_debt"].tolist()
+        assert nd == pytest.approx([33.5e6 - 1026.9e6, 36.7e6 - 926.5e6])
+
+    def test_real_report_dry_run(self, m33, specs):
+        path = m33.locate_report("asm_international.zip")
+        if path is None:
+            pytest.skip("asm_international.zip is not on this machine")
+        rows, facts, lines = m33.read_rows(path), m33.report_facts(path), m33.read_text(path)
+        got = {i: {r["year"]: r["value"] for r in m33.extract(s, rows, facts, lines)} for i, s in specs.items()}
+        assert got["asm_lease_current_fy2025"] == pytest.approx({2025: 13.9e6, 2024: 11.7e6})
+        assert got["asm_lease_noncurrent_fy2025"] == pytest.approx({2025: 19.6e6, 2024: 25.0e6})
+        assert got["asm_no_noncurrent_borrowings_2025"] == {2025: 0.0} and got["asm_no_current_borrowings_2024"] == {2024: 0.0}

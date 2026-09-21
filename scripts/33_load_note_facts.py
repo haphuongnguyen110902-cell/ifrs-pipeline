@@ -14,6 +14,10 @@ and a plausibility range against revenue), and stores it in fact_value with raw_
 context_ref = "<report>#row<n>", so a note-sourced fact can always be told from an XBRL fact and traced to its row. It never
 overwrites an XBRL fact (INSERT ... ON CONFLICT DO NOTHING). Dry run by default.
 
+Two kinds of figure: a NUMBER read from a table row (the default), and a STATED ZERO (kind: stated_zero) - a balance the
+company states to be nil in its report ("ASM was debt-free", "the amount outstanding ... was nil"). A stated zero is stored only
+if the report still contains the stating sentence and the balance sheet still has no line of that nature.
+
 Usage:
     python scripts/33_load_note_facts.py                 # extract + check + show what would be stored
     python scripts/33_load_note_facts.py --apply         # store (one transaction)
@@ -37,6 +41,8 @@ REPORT_DIRS = ("data/raw/historical", "data/raw", "data/raw/gate40")
 XHTML = "{http://www.w3.org/1999/xhtml}"
 REQUIRED = ("id", "company", "report", "row", "years", "column", "scale", "decimal", "currency", "concept", "statement",
             "label", "perimeter", "checks", "evidence")
+REQUIRED_ZERO = ("id", "company", "report", "years", "currency", "concept", "statement", "label", "perimeter", "checks",
+                 "evidence")
 _RR = None
 
 
@@ -56,7 +62,8 @@ def load_specs(path=SPEC_PATH) -> list:
     data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
     specs, seen = [], set()
     for f in data.get("figures", []):
-        missing = [k for k in REQUIRED if k not in f or f[k] in (None, "", [])]
+        required = REQUIRED_ZERO if f.get("kind") == "stated_zero" else REQUIRED
+        missing = [k for k in required if k not in f or f[k] in (None, "", [])]
         if missing:
             raise ValueError(f"figure {f.get('id')} is missing {missing}")
         if f["id"] in seen:
@@ -91,6 +98,24 @@ def read_rows(zip_path) -> list:
     return rows
 
 
+def read_text(zip_path) -> list:
+    """The report's running text as lines (own text and tails of every block element), for the checks that look for a
+    sentence rather than a number."""
+    z = zipfile.ZipFile(zip_path)
+    name = next((n for n in z.namelist() if n.lower().endswith((".xhtml", ".html")) and "/reports/" in n.lower()), None)         or next(n for n in z.namelist() if n.lower().endswith((".xhtml", ".html")))
+    root = etree.fromstring(z.read(name), etree.XMLParser(recover=True, huge_tree=True))
+    lines = []
+    for el in root.iter():
+        if isinstance(el.tag, str) and el.tag.split("}")[-1] in ("p", "div", "li", "span", "td", "th"):
+            own = " ".join((el.text or "").split())
+            if own:
+                lines.append(own)
+            for ch in el:
+                if ch.tail and ch.tail.strip():
+                    lines.append(" ".join(ch.tail.split()))
+    return lines
+
+
 def parse_cell(text: str, decimal: str = ","):
     """A printed table cell as a float, or None if it is not a number: French/Swedish '1 652,4', English '1,652.4',
     negatives as '(837)', '-1 099' or '–1 099'. A bare dash is not a number here."""
@@ -123,11 +148,16 @@ def report_facts(zip_path) -> list:
     return _rr().read_package(str(zip_path))["facts"]
 
 
-def fact_by_year(facts: list, tags, span=(300, 400)) -> dict:
-    """{year: value} of the first tag in `tags` that has an annual duration ending that year (year of the printed end date)."""
+def fact_by_year(facts: list, tags, span=(300, 400), instant=False) -> dict:
+    """{year: value} of the first tag in `tags` that has an annual duration ending that year (year of the printed end date),
+    or - with instant=True - a balance at that year end."""
     out = {}
     for tag in ([tags] if isinstance(tags, str) else tags):
         for f in facts:
+            if instant:
+                if f["tag"] == tag and f["instant"]:
+                    out.setdefault(datetime.date.fromisoformat(f["instant"]).year, f["value"])
+                continue
             if f["tag"] != tag or not f["start"] or not f["end"]:
                 continue
             d0, d1 = datetime.date.fromisoformat(f["start"]), datetime.date.fromisoformat(f["end"])
@@ -142,12 +172,46 @@ class FigureError(Exception):
     """The report does not contain what the reviewed specification says it does - nothing is stored."""
 
 
-def extract(spec: dict, rows: list, facts: list) -> list:
+def _stated_zero(spec: dict, rows: list, facts: list, text_lines) -> list:
+    """A balance the company states to be nil: one entry per listed year, valid only if the report still says so."""
+    out = [{"year": int(y), "value": 0.0, "row_index": None, "row_text": "stated nil (see checks)", "pos": None, "checks": []}
+           for y in spec["years"]]
+    joined = " ".join(text_lines or [])
+    for chk in spec["checks"]:
+        (kind, arg), = chk.items()
+        if kind == "report_states":
+            if not re.search(arg, joined, re.I):
+                raise FigureError(f"{spec['id']}: the report no longer contains the stating sentence {arg!r}")
+            for r in out:
+                r["checks"].append(f"the report states {arg!r}")
+        elif kind == "no_row_matching":
+            start, end, pat = re.compile(arg["from"], re.I), re.compile(arg["to"], re.I), re.compile(arg["pattern"], re.I)
+            starts = [p for p, (_, c) in enumerate(rows) if start.search(c[0])]
+            i = starts[int(arg.get("occurrence", 1)) - 1] if len(starts) >= int(arg.get("occurrence", 1)) else None
+            j = next((p for p in range(i + 1, len(rows)) if end.search(rows[p][1][0])), None) if i is not None else None
+            if i is None or j is None:
+                raise FigureError(f"{spec['id']}: cannot locate the section {arg['from']!r} .. {arg['to']!r}")
+            hit = [rows[p][1][0] for p in range(i, j + 1) if pat.search(rows[p][1][0]) and numeric_values(rows[p][1], ",")]
+            if hit:
+                raise FigureError(f"{spec['id']}: the section has a line of that nature after all: {hit}")
+            for r in out:
+                r["checks"].append(f"no line matching {arg['pattern']!r} between {rows[i][1][0]!r} and {rows[j][1][0]!r}")
+        else:
+            raise FigureError(f"{spec['id']}: unknown check {kind!r} for a stated zero")
+    return out
+
+
+def extract(spec: dict, rows: list, facts: list, text_lines=None) -> list:
     """[{year, value (in currency units), row_index, row_text, checks: [...]}] for one reviewed figure. Raises
     FigureError when the row cannot be found unambiguously or any check fails."""
+    if spec.get("kind") == "stated_zero":
+        return _stated_zero(spec, rows, facts, text_lines)
     pat = re.compile(spec["row"], re.I)
-    hits = [pos for pos, (_, cells) in enumerate(rows) if pat.search(cells[0]) and numeric_values(cells, spec["decimal"])]
+    min_values = int(spec.get("min_values", 1))
+    hits = [pos for pos, (_, cells) in enumerate(rows)
+            if pat.search(cells[0]) and len(numeric_values(cells, spec["decimal"])) >= min_values]
     years_spec, scale, decimal = spec["years"], float(spec["scale"]), spec["decimal"]
+    instant = spec.get("period") == "instant"
     picked = []                                     # (pos, year, printed value)
     if years_spec == "header":
         if len(hits) != 1:
@@ -184,21 +248,37 @@ def extract(spec: dict, rows: list, facts: list) -> list:
                 if not arg[0] <= pct <= arg[1]:
                     raise FigureError(f"{spec['id']} {y}: {pct:.1f}% of revenue is outside the reviewed range {arg}")
                 r["checks"].append(f"sane_pct_of_revenue: {pct:.1f}% of revenue (range {arg})")
+        elif kind == "sane_pct_of_tagged_fact":
+            base = fact_by_year(facts, arg["tag"], instant=instant)
+            for y, r in by_year.items():
+                if y not in base:
+                    r["checks"].append(f"sane_pct_of_tagged_fact: skipped (no {arg['tag']} for {y})")
+                    continue
+                pct = 100 * r["value"] / base[y]
+                if not arg["range"][0] <= pct <= arg["range"][1]:
+                    raise FigureError(f"{spec['id']} {y}: {pct:.2f}% of {arg['tag']} is outside the reviewed range {arg['range']}")
+                r["checks"].append(f"{pct:.2f}% of {arg['tag'].split(':')[-1]} (range {arg['range']})")
         elif kind == "cross_row_equals_tagged_fact":
-            tagged = fact_by_year(facts, arg["tag"])
+            tagged = fact_by_year(facts, arg["tag"], instant=instant)
             cross = re.compile(arg["row"], re.I)
             verified = 0
-            for pos, y, _ in picked:
+            for k, (pos, y, _) in enumerate(picked):
                 nxt = rows[pos + arg.get("row_offset", 1)][1]
                 if not cross.search(nxt[0]):
-                    raise FigureError(f"{spec['id']} {y}: row after {rows[pos][1][0]!r} is {nxt[0]!r}, not {arg['row']!r}")
-                printed = abs(numeric_values(nxt, decimal)[-1]) * scale
+                    raise FigureError(f"{spec['id']} {y}: row {arg.get('row_offset', 1):+d} from {rows[pos][1][0]!r} is "
+                                      f"{nxt[0]!r}, not {arg['row']!r}")
+                cross_vals = numeric_values(nxt, decimal)
+                if years_spec == "header":                 # same column layout as the figure's row: year k <-> value k
+                    cross_vals = cross_vals[-len(picked):]
+                    printed = abs(cross_vals[k]) * scale
+                else:
+                    printed = abs(cross_vals[0 if arg.get("column") == "first" else -1]) * scale
                 if y not in tagged:
                     if arg.get("min_verified"):        # a year the report itself does not tag: judged by its position
                         by_year[y]["checks"].append(f"{nxt[0]} {printed:,.0f}: no tagged fact for {y} to compare "
                                                     f"(year taken from the table order)")
                         continue
-                if y not in tagged or abs(printed - abs(tagged[y])) > 0.5 * scale / 1000:
+                if y not in tagged or abs(printed - abs(tagged[y])) > max(0.5 * scale / 1000, float(arg.get("tolerance", 0)) * scale):
                     raise FigureError(f"{spec['id']} {y}: {nxt[0]!r} prints {printed:,.0f} but {arg['tag']} is "
                                       f"{tagged.get(y)!r} - the row/year mapping cannot be trusted")
                 verified += 1
@@ -242,18 +322,19 @@ def _filing_id(conn, company, report):
     return rows[0][0] if len(rows) == 1 else None
 
 
-def _period_id(conn, filing_id, year):
-    """The annual duration of `year`, stored the way the loader stores it (Arelle's end date is one day late)."""
+def _period_id(conn, filing_id, year, instant=False):
+    """The fiscal year's period, stored the way the loader stores it (Arelle's end date is one day late): an annual duration,
+    or - for a balance - an instant at the year end (no start date)."""
     from sqlalchemy import text
     start, end = datetime.date(year, 1, 1).isoformat(), datetime.date(year + 1, 1, 1).isoformat()
-    row = conn.execute(text("SELECT period_id FROM period WHERE filing_id = :f AND start_date = :s AND end_date = :e "
-                            "AND period_type = 'duration'"), {"f": filing_id, "s": start, "e": end}).fetchone()
+    where = ("start_date IS NULL AND period_type = 'instant'" if instant else "start_date = :s AND period_type = 'duration'")
+    params = {"f": filing_id, "e": end, **({} if instant else {"s": start})}
+    row = conn.execute(text(f"SELECT period_id FROM period WHERE filing_id = :f AND end_date = :e AND {where}"), params).fetchone()
     if row:
         return row[0]
-    conn.execute(text("INSERT INTO period (filing_id, start_date, end_date, period_type) VALUES (:f, :s, :e, 'duration')"),
-                 {"f": filing_id, "s": start, "e": end})
-    return conn.execute(text("SELECT period_id FROM period WHERE filing_id = :f AND start_date = :s AND end_date = :e "
-                             "AND period_type = 'duration'"), {"f": filing_id, "s": start, "e": end}).fetchone()[0]
+    conn.execute(text("INSERT INTO period (filing_id, start_date, end_date, period_type) VALUES (:f, :s, :e, :t)"),
+                 {"f": filing_id, "s": None if instant else start, "e": end, "t": "instant" if instant else "duration"})
+    return conn.execute(text(f"SELECT period_id FROM period WHERE filing_id = :f AND end_date = :e AND {where}"), params).fetchone()[0]
 
 
 def _concept_id(conn, name, statement, label):
@@ -275,13 +356,14 @@ def store(conn, spec: dict, extracted: list) -> list:
     concept = _concept_id(conn, spec["concept"], spec["statement"], spec["label"])
     out = []
     for r in extracted:
-        period = _period_id(conn, filing, r["year"])
+        period = _period_id(conn, filing, r["year"], instant=spec.get("period") == "instant")
         n = conn.execute(text("""INSERT INTO fact_value (filing_id, period_id, concept_id, raw_xbrl_tag, value, currency, decimals,
                                                          context_ref, dimensions)
                                  VALUES (:f, :p, :c, :tag, :v, :cur, NULL, :ctx, NULL)
                                  ON CONFLICT (filing_id, period_id, concept_id) DO NOTHING"""),
                          {"f": filing, "p": period, "c": concept, "tag": f"note:{spec['id']}", "v": r["value"],
-                          "cur": spec["currency"], "ctx": f"{spec['report']}#row{r['row_index']}"}).rowcount
+                          "cur": spec["currency"],
+                          "ctx": f"{spec['report']}#" + ("stated" if r["row_index"] is None else f"row{r['row_index']}")}).rowcount
         out.append((r["year"], "stored" if n else "exists"))
     return out
 
@@ -303,7 +385,8 @@ def main(argv=None):
             failed += 1
             continue
         try:
-            got = extract(spec, read_rows(path), report_facts(path))
+            got = extract(spec, read_rows(path), report_facts(path),
+                          read_text(path) if spec.get("kind") == "stated_zero" else None)
         except FigureError as e:
             print(f"[{spec['id']}] REFUSED: {e}")
             failed += 1
@@ -311,7 +394,8 @@ def main(argv=None):
         plan.append((spec, got))
         print(f"[{spec['id']}] {spec['company']} - {spec['report']}: {spec['perimeter']}")
         for r in got:
-            print(f"    {r['year']}: {r['value']:>18,.0f}  <- row {r['row_index']}: {r['row_text'][:90]}")
+            print(f"    {r['year']}: {r['value']:>18,.0f}  <- " + (f"row {r['row_index']}: {r['row_text'][:90]}"
+                                                                     if r["row_index"] is not None else r["row_text"]))
             for c in r["checks"]:
                 print(f"          check ok: {c}")
     if not args.apply:
