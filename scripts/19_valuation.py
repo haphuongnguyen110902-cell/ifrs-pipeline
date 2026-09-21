@@ -214,8 +214,9 @@ def fetch_fundamentals_history(engine, company_filter=None) -> pd.DataFrame:
 
 def populate_sector_std(engine, force: bool = False) -> int:
     """Backfills company.sector_std from yfinance's own `sector` field
-    (PLAN.md WP3a), using TICKER_MAP for the ticker - the same pre-WP4
-    source of truth this script already relies on for market data.
+    (PLAN.md WP3a). The ticker is TICKER_MAP's, else the DB-resolved
+    company.ticker (see resolve_ticker_currency) - the same order this
+    script already uses for market data.
 
     WHY THIS FIELD EXISTS: company.sector is free text - 9 distinct
     strings across the current 11 companies (see PLAN.md WP3a) - and
@@ -233,17 +234,19 @@ def populate_sector_std(engine, force: bool = False) -> int:
     NULL, not defaulted to something plausible-looking.
     """
     with engine.begin() as conn:
-        if force:
-            targets = list(TICKER_MAP.keys())
-        else:
-            rows = conn.execute(text(
-                "SELECT name FROM company WHERE sector_std IS NULL"
-            )).fetchall()
-            targets = [r[0] for r in rows if r[0] in TICKER_MAP]
+        where = "" if force else " WHERE sector_std IS NULL"
+        rows = conn.execute(text(f"SELECT name, ticker FROM company{where}")).fetchall()
+        # TICKER_MAP first, then the DB-resolved ticker (company.ticker): before this a
+        # company added after WP4 - e.g. everything loaded from the universe - could never
+        # get a sector, so it showed Sector "None" and sat outside every sector peer group.
+        targets = []
+        for name, db_ticker in rows:
+            ticker, _ = resolve_ticker_currency(name, db_ticker)
+            if ticker:
+                targets.append((name, ticker))
 
         n_updated = 0
-        for company in targets:
-            ticker, _ = TICKER_MAP[company]
+        for company, ticker in targets:
             try:
                 sector_std = yf.Ticker(ticker).info.get("sector")
             except Exception as e:
