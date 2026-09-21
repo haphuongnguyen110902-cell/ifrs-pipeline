@@ -96,6 +96,29 @@ COMPANIES_YAML = Path(__file__).parent.parent / "data" / "companies.yaml"
 
 # ---------------------------------------------------------------- fetch
 
+ANNUAL_SPAN_DAYS = (300, 400)     # a duration this long is a fiscal year (52/53-week years included)
+
+
+def fiscal_year_label(period_type, start_date, end_date) -> int:
+    """The fiscal year a fact belongs to: the year the period ENDS (Arelle stores every end date one day
+    late, hence the -1 day).
+
+    Instants and annual durations therefore agree, so a company's P&L, cash flow and balance sheet for one
+    fiscal year land in ONE row. Durations used to be labelled by the year they START, which is identical for
+    a calendar-year filer but split a broken fiscal year in two: Pernod Ricard (FYE 30 June) had FY2025
+    (1 Jul 2024 - 30 Jun 2025) revenue and EBIT under "2024" while its 30 Jun 2025 inventories and debt sat
+    under "2025" - every ratio mixing flows and stocks (DIO, DPO, ROIC, net debt / EBITDA) was one year out.
+
+    A duration that is not about a year long (a stub, a multi-year period from a filer defect such as
+    Recordati's 2021-2033 one) keeps the start-year label it always had: it is never the annual figure, and
+    moving it would create a phantom year."""
+    end_year = (end_date - timedelta(days=1)).year
+    if period_type == "instant" or start_date is None or pd.isna(start_date):
+        return end_year
+    lo, hi = ANNUAL_SPAN_DAYS
+    return end_year if lo <= (end_date - start_date).days <= hi else start_date.year
+
+
 def fetch_facts(engine, company_filter=None) -> pd.DataFrame:
     """Pull all facts from the database as a long-format DataFrame (one row
     per stored fact, with its filing_id so conflicts between filings can be
@@ -124,13 +147,8 @@ def fetch_facts(engine, company_filter=None) -> pd.DataFrame:
     if df.empty:
         return df
 
-    # correct year labels - same logic as 07_generate_statements.py
-    def get_year(row):
-        if row["period_type"] == "instant":
-            return (row["end_date"] - timedelta(days=1)).year
-        return row["start_date"].year
-
-    df["year"] = df.apply(get_year, axis=1)
+    df["year"] = [fiscal_year_label(pt, s, e)
+                  for pt, s, e in zip(df["period_type"], df["start_date"], df["end_date"])]
     df["value"] = pd.to_numeric(df["value"], errors="coerce")
     return df
 
