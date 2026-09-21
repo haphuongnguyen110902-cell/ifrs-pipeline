@@ -634,7 +634,11 @@ def print_summary(flags: pd.DataFrame, min_severity: str = "low"):
 
 
 def save_excel(flags: pd.DataFrame, out_path: str):
-    """Save detailed flags to Excel."""
+    """Save detailed flags to Excel. A run with no flags at all (a scoped run on a company nothing triggers for - Puig
+    Brands on 2026-09-21) used to crash here on the missing columns, BEFORE the database step, so flags that had
+    stopped triggering were never removed from forensics_flag; it now writes a header-only sheet instead."""
+    if flags.empty:
+        flags = pd.DataFrame(columns=["severity", "company", "year", "label", "detail", "what_to_check", "value"])
     with pd.ExcelWriter(out_path, engine="openpyxl") as writer:
         # summary sheet
         summary = flags.sort_values(
