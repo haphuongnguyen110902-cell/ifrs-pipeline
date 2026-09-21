@@ -492,6 +492,32 @@ def _company_id_map(conn) -> dict:
     return {name: cid for cid, name in rows}
 
 
+def drop_flags_for_financial_companies(flags: pd.DataFrame, financial_names: dict):
+    """(flags without the financial companies', [names dropped]). `financial_names` is
+    {company name: reason} as 11_ratio_engine.financial_company_reasons resolves it.
+
+    WHY: the rules read revenue growth, margins, cash conversion and net debt - none of which
+    mean what they say for a lender, insurer or payment processor. Found live: Adyen's stored
+    revenue is EUR 8,936M for FY2022 and EUR 1,863M for FY2023 (gross before, net after), so
+    the rules raised "revenue -79.1%" and "operating margin 7.4% -> 35.3%", and "net cash 11x
+    operating profit" describes client money, not surplus. A plausible-looking flag on a
+    definition break is worse than no flag - the same reasoning as the ratio gating."""
+    if flags.empty or not financial_names:
+        return flags, []
+    mask = flags["company"].isin(list(financial_names))
+    return flags[~mask].reset_index(drop=True), sorted(flags.loc[mask, "company"].unique())
+
+
+def ensure_printable_output(stream=None) -> None:
+    """Never let a print() die on an emoji. print_summary writes severity emoji; with piped or
+    redirected output on Windows the stream is cp1252 and the run crashed with UnicodeEncodeError
+    AFTER the flags were computed but BEFORE they were saved - silently, if the caller filtered
+    the output. Unencodable characters become '?' instead."""
+    stream = stream or sys.stdout
+    if hasattr(stream, "reconfigure"):
+        stream.reconfigure(errors="replace")
+
+
 def save_to_db(engine, flags: pd.DataFrame, evaluated_companies=None) -> int:
     """Delete-then-insert - see this module's docstring for why an upsert
     alone isn't enough (a flag that stops triggering needs to actually
@@ -641,7 +667,23 @@ if __name__ == "__main__":
     if not rev_growth.empty:
         flags = add_revenue_flags(flags, rev_growth)
 
+    # not meaningful for lenders / insurers / payment processors (see the function's docstring);
+    # the classification is the ratio engine's, so the two stages can never disagree on who is financial
+    import importlib.util
+    _spec = importlib.util.spec_from_file_location("ratio_engine_11", Path(__file__).parent / "11_ratio_engine.py")
+    r11 = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(r11)
+    profiles = r11.fetch_company_profiles(engine)
+    reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
+    financial_names = {row["name"]: reasons[int(row["company_id"])]
+                       for _, row in profiles.iterrows() if int(row["company_id"]) in reasons}
+    flags, suppressed = drop_flags_for_financial_companies(flags, financial_names)
+    for name in suppressed:
+        print(f"  {name}: flags suppressed - treated as a financial company ({financial_names[name]}); "
+              f"revenue, margin, cash-conversion and net-debt rules are not meaningful for it")
+
     # output
+    ensure_printable_output()
     print_summary(flags, min_severity=args.min_severity)
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
