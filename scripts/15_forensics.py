@@ -603,6 +603,15 @@ def save_to_db(engine, flags: pd.DataFrame, evaluated_companies=None) -> int:
 SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 
 
+def severity_summary(flags: pd.DataFrame):
+    """({severity: count}, total, number of companies) for the closing summary; a run with no flags has no columns
+    at all (a scoped run on a company nothing triggers for), which used to crash this AFTER the database step."""
+    if flags.empty:
+        return {"high": 0, "medium": 0, "low": 0}, 0, 0
+    counts = flags["severity"].value_counts()
+    return {sev: int(counts.get(sev, 0)) for sev in ("high", "medium", "low")}, len(flags), int(flags["company"].nunique())
+
+
 def print_summary(flags: pd.DataFrame, min_severity: str = "low"):
     """Print a clean summary table to terminal."""
     if flags.empty:
@@ -718,9 +727,7 @@ if __name__ == "__main__":
 
     # summary counts
     print(f"\n{'─'*40}")
-    counts = flags["severity"].value_counts()
+    by_severity, total, n_companies = severity_summary(flags)
     for sev in ["high", "medium", "low"]:
-        n = counts.get(sev, 0)
-        print(f"  {sev.capitalize():8s}: {n} flags")
-    print(f"  {'Total':8s}: {len(flags)} flags across "
-          f"{flags['company'].nunique()} companies")
+        print(f"  {sev.capitalize():8s}: {by_severity[sev]} flags")
+    print(f"  {'Total':8s}: {total} flags across {n_companies} companies")

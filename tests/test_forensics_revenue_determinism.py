@@ -87,3 +87,12 @@ class TestSaveExcelWithNoFlags:
     def test_a_frame_with_columns_but_no_rows_too(self, f15, tmp_path):
         f15.save_excel(pd.DataFrame(columns=["severity", "company", "year", "label", "detail", "what_to_check", "value"]),
                        str(tmp_path / "g.xlsx"))
+
+
+class TestSeveritySummary:
+    def test_no_flags_is_all_zero_not_a_crash(self, f15):
+        assert f15.severity_summary(pd.DataFrame()) == ({"high": 0, "medium": 0, "low": 0}, 0, 0)
+
+    def test_counts_by_severity_and_companies(self, f15):
+        flags = pd.DataFrame({"severity": ["high", "low", "low"], "company": ["A", "A", "B"]})
+        assert f15.severity_summary(flags) == ({"high": 1, "medium": 0, "low": 2}, 3, 2)
