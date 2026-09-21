@@ -550,9 +550,13 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # decommissioning-related D&A a granular PP&E/ROU/intangibles split
     # might miss) - and only fall back to summing the granular concepts
     # for companies that never disclose a combined total at all.
-    da_ppe = get_col(wide, "depreciation_property_plant_and_equipment").fillna(0)
-    da_rou = get_col(wide, "depreciation_rightofuse_assets").fillna(0)
-    amort = get_col(wide, "amortisation_intangible_assets_other_than_goodwill").fillna(0)
+    # abs(): a D&A add-back is an expense added back, never a negative - filers differ in the sign they give a
+    # cash-flow "adjustment" line (Essity's FY2020 filing stores 2019 and 2020 D&A as -7,529M / -7,671M, its
+    # FY2021 filing +7,671M for 2020; with the sign kept, EBITDA 2019 came out ~SEK 15bn too low). Same
+    # convention as cash and net debt above.
+    da_ppe = get_col(wide, "depreciation_property_plant_and_equipment").abs().fillna(0)
+    da_rou = get_col(wide, "depreciation_rightofuse_assets").abs().fillna(0)
+    amort = get_col(wide, "amortisation_intangible_assets_other_than_goodwill").abs().fillna(0)
     granular_da_sum = da_ppe + da_rou + amort
 
     # Found via a real run (22_dcf.py on L'Oreal): _da_total was silently
@@ -582,7 +586,7 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
         "adjustments_for_depreciation_and_amortisation_expense_and_etc",
         "depreciation_amortisation_and_impairment_loss_reversal_of_etc",
         "adjustments_for_depreciation_and_amortisation_expense",
-    )
+    ).abs()
     r["_da_total"] = da_combined.where(da_combined.notna(), granular_da_sum)
     r["_ebitda"] = ebit + r["_da_total"]
     return r
