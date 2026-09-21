@@ -399,6 +399,23 @@ def get_best(wide: pd.DataFrame, *names: str) -> pd.Series:
 
 # ---------------------------------------------------------------- compute
 
+PAYABLES_CONCEPTS = (
+    "trade_and_other_current_payables_to_trade_suppliers",   # trade payables only - preferred
+    "trade_and_other_current_payables",                      # broader: trade AND other payables
+    "other_current_payables",                                # weakest fallback
+)
+BROADER_PAYABLES = frozenset(PAYABLES_CONCEPTS[1:])
+
+
+def source_concepts_for(ratio_name: str, row) -> list | None:
+    """The stored concepts a ratio was built from where that matters for reading it (ratio.source_concepts): DPO and
+    the cash conversion cycle carry the payables line they were read from; nothing else is recorded."""
+    if ratio_name in ("dpo", "ccc"):
+        basis = row.get("_payables_basis")
+        return [basis] if isinstance(basis, str) and basis else None
+    return None
+
+
 def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     """
     Compute all ratios from a wide-format DataFrame.
@@ -475,11 +492,14 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
         "trade_and_other_current_receivables",    # broader fallback (includes non-trade)
     )
     inventory = get_best(wide, "inventories", "inventories_total")
-    payables = get_best(wide,
-        "trade_and_other_current_payables_to_trade_suppliers",  # specific - preferred
-        "trade_and_other_current_payables",                     # broader fallback
-        "other_current_payables",                               # weakest fallback
-    )
+    payables = get_best(wide, *PAYABLES_CONCEPTS)
+    # which line the payables were read from. The IFRS element "trade AND other payables" is used by some filers for
+    # trade payables alone (printed rows checked: LVMH "Fournisseurs et comptes rattaches", Kering, Moncler "Debiti
+    # commerciali") and by others for a broader line (Heineken and Shell "Trade and other payables", Schneider
+    # "Fournisseurs et dettes d'exploitation"); the tag cannot tell which. Stored with the ratio (source_concepts) and
+    # shown as a caption on the dashboard - never a silent difference in perimeter.
+    r["_payables_basis"] = [next((n for n in PAYABLES_CONCEPTS if n in wide.columns and pd.notna(wide.at[i, n])), "")
+                            for i in wide.index]
     # `cogs` already computed above (tagged cost_of_sales, or derived from
     # Revenue - Gross Profit when a company tags gross_profit but never
     # cost_of_sales directly - see that section's comment, e.g. Essity).
@@ -808,18 +828,20 @@ def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict, notes: dict = No
                 conn.execute(text("""
                     INSERT INTO ratio
                         (company_id, year, ratio_name, display_label,
-                         value, is_currency_neutral, computed_at, note)
+                         value, is_currency_neutral, computed_at, note, source_concepts)
                     VALUES
-                        (:cid, :year, :rn, :label, :val, :neutral, now(), :note)
+                        (:cid, :year, :rn, :label, :val, :neutral, now(), :note, :src)
                     ON CONFLICT (company_id, year, ratio_name)
                     DO UPDATE SET
                         value = EXCLUDED.value,
                         display_label = EXCLUDED.display_label,
                         note = EXCLUDED.note,
+                        source_concepts = EXCLUDED.source_concepts,
                         computed_at = now()
                 """), {"cid": int(cid), "year": int(year), "rn": ratio_name,
                        "label": label, "val": None if pd.isna(val) else float(val),
-                       "neutral": neutral, "note": notes.get((int(cid), int(year), ratio_name))})
+                       "neutral": neutral, "note": notes.get((int(cid), int(year), ratio_name)),
+                       "src": None if pd.isna(val) else source_concepts_for(ratio_name, row)})
                 rows_written += 1
         conn.commit()
     return rows_written
