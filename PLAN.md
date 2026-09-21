@@ -1427,7 +1427,7 @@ is my judgement):**
   (`populate_sector_std` only fills the hard-coded `TICKER_MAP` companies);
   19/21/22/24 don't gate; ~20% of the universe by name (my rough read) are
   banks/insurers/holdings.
-- HIGH - **FIX OPEN (PR #25), found while applying the above.**
+- HIGH - **FIXED (PR #25, merged 2026-09-20), found while applying the above.**
   `15_forensics.save_to_db` deleted old flags only for companies present in the NEW
   flag list, so a company whose flags all stop triggering keeps them (Adyen: 3
   stale flags incl. one HIGH). Also `test_rerunning_save_to_db_is_idempotent_not_
@@ -1535,3 +1535,40 @@ breadth, not blocking anything that came before it). WP6 (the one-pager) was the
 last item that serves the Contrôleur de Gestion job search directly -
 everything from here is the Asset Management / breadth bet, per §6's own
 strategic-honesty note.
+
+### 2026-09-20/21: fidelity rule adopted; what was applied, merged and found (supersedes the "NOT integrated" and "FIX OPEN" notes above)
+
+**Rule of record (user):** every figure shown must MATCH the company's own published annual report; where a line's
+meaning is in doubt, IFRS decides. Enforced by `scripts/reconcile_reports.py` (compares each printed statement line
+of the ESEF report with what is stored; states OK / DIFFERENT / MISSING / BAD_PERIOD / NOT_LOADED / NO_STATEMENT).
+Measured: loaded companies 6,052 lines ~99.9% match; the 5 companies given history 2,386 lines 94.1%. The stored
+statement figures are faithful; the errors were in what the ENGINE reads.
+
+**Done and live:**
+- Depth: Heineken 2020-25, Schneider 2019-25, ASM 2019-25, Adyen 2019-25, Recordati 2020-25 (23 filings, sha256-verified
+  downloads, additive loads, snapshot-compared: 0 rows removed/changed anywhere). Forecasts 9 -> 14 of 16 companies.
+  Puig: the archive holds exactly one filing. Pernod Ricard: documented exclusion (June year end).
+- Net debt = the financial-liability lines the company prints (IAS 1.54(m)) INCLUDING IFRS 16 leases, blank unless
+  both the non-current and current side are stored; the "total non-current liabilities" fallback is gone
+  (8 of 16 companies had used it). Recordati matches hand calculation from its printed balance sheets 6/6 years.
+- Universe linked to companies (13 entities), tickers/LEI filled for 8, sector_std for the 5 newer companies.
+- Financial companies (Adyen) are skipped in forensics, credit and valuation (same classification as the ratio gating).
+- Dashboard: EBITDA multiples/band/trend shown as `n/a*` where D&A is not printed separately (L'Oreal, Schneider,
+  Recordati, EssilorLuxottica, LVMH, Kering; Essity in part) because "EBITDA" there is EBIT. LVMH check: net financial
+  debt as reported 9,228 (its definition, excludes leases) vs 31,143 here (+17,832 leases, +3,956 financial
+  investments not netted, +127 derivatives); every stored input equals the printed figure.
+- All earlier audit PRs (#25-#45) merged; `main` CI green.
+
+**Known limits / still open:**
+- HIGH-ish: no clean EBITDA for six companies (D&A only in notes as dimensional facts, or bundled with provisions).
+- ASM: no debt line stored -> net debt blank; needs a reviewed zero-debt override with evidence, not an assumption.
+- Statement hierarchy (parent/child) is not stored: whether a printed subtotal contains or sits beside its detail
+  cannot be decided from numbers, so the debt rule only ever understates (never double counts). Storing the
+  presentation tree per filing at load time is the proper fix.
+- One-off concepts created by classification (`finanziamenti_*`, Danone's `dan:` lines under `_x` keys) are invisible
+  to the engine; the general fix is to read each company's own ESEF anchors at load time. `12_apply_review.py` still
+  does not de-duplicate by tag (73 duplicates).
+- `19_valuation` still uses a hand-verified `TICKER_MAP` first; forecast save only upserts, so extending a history
+  leaves stale rows (cleaned by hand for Recordati); Heineken has no 3-statement/DCF (costs by nature).
+- Not verified: the engine's concept choice for inventory, payables, D&A and capex has not been audited against the
+  reports the way debt and receivables were.
