@@ -64,28 +64,35 @@ def test_the_pernod_ricard_null_year_case_is_skipped_not_selected(engine):
     assert float(view_value) == pytest.approx(float(expected))
 
 
-def test_no_unexpected_nulls_for_the_current_full_universe(engine):
-    """Every one of the 11 current companies has real data for every
-    metric this view computes (confirmed live) - a NULL appearing here
-    would mean either a genuine data gap (fine, but should be
-    investigated, not silently accepted) or the view's join logic
-    regressed. This test exists to make that visible immediately rather
-    than only noticed by someone reading the screener page."""
-    with engine.connect() as conn:
-        df_cols = conn.execute(text("SELECT * FROM company_latest_metrics LIMIT 1")).keys()
-        null_counts = {}
-        for col in df_cols:
-            if col in ("company_id", "name"):
-                continue
-            n_null = conn.execute(text(
-                f"SELECT COUNT(*) FROM company_latest_metrics WHERE {col} IS NULL"
-            )).scalar()
-            if n_null:
-                null_counts[col] = n_null
+# Blanks that are DELIBERATE, each with its reason. Anything not listed here that turns NULL is a regression.
+EXPECTED_BLANKS = {
+    # a payment processor: its "net cash" is merchants' money, so ROIC, comps, EV and credit are skipped on purpose
+    "Adyen": {"roic", "ev_ebitda", "net_debt_ebitda", "credit_band", "credit_is_da_fallback"},
+    # no debt line is stored for ASM, so net debt is blank rather than assumed (needs a reviewed zero-debt override)
+    "ASM International": {"roic", "ev_ebitda", "net_debt_ebitda", "credit_band", "credit_is_da_fallback"},
+}
 
-    assert not null_counts, (
-        f"Unexpected NULLs in company_latest_metrics: {null_counts} - "
-        f"investigate before trusting the screener for these companies."
+
+def test_no_unexpected_nulls_for_the_current_full_universe(engine):
+    """Every company has real data for every metric this view computes, EXCEPT the named, reasoned blanks in
+    EXPECTED_BLANKS above. A NULL anywhere else means a genuine data gap (investigate, do not accept silently) or a
+    regression in the view's join logic - and an expected blank that FILLS IN also fails, so the list cannot rot.
+    (Previously this demanded zero NULLs, which stopped being true when Adyen and ASM were added.)"""
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT * FROM company_latest_metrics"))
+        cols = list(result.keys())
+        rows = result.fetchall()
+    actual = {}
+    for row in rows:
+        blanks = {c for c, v in zip(cols, row) if v is None and c not in ("company_id", "name")}
+        if blanks:
+            actual[row[cols.index("name")]] = blanks
+
+    unexpected = {k: sorted(v - EXPECTED_BLANKS.get(k, set())) for k, v in actual.items() if v - EXPECTED_BLANKS.get(k, set())}
+    filled_in = {k: sorted(v - actual.get(k, set())) for k, v in EXPECTED_BLANKS.items() if v - actual.get(k, set())}
+    assert actual == EXPECTED_BLANKS, (
+        "company_latest_metrics blanks differ from the reasoned expectation - "
+        f"unexpected: {unexpected}; filled in (update EXPECTED_BLANKS): {filled_in}"
     )
 
 
