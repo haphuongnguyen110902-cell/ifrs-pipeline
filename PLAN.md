@@ -1632,7 +1632,40 @@ L'Oreal, LVMH and Essity (D&A not separable).
 - Recordati capex 2023/2024 (383M / 851M) come from its printed intangible-purchase line (product-rights deals);
   compared with the printed statements only for FY2022.
 
-**Still open:** D&A for Kering / LVMH / L'Oreal / Essity (notes only); ASM zero-debt override;
+**Still open:** ASM zero-debt override (D&A for Kering / LVMH / L'Oreal / Essity: done, see the next section);
 statement hierarchy not stored; one-off `_x` concepts (70 tags still mapped twice) and 6 stale `concept_mapping` rows;
 `19_valuation --company` overwrites peer medians with the single company's own (run it for the whole universe);
 Pernod forecast (2 years of history); Heineken / Amplifon / Shell have no 3-statement/DCF (costs by nature).
+
+### 2026-09-21 (later): D&A for LVMH, L'Oreal, Essity and Kering (PR #63, applied to the live DB)
+
+**Problem:** these four had no clean D&A in XBRL (LVMH / L'Oreal tag only lines bundled with provisions; Essity's FY2023-24
+cash-flow line is untagged; Kering's line is anchored to "provisions"), so EBITDA was EBIT and EV/EBITDA, net debt/EBITDA,
+the credit band and the DCF's D&A were `n/a*` or a flagged fallback. The figures are printed in the reports, in NOTES that an
+ESEF report only block-tags, so they were never facts.
+
+**Solution (deterministic, inspectable):** `scripts/33_load_note_facts.py` + the reviewed specification
+`data/mappings/reviewed_note_figures.yaml`. The spec says where to read (report, row regex, how the years are identified,
+concept, perimeter, evidence); the CODE reads the number from the report's own table and REFUSES it unless its checks pass
+(cross-check against a tagged fact of the same report or the company's own EBITDA bridge; plausibility vs revenue). Stored
+as `fact_value` with `raw_xbrl_tag = "note:<id>"`, `context_ref = "<report>#row<n>"`; never overwrites an XBRL fact.
+- LVMH: segment note "Charges d'amortissement et de depreciation" 6,702 / 6,018 / 5,772 / 5,253 (2024-2021); its IFRS 16 row
+  equals the tagged right-of-use line (3,228 / 3,031 / 3,007), which proves the year mapping (2021 by table order).
+- L'Oreal: fixed-assets note 1,652.4 / 1,586.7 / 1,429.7 / 1,474.2 (2025-2022), D&A only (impairment is a separate line).
+- Essity: cash-flow line 7,505 / 7,998 / 9,012 SEK (2024-2022), equal to EBITDA - operating profit in its own bridge
+  (25,800 - 18,295). 2022 now follows the restated FY2024 report, consistent with the restated EBIT.
+- Kering: its TAGGED line 1,823 / 1,666 is what its own EBITDA adds back (4,746 + 1,823 = 6,569): a reviewed override.
+Result on the live DB: 15 note facts stored + 8 Kering facts re-pointed; no existing fact changed except `concept_id`; the 11
+other companies identical in every table except valuation (market data). No company is on the D&A fallback any more (ASM and
+Adyen have no net debt/EBITDA for other reasons). Screener: LVMH 9.0x / 1.2x, L'Oreal 20.6x / 0.2x, Kering 6.5x / 2.1x,
+Essity 8.4x / 1.4x. Essity EBITDA 2023 / 2024 (23,146 / 25,800) equals the company's own; Kering 6,466 vs its 6,569 (ours starts
+from operating profit after non-current items, its from recurring operating income).
+
+**Perimeters (stated in the spec):** LVMH / Essity / Kering include impairment, L'Oreal does not; LVMH's line excludes the
+brand and goodwill impairment booked in "autres produits et charges operationnels" (422M in 2024), so its EBITDA is slightly
+conservative. Not covered by any report on this machine: L'Oreal 2019-2021 and LVMH 2020 (their D&A stays the flagged fallback).
+
+**DCF effect (judgement call):** with real D&A the DCF moved: LVMH EV 476bn -> 529bn (D&A 6.7bn vs capex 5.5bn), Kering
+127bn -> 93bn (2023 capex 2.6bn includes real-estate purchases, above D&A 1.8bn), L'Oreal 144 -> 148bn, Essity 42.8 -> 43.2bn.
+The inputs are the printed ones; the levels are still driven by the growth assumption (historical CAGR incl. acquisitions:
+LVMH 17.4%), so LVMH's DCF stays far above its ~232bn market EV. The DCF is illustrative.

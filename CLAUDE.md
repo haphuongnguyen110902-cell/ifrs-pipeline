@@ -118,7 +118,11 @@ one company only), never a condition in core analytics. When a mapping is
 corrected, `scripts/32_remap_facts.py` re-points the facts already loaded
 (dry run first; `fact_value.raw_xbrl_tag` keeps the original tag). A fact's
 fiscal year is the year its period ENDS (`fiscal_year_label` in
-`11_ratio_engine.py`, the only place the rule lives).
+`11_ratio_engine.py`, the only place the rule lives). A figure that is printed
+in a NOTE but not tagged (ESEF only block-tags most notes) is never typed in:
+`scripts/33_load_note_facts.py` reads it from the report by a reviewed
+specification (`data/mappings/reviewed_note_figures.yaml`), refuses it unless
+its checks pass, and stores it as a `note:` fact with its row as provenance.
 
 **Two separate `requirements.txt` on purpose.** The root one (used by
 pipeline scripts and CI's `tests.yml`/`pipeline.yml`) includes `arelle-release`,
