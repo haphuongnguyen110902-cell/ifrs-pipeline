@@ -76,7 +76,7 @@ class TestApply:
     def test_moves_facts_creates_the_target_and_follows_with_the_mapping_row(self, m32, db):
         with db.begin() as c:
             out = m32.apply_drift(c, LOOKUP, m32.find_drift(c, LOOKUP))
-        assert out["moved"].sum() == 3 and out["skipped_clash"].sum() == 0
+        assert out["moved"].sum() == 3 and out["still_blocked"].sum() == 0
         cc = concepts_of(db)
         assert cc[1] == cc[2] == cc[3] == CANON and cc[4] == "inventories" and cc[5] == "inventories"
         with db.connect() as c:
@@ -96,7 +96,7 @@ class TestApply:
             c.execute(text(f"INSERT INTO fact_value VALUES (6,10,100,3,'other:Twin',1522.0)"))   # same filing+period, target concept
         with db.begin() as c:
             out = m32.apply_drift(c, LOOKUP, m32.find_drift(c, LOOKUP))
-        assert out["skipped_clash"].sum() == 1 and out["moved"].sum() == 2
+        assert out["still_blocked"].sum() == 1 and out["moved"].sum() == 2
         assert concepts_of(db)[1] == OLD_EL                       # left where it was, still there
         with db.connect() as c:                                   # the mapping row stays: a fact still needs the old concept
             assert c.execute(text(f"SELECT concept_id FROM concept_mapping WHERE xbrl_tag = '{TAG_EL}'")).scalar() == 1

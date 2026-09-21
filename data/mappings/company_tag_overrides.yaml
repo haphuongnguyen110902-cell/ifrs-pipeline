@@ -1,0 +1,42 @@
+# Reviewed per-company corrections to the tag -> concept mapping.
+#
+# WHEN THIS FILE IS USED: a filer sometimes uses a standard IFRS tag for a line that is NOT what the tag means. The
+# tag alone cannot show it - only the label the company prints next to the number can. An entry here applies to ONE
+# company (matched by the name in data/companies.yaml), sits on top of ifrs_concepts_v0.yaml for that company only, and
+# is applied by the loader (09_batch_load.py) and by the fact re-pointing tool (32_remap_facts.py). The fact keeps its
+# original tag in fact_value.raw_xbrl_tag, so nothing is lost and every override can be audited.
+#
+# EVERY ENTRY MUST CARRY: the label the company itself prints (printed_label) and the evidence (where it was read).
+# Never add one from a tag name alone, and never from a language-model guess: read the company's own statement.
+#
+# Format: company, tag, concept (normalized name), statement, label, printed_label, evidence.
+
+overrides:
+
+  # Puig Brands - FY2024 consolidated balance sheet (Spanish ESEF report 549300OVHNSX30L1AQ94-20241231-es.xhtml).
+  # Puig swapped two tags: trade payables sit under the income-tax-liability tag and the income-tax payable under the
+  # trade-and-other-payables tag. Read from the report's own balance sheet rows and the cash-flow working-capital note.
+  # Effect before the fix: the ratio engine read 47.6M ("trade payables") -> DPO 14 days; the trade payables the company
+  # prints are 229.5M -> about 64 days.
+  - company: "Puig Brands"
+    tag: "ifrs-full:CurrentTaxLiabilitiesCurrent"
+    concept: trade_and_other_current_payables_to_trade_suppliers
+    statement: balance_sheet
+    label: Trade Payables
+    printed_label: "Proveedores y acreedores"
+    evidence: >-
+      Balance sheet 31 Dec 2024 / 2023 (EUR thousands): the row "Proveedores y acreedores" 229,492 / 212,072 is tagged
+      ifrs-full:CurrentTaxLiabilitiesCurrent. The consolidated note "Cambios en el capital circulante" lists the same
+      caption "Proveedores y acreedores" as a working-capital movement (5,826) beside "Otras cuentas a pagar a corto plazo".
+      Read 2026-09-21 with scripts/reconcile_reports.py and the report's row labels.
+
+  - company: "Puig Brands"
+    tag: "ifrs-full:TradeAndOtherCurrentPayables"
+    concept: current_tax_liabilities_current
+    statement: balance_sheet
+    label: Current Tax Liabilities
+    printed_label: "Impuesto sobre sociedades a pagar"
+    evidence: >-
+      Balance sheet 31 Dec 2024 / 2023 (EUR thousands): the row "Impuesto sobre sociedades a pagar" (corporate income tax
+      payable) 47,625 / 55,319 is tagged ifrs-full:TradeAndOtherCurrentPayables. Read 2026-09-21 with
+      scripts/reconcile_reports.py and the report's row labels.
