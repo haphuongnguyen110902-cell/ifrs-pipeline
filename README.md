@@ -41,7 +41,7 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Measured on | 2026-09-21 |
 | Companies loaded | 16: ASM International, Adyen, Amplifon, Danone, EssilorLuxottica, Essity, Heineken, Kering, L'Oreal, LVMH, Moncler, Pernod Ricard, Puig Brands, Recordati, Schneider Electric, Shell |
 | Countries | France, Italy, Netherlands, Spain, Sweden, United Kingdom |
-| Facts in database | 19,786 |
+| Facts in database | 19,801 |
 | Years with ratios, per company | 3-8 (median 7); calendar span 2017-2025 |
 | Ratios computed | 12 distinct ratios: 884 values, 364 blank (an input is missing or the ratio is not meaningful for that company - stored blank, never as zero) |
 | Trading comps | 14/16 companies |
@@ -53,7 +53,7 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Forecast backtest | 14/16 companies |
 | Forensics flags | 87 across 15 companies (32 high / 20 medium / 35 low severity) |
 | Candidate universe | 156 distinct entities over 4 snapshots (latest 2026-09-17); 13 linked to a loaded company |
-| Tests | 675 (639 run in CI without a database, 36 need a live database and skip there) |
+| Tests | 722 (686 run in CI without a database, 36 need a live database and skip there) |
 <!-- FACTS:END -->
 
 The table above is **generated** from the database and the test suite (`python scripts/doc_facts.py --write`) - no number in it is typed by hand, and `python scripts/doc_facts.py --check` fails if it drifts from reality.
@@ -298,6 +298,7 @@ streamlit run webapp/app.py
 | `30_national_index_membership.py` | Universe rows from national index constituent lists (Wikipedia-scraped; France, Netherlands, Italy, Sweden, Belgium) |
 | `doc_facts.py` | Generates this README's status table from the database and test suite (`--check` fails if it drifts) |
 | `32_remap_facts.py` | Re-points already-loaded facts to the concept the mapping (plus `data/mappings/company_tag_overrides.yaml`) now assigns — dry run by default |
+| `33_load_note_facts.py` | Loads figures a company prints in its notes but does not tag (D&A of LVMH, L'Oréal, Essity) from a reviewed specification; every figure is read from the report by code and refused unless its checks pass |
 | `wake_dashboard.py` | Headless-browser keep-alive for the public dashboard (run by `.github/workflows/keep_dashboard_awake.yml`) |
 | `27_onepager.py` | One-page PDF per company — DCF/comps/market-EV reconciled side by side (with a "football field" bar chart), key ratios, trading comps, credit profile, earnings-quality flags, and a matching precedent transaction where one exists |
 | `run_pipeline.py` | Orchestrates the above (`--mode full` / `--mode analyze` / others) |
