@@ -296,12 +296,48 @@ def render_forensics(flags: pd.DataFrame):
                 st.caption(f"What to check: {f['what_to_check']}")
 
 
+EBITDA_FALLBACK_NOTE = (
+    "EV/EBITDA is not shown for this company: no depreciation & amortisation was found in its "
+    "filing, so EBITDA can't be built (it would just equal EBIT and overstate the multiple). "
+    "It is also left out of the sector peer medians. EV/EBIT is shown instead.")
+
+
+def peer_comparison_text(r):
+    """The sector peer comparison sentence, or None when there are fewer than
+    2 usable peers. Prefers the EV/EBITDA basis; a company whose EBITDA can't
+    be built (no D&A in its filing) gets the same comparison on EV/EBIT,
+    labelled as such, instead of a wrong EBITDA one or none at all."""
+    bases = (
+        ("EV/EBITDA", "n_peers_in_sector", "ev_ebitda_sector_median",
+         "implied_ev_from_peers", "premium_vs_peers_pct", ""),
+        ("EV/EBIT", "n_peers_ebit_in_sector", "ev_ebit_sector_median",
+         "implied_ev_from_peers_ebit", "premium_vs_peers_ebit_pct",
+         " (EV/EBIT basis - this company's EBITDA isn't available)"),
+    )
+    for label, n_col, median_col, implied_col, premium_col, suffix in bases:
+        n, implied, premium = r.get(n_col), r.get(implied_col), r.get(premium_col)
+        if pd.isna(n) or n < 2 or pd.isna(implied) or pd.isna(premium):
+            continue
+        return (f"**Sector peer comparison**{suffix} - {int(n)} peers in {r['sector']}: "
+                f"peer median {label} {r[median_col]:.1f}x implies an EV of {format_eur(implied)}; "
+                f"this company trades at a {premium:+.0f}% "
+                f"{'premium' if premium >= 0 else 'discount'} to that.")
+    return None
+
+
+def ebitda_is_fallback(row) -> bool:
+    """True when comps flagged this row's EBITDA as unavailable. The column is
+    written by 19_valuation.py; a database it has not re-run against yet has no
+    such column, which simply means no flag."""
+    value = row.get("ebitda_is_fallback") if hasattr(row, "get") else None
+    return bool(value) if value is not None and not pd.isna(value) else False
+
+
 def render_comps(df: pd.DataFrame, n_companies: int = 11):
     if df.empty:
-        st.info("No trading comps computed yet for this company (see 19_valuation.py) - "
-                "usually because a required field (gross margin, DSO/DIO/DPO...) isn't "
-                "tagged for this company's latest filing. See CLAUDE.md's data-completeness "
-                "notes rather than assuming this is a bug.")
+        st.info("Trading comps haven't been computed for this company yet. They need a stock "
+                "ticker and a full set of fundamentals (revenue, operating profit, net debt) "
+                "from its latest filing.")
         return
     r = df.iloc[0]
     st.caption(f"Fiscal year {int(r['year'])} fundamentals · ticker {r['ticker']} · "
@@ -324,21 +360,20 @@ def render_comps(df: pd.DataFrame, n_companies: int = 11):
 
     c7, c8 = st.columns(2)
     c7.metric("Revenue", format_eur(r["revenue_eur"]))
-    c8.metric("EBITDA (reconstructed)", format_eur(r["ebitda_eur"]))
-
-    n_peers = int(r["n_peers_in_sector"]) if pd.notna(r["n_peers_in_sector"]) else 0
-    if n_peers >= 2 and pd.notna(r["implied_ev_from_peers"]):
-        st.markdown(
-            f"**Sector peer comparison** ({n_peers} peers in {r['sector']}): "
-            f"peer median EV/EBITDA {r['ev_ebitda_sector_median']:.1f}x implies an EV of "
-            f"{format_eur(r['implied_ev_from_peers'])} — this company trades at a "
-            f"{r['premium_vs_peers_pct']:+.0f}% {'premium' if r['premium_vs_peers_pct'] >= 0 else 'discount'} "
-            f"to that."
-        )
+    if ebitda_is_fallback(r):
+        # no D&A in the filing: EBITDA cannot be built, so show the honest multiple
+        ev_ebit = r.get("ev_ebit")
+        c8.metric("EV / EBIT", f"{ev_ebit:.1f}x" if pd.notna(ev_ebit) else "n/a")
+        st.caption(EBITDA_FALLBACK_NOTE)
     else:
-        st.caption(f"Fewer than 2 sector peers in this {n_companies}-company universe ({n_peers} found) - "
-                   "no meaningful implied valuation from peers (see 19_valuation.py's "
-                   "'median of one' guard).")
+        c8.metric("EBITDA (reconstructed)", format_eur(r["ebitda_eur"]))
+
+    comparison = peer_comparison_text(r)
+    if comparison:
+        st.markdown(comparison)
+    else:
+        st.caption("No peer comparison: fewer than 2 companies in this sector have a usable "
+                   f"multiple yet (this universe has {n_companies} companies).")
 
     if pd.notna(r.get("fwd_ev_ebitda")):
         st.caption(f"Forward (NTM, CAGR-projected) EV/EBITDA: {r['fwd_ev_ebitda']:.1f}x · "
