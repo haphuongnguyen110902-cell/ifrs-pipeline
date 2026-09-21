@@ -1555,6 +1555,9 @@ cash_flow:
     display_label: Depreciation, Amortization and Impairment Adjustments
     xbrl_tags:
     - ifrs-full:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss
+    - el:AmortissementsDépréciationsEtPertesDeValeur
+    - el:DepreciationAmortizationImpairment
+    - asm:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossExcludingOtherInvestments
   adjustments_for_increase_decrease_in_employee_benefit_lia_etc:
     display_label: Adjustments for Increase/(Decrease) in Employee Benefit Liabilities
     xbrl_tags:
@@ -2058,10 +2061,6 @@ cash_flow:
     display_label: Issuance/(Redemption) of Other Borrowings
     xbrl_tags:
     - kering:IssuanceRedemptionOfOtherBorrowings
-  amortissements_depreciations_et_pertes_de_valeur:
-    display_label: Depreciation, Amortization and Impairment (EssilorLuxottica)
-    xbrl_tags:
-    - el:AmortissementsDépréciationsEtPertesDeValeur
   variation_du_besoin_en_fonds_de_roulement_commercial:
     display_label: Change in Trade Working Capital
     xbrl_tags:
@@ -2162,10 +2161,6 @@ cash_flow:
     display_label: Issuance/(Redemption) of Other Borrowings
     xbrl_tags:
     - kering:IssuanceRedemptionOfOtherBorrowings
-  amortissements_depreciations_et_pertes_de_valeur_x:
-    display_label: Depreciation, Amortization and Impairment (EssilorLuxottica)
-    xbrl_tags:
-    - el:AmortissementsDépréciationsEtPertesDeValeur
   variation_du_besoin_en_fonds_de_roulement_commercial_x:
     display_label: Change in Trade Working Capital
     xbrl_tags:
@@ -2314,10 +2309,6 @@ cash_flow:
     display_label: Change in bank overdrafts classified as cash equivalents
     xbrl_tags:
     - dan:IncreaseDecreaseBankOverdraftsClassifiedAsCashEquivalents
-  el_depreciation_amortization_impairment:
-    display_label: Depreciation, amortization and impairment
-    xbrl_tags:
-    - el:DepreciationAmortizationImpairment
   el_changes_in_trade_working_capital:
     display_label: Changes in trade working capital
     xbrl_tags:
@@ -2441,14 +2432,6 @@ cash_flow:
       et coentreprises
     xbrl_tags:
     - schneiderelectric:AdjustmentsForImpairmentOfInvestmentsInAssociatesAndJointVentures
-  adjustments_for_depreciation_of_property_plant_and_equipment:
-    display_label: Amortissements des immobilisations corporelles
-    xbrl_tags:
-    - schneiderelectric:AdjustmentsForDepreciationOfPropertyPlantAndEquipment
-  adjustments_for_depreciation_of_intangible_assets_other_than_etc:
-    display_label: Amortissements des immobilisations incorporelles (hors goodwill)
-    xbrl_tags:
-    - schneiderelectric:AdjustmentsForDepreciationOfIntangibleAssetsOtherThanGoodwill
   adjustments_for_decrease_increase_in_other_current_assets_an_etc:
     display_label: Diminution/(augmentation) des autres actifs et passifs courants
     xbrl_tags:
@@ -2509,6 +2492,7 @@ cash_flow:
     display_label: Adjustments for amortisation expense
     xbrl_tags:
     - ifrs-full:AdjustmentsForAmortisationExpense
+    - schneiderelectric:AdjustmentsForDepreciationOfIntangibleAssetsOtherThanGoodwill
   adjustments_for_depreciation_right_of_use_assets_x:
     display_label: Adjustments For Depreciation Right Of Use Assets
     xbrl_tags:
@@ -2547,12 +2531,6 @@ cash_flow:
     display_label: Increase (decrease) in intangible assets and goodwill
     xbrl_tags:
     - ifrs-full:IncreaseDecreaseInIntangibleAssetsAndGoodwill
-  adjustments_for_depreciation_and_amortisation_expense_and_im_etc:
-    display_label: Adjustments for depreciation and amortisation expense and impairment
-      loss (reversal of impairment loss) recognised in profit or loss, Excluding Other
-      Investments
-    xbrl_tags:
-    - asm:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossExcludingOtherInvestments
   adjustments_for_impairment_of_other_investments:
     display_label: Adjustments for impairment of other investments
     xbrl_tags:
@@ -2590,6 +2568,7 @@ cash_flow:
     display_label: Adjustments for depreciation expense
     xbrl_tags:
     - ifrs-full:AdjustmentsForDepreciationExpense
+    - schneiderelectric:AdjustmentsForDepreciationOfPropertyPlantAndEquipment
   adjustments_for_impairment_losses:
     display_label: Adjustments for impairment losses
     xbrl_tags:

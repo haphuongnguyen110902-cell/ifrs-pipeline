@@ -137,3 +137,34 @@ class TestTheRealMappingFile:
 
     def test_the_capex_logic_reads_the_canonical_concept(self, load_script):
         assert CANON in load_script("21_three_statement_model.py").CAPEX_CONCEPTS
+
+
+class TestExtensionDaLinesAreMapped:
+    """Read from each company's own cash-flow statement and anchors (definition linkbase), 2026-09-21:
+    Schneider prints depreciation of PP&E (871M, PP&E incl. right-of-use assets) and amortisation of intangibles (781M)
+    as two lines anchored to the IFRS D&A total; EssilorLuxottica (3,098M) and ASM (251M) print ONE line for
+    depreciation, amortisation and impairment, anchored to the D&A and impairment elements. Each sat in a one-off concept
+    the engine cannot read, so EBITDA was EBIT and they were flagged n/a*."""
+
+    @pytest.fixture(scope="class")
+    def lookup(self, m32):
+        return m32.load_lookup(MAPPING)
+
+    @pytest.mark.parametrize("tag,concept", [
+        ("schneiderelectric:AdjustmentsForDepreciationOfPropertyPlantAndEquipment", "adjustments_for_depreciation_expense"),
+        ("schneiderelectric:AdjustmentsForDepreciationOfIntangibleAssetsOtherThanGoodwill", "adjustments_for_amortisation_expense"),
+        ("el:AmortissementsDépréciationsEtPertesDeValeur", "adjustments_for_depreciation_and_amortisation_expense_and_etc"),
+        ("el:DepreciationAmortizationImpairment", "adjustments_for_depreciation_and_amortisation_expense_and_etc"),
+        ("asm:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossExcludingOtherInvestments",
+         "adjustments_for_depreciation_and_amortisation_expense_and_etc"),
+    ])
+    def test_tag_maps_to_the_concept_the_engine_reads(self, lookup, tag, concept):
+        assert lookup[tag][0] == concept
+
+    def test_the_engine_reads_those_concepts(self, load_script):
+        import pandas as pd
+        r11 = load_script("11_ratio_engine.py")
+        row = {"company": "S", "company_id": 1, "year": 2025, "revenue": 40_152.0, "profit_loss_from_operating_activities": 6_699.0,
+               "adjustments_for_depreciation_expense": 871.0, "adjustments_for_amortisation_expense": 781.0}
+        out = r11.compute_ratios(pd.DataFrame([row]))
+        assert out["_da_total"].iloc[0] == 1_652.0 and out["_ebitda"].iloc[0] == 8_351.0
