@@ -184,3 +184,30 @@ class TestLvmhOperatingInvestmentsAsCapex:
         w = pd.DataFrame([{"year": 2024, self.CANON: 5_531e6}])
         r = m21.resolve_capex(w)
         assert r["capex"].iloc[0] == pytest.approx(5_531e6) and r["basis"].iloc[0] == self.CANON
+
+
+class TestKeringDaLine:
+    """Kering's tagged cash-flow line 'Dotations nettes courantes aux amortissements et provisions sur actifs operationnels
+    non courants' looked bundled by its tag (anchored to D&A and provisions). Its label and the company's own EBITDA
+    reconciliation show it is the D&A charge on non-current operating assets: EBITDA = recurring operating income + this line."""
+
+    TAG = "kering:AdjustmentsForDepreciationAndAmortisationAndProvisionExpense"
+    COMBINED = "adjustments_for_depreciation_and_amortisation_expense_and_etc"
+
+    def test_the_company_ebitda_reconciliation_adds_up(self):
+        assert 4_746 + 1_823 == 6_569 and 5_589 + 1_666 == 7_255                # 2023, 2022 (EUR millions)
+
+    def test_the_override_applies_to_kering_only_and_is_documented(self, m09):
+        import yaml
+        lookup = m09.load_mapping(str(MAPPING))
+        ov = m09.load_overrides(OVERRIDES)
+        assert m09.tag_lookup_for("Kering", lookup, ov)[self.TAG][0] == self.COMBINED
+        assert m09.tag_lookup_for("LVMH", lookup, ov)[self.TAG][0] != self.COMBINED
+        e = next(x for x in yaml.safe_load(OVERRIDES.read_text(encoding="utf-8"))["overrides"] if x["company"] == "Kering")
+        assert "6,569" in e["evidence"] and "EBITDA" in e["evidence"] and e["printed_label"].startswith("Dotations nettes courantes")
+
+    def test_the_engine_reads_it_as_d_and_a(self, r11):
+        w = pd.DataFrame([{"company": "K", "company_id": 1, "year": 2023, "revenue": 19_566.0,
+                           "profit_loss_from_operating_activities": 4_500.0, self.COMBINED: 1_823.0}])
+        r = r11.compute_ratios(w)
+        assert r["_da_total"].iloc[0] == 1_823.0 and r["_ebitda"].iloc[0] == 6_323.0

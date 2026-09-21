@@ -70,3 +70,24 @@ overrides:
       intangibles (837) and PP&E (4,715) before the change in fixed-asset suppliers. 2023: (7,478) vs (7,536) gross;
       2022: (4,969) vs (4,948) gross. Company-defined, within 1% of the IAS 7.16(a) gross payments in all three years.
       Read 2026-09-21 from the report's own rows.
+
+  # Kering - FY2023 URD, consolidated cash flow statement and note 3.1 (segment information / EBITDA reconciliation, French
+  # ESEF report kering-2023-12-31-fr.xhtml). The cash-flow line "Dotations nettes courantes aux amortissements et provisions
+  # sur actifs opérationnels non courants" (1,823M in 2023, 1,666M in 2022) is tagged with an extension element that the
+  # filer anchors to depreciation/amortisation AND provisions, so by its tag it looked bundled. Its own label and the
+  # company's EBITDA reconciliation say what it is: it is the D&A charge on NON-CURRENT OPERATING ASSETS (PP&E, intangibles,
+  # right-of-use - "dont amortissement des droits d'utilisation" 985 / 935) net of impairment provisions on those assets, not a
+  # provision for liabilities or inventories. Kering defines EBITDA as recurring operating income + exactly this line:
+  # 4,746 + 1,823 = 6,569 (2023); 5,589 + 1,666 = 7,255 (2022). Perimeter: depreciation, amortisation and net impairment /
+  # provisions on non-current operating assets (the same "D&A and impairment" perimeter as Danone, Heineken, ASM).
+  - company: "Kering"
+    tag: "kering:AdjustmentsForDepreciationAndAmortisationAndProvisionExpense"
+    concept: adjustments_for_depreciation_and_amortisation_expense_and_etc
+    statement: cash_flow
+    label: Depreciation, Amortization and Impairment Adjustments
+    printed_label: "Dotations nettes courantes aux amortissements et provisions sur actifs opérationnels non courants"
+    evidence: >-
+      Kering FY2023 report, note 3.1 EBITDA reconciliation: recurring operating income 4,746 + net current depreciation,
+      amortisation and provisions on non-current operating assets 1,823 (of which right-of-use amortisation 985) = EBITDA
+      6,569; 2022: 5,589 + 1,666 (935) = 7,255. The line therefore is the D&A the company itself adds back to reach EBITDA.
+      Read 2026-09-21 from the report's own rows.
