@@ -58,7 +58,14 @@ def get_engine():
             "On Streamlit Cloud: add it under this app's Settings → Secrets."
         )
         st.stop()
-    return create_engine(db_url)
+    # This engine is cached for the life of the app, but Neon (serverless
+    # Postgres) closes idle connections. Without pre-ping the pool hands out
+    # a dead one and the first click after a quiet spell raises
+    # OperationalError / "connection already closed" - seen live: selecting a
+    # company crashed the Ratios tab, then worked after a reload. pre_ping
+    # tests the connection on checkout and transparently reconnects;
+    # pool_recycle retires connections before Neon's idle timeout would.
+    return create_engine(db_url, pool_pre_ping=True, pool_recycle=300)
 
 
 @st.cache_data(ttl=3600)
@@ -190,6 +197,39 @@ def format_eur(value) -> str:
     return f"€{value:,.0f}"
 
 
+NOT_SHOWN = "n/a*"
+
+LEVERAGE_FOOTNOTE = (
+    "* n/a*: this company's statements do not print depreciation and amortisation separately, so EBITDA "
+    "cannot be derived. A multiple built on EBIT but labelled EBITDA would overstate leverage, so it is not "
+    "shown; net debt and EBIT are still shown, and \"Net Debt vs Op. Profit\" on the Ratios tab is on an "
+    "EBIT basis. Net debt here includes IFRS 16 lease liabilities, whereas many companies' own headline "
+    "\"net financial debt\" excludes them (LVMH 2024: about €9.2bn as reported, about €31bn here, of which "
+    "€17.8bn is leases), so figures can differ from a company's press release."
+)
+
+
+def _is_true(value) -> bool:
+    return bool(value) if pd.notna(value) else False
+
+
+def ebitda_multiple_text(value, is_da_fallback, fmt: str = "{:.1f}x") -> str:
+    """A multiple whose denominator is EBITDA, as a visitor sees it. Where D&A is not printed separately the
+    pipeline's "EBITDA" is really EBIT (flagged is_da_fallback), so the multiple is overstated - LVMH showed
+    1.65x on EBIT against roughly 1.0x on its own operating cash flow. Shown as n/a* instead of a figure that
+    reads as EBITDA-based but is not."""
+    if _is_true(is_da_fallback):
+        return NOT_SHOWN
+    return fmt.format(value) if pd.notna(value) else "n/a"
+
+
+def leverage_label(label, is_da_fallback) -> str:
+    """A band / trend derived from such a multiple: hidden for the same reason."""
+    if _is_true(is_da_fallback):
+        return NOT_SHOWN
+    return str(label) if pd.notna(label) else "n/a"
+
+
 def format_pct_fraction(value) -> str:
     """For columns stored as a FRACTION (0.0713, not 7.13) - dcf_valuation's
     wacc/cost_of_equity/pct_ev_from_terminal are all fractions."""
@@ -289,12 +329,48 @@ def render_forensics(flags: pd.DataFrame):
                 st.caption(f"What to check: {f['what_to_check']}")
 
 
+EBITDA_FALLBACK_NOTE = (
+    "EV/EBITDA is not shown for this company: no depreciation & amortisation was found in its "
+    "filing, so EBITDA can't be built (it would just equal EBIT and overstate the multiple). "
+    "It is also left out of the sector peer medians. EV/EBIT is shown instead.")
+
+
+def peer_comparison_text(r):
+    """The sector peer comparison sentence, or None when there are fewer than
+    2 usable peers. Prefers the EV/EBITDA basis; a company whose EBITDA can't
+    be built (no D&A in its filing) gets the same comparison on EV/EBIT,
+    labelled as such, instead of a wrong EBITDA one or none at all."""
+    bases = (
+        ("EV/EBITDA", "n_peers_in_sector", "ev_ebitda_sector_median",
+         "implied_ev_from_peers", "premium_vs_peers_pct", ""),
+        ("EV/EBIT", "n_peers_ebit_in_sector", "ev_ebit_sector_median",
+         "implied_ev_from_peers_ebit", "premium_vs_peers_ebit_pct",
+         " (EV/EBIT basis - this company's EBITDA isn't available)"),
+    )
+    for label, n_col, median_col, implied_col, premium_col, suffix in bases:
+        n, implied, premium = r.get(n_col), r.get(implied_col), r.get(premium_col)
+        if pd.isna(n) or n < 2 or pd.isna(implied) or pd.isna(premium):
+            continue
+        return (f"**Sector peer comparison**{suffix} - {int(n)} peers in {r['sector']}: "
+                f"peer median {label} {r[median_col]:.1f}x implies an EV of {format_eur(implied)}; "
+                f"this company trades at a {premium:+.0f}% "
+                f"{'premium' if premium >= 0 else 'discount'} to that.")
+    return None
+
+
+def ebitda_is_fallback(row) -> bool:
+    """True when comps flagged this row's EBITDA as unavailable. The column is
+    written by 19_valuation.py; a database it has not re-run against yet has no
+    such column, which simply means no flag."""
+    value = row.get("ebitda_is_fallback") if hasattr(row, "get") else None
+    return bool(value) if value is not None and not pd.isna(value) else False
+
+
 def render_comps(df: pd.DataFrame, n_companies: int = 11):
     if df.empty:
-        st.info("No trading comps computed yet for this company (see 19_valuation.py) - "
-                "usually because a required field (gross margin, DSO/DIO/DPO...) isn't "
-                "tagged for this company's latest filing. See CLAUDE.md's data-completeness "
-                "notes rather than assuming this is a bug.")
+        st.info("Trading comps haven't been computed for this company yet. They need a stock "
+                "ticker and a full set of fundamentals (revenue, operating profit, net debt) "
+                "from its latest filing.")
         return
     r = df.iloc[0]
     st.caption(f"Fiscal year {int(r['year'])} fundamentals · ticker {r['ticker']} · "
@@ -317,21 +393,20 @@ def render_comps(df: pd.DataFrame, n_companies: int = 11):
 
     c7, c8 = st.columns(2)
     c7.metric("Revenue", format_eur(r["revenue_eur"]))
-    c8.metric("EBITDA (reconstructed)", format_eur(r["ebitda_eur"]))
-
-    n_peers = int(r["n_peers_in_sector"]) if pd.notna(r["n_peers_in_sector"]) else 0
-    if n_peers >= 2 and pd.notna(r["implied_ev_from_peers"]):
-        st.markdown(
-            f"**Sector peer comparison** ({n_peers} peers in {r['sector']}): "
-            f"peer median EV/EBITDA {r['ev_ebitda_sector_median']:.1f}x implies an EV of "
-            f"{format_eur(r['implied_ev_from_peers'])} — this company trades at a "
-            f"{r['premium_vs_peers_pct']:+.0f}% {'premium' if r['premium_vs_peers_pct'] >= 0 else 'discount'} "
-            f"to that."
-        )
+    if ebitda_is_fallback(r):
+        # no D&A in the filing: EBITDA cannot be built, so show the honest multiple
+        ev_ebit = r.get("ev_ebit")
+        c8.metric("EV / EBIT", f"{ev_ebit:.1f}x" if pd.notna(ev_ebit) else "n/a")
+        st.caption(EBITDA_FALLBACK_NOTE)
     else:
-        st.caption(f"Fewer than 2 sector peers in this {n_companies}-company universe ({n_peers} found) - "
-                   "no meaningful implied valuation from peers (see 19_valuation.py's "
-                   "'median of one' guard).")
+        c8.metric("EBITDA (reconstructed)", format_eur(r["ebitda_eur"]))
+
+    comparison = peer_comparison_text(r)
+    if comparison:
+        st.markdown(comparison)
+    else:
+        st.caption("No peer comparison: fewer than 2 companies in this sector have a usable "
+                   f"multiple yet (this universe has {n_companies} companies).")
 
     if pd.notna(r.get("fwd_ev_ebitda")):
         st.caption(f"Forward (NTM, CAGR-projected) EV/EBITDA: {r['fwd_ev_ebitda']:.1f}x · "
@@ -340,15 +415,14 @@ def render_comps(df: pd.DataFrame, n_companies: int = 11):
 
 def render_three_statement(df: pd.DataFrame):
     if df.empty:
-        st.info("No 3-statement projection computed yet for this company "
-                "(see 21_three_statement_model.py).")
+        st.info("A projected 3-statement model hasn't been built for this company yet.")
         return
     base_year = int(df["base_year"].iloc[0])
     growth = df["growth_assumption"].iloc[0]
     rate = df["interest_rate_assumption"].iloc[0]
     st.caption(f"Projected from base year {base_year} · revenue growth "
-               f"{growth:.1%} · interest rate {rate:.1%} — see 21_three_statement_model.py "
-               f"for the full linked-model assumptions (circularity-solved debt schedule).")
+               f"{growth:.1%} · interest rate {rate:.1%} · linked income statement, cash "
+               f"flow and net debt, with a circularity-solved debt schedule.")
 
     display_cols = {
         "forecast_year": "Year", "revenue": "Revenue", "ebit": "EBIT",
@@ -361,19 +435,17 @@ def render_three_statement(df: pd.DataFrame):
     formatted = table.map(format_eur)
     st.dataframe(formatted, width="stretch")
     st.caption("FCF here is LEVERED (net of interest expense) - NOT the unlevered FCFF the "
-               "DCF tab discounts. See 22_dcf.py's module docstring for why the two must not "
-               "be mixed.")
+               "DCF tab discounts, so the two must not be mixed.")
 
 
 def render_dcf(df: pd.DataFrame):
     if df.empty:
-        st.info("No DCF computed yet for this company (see 22_dcf.py) - either a required "
-                "3-statement input is missing, or no ticker is mapped for market data.")
+        st.info("A DCF valuation hasn't been computed for this company yet. It needs the "
+                "projected 3-statement model and a stock ticker for market data.")
         return
     r = df.iloc[0]
     st.caption(f"Base year {int(r['base_year'])} · WACC built up via CAPM, unlevered FCFF "
-               f"discounted to Enterprise Value, Gordon-growth terminal value - see "
-               f"22_dcf.py's module docstring for the full method and sourced assumptions.")
+               f"discounted to Enterprise Value, Gordon-growth terminal value.")
 
     c1, c2, c3 = st.columns(3)
     c1.metric("WACC", format_pct_fraction(r["wacc"]))
@@ -392,13 +464,12 @@ def render_dcf(df: pd.DataFrame):
 
 def render_market_risk(df: pd.DataFrame):
     if df.empty:
-        st.info("No market risk metrics computed yet for this company (see 23_market_risk.py).")
+        st.info("Market-risk metrics haven't been computed for this company yet.")
         return
     r = df.iloc[0]
     st.caption(f"{r['period_start']} to {r['period_end']} ({int(r['n_observations'])} aligned "
                f"trading days) vs {r['benchmark']} (STOXX Europe 600) - beta and correlation are "
-               f"computed directly from daily price history, not read from a third-party number. "
-               f"See 23_market_risk.py's module docstring for the full method.")
+               f"computed directly from daily price history, not read from a third-party number.")
 
     c1, c2, c3 = st.columns(3)
     c1.metric("Annualized Volatility", format_pct_fraction(r["annualized_volatility"]))
@@ -419,29 +490,29 @@ def render_market_risk(df: pd.DataFrame):
 
 def render_credit_profile(df: pd.DataFrame):
     if df.empty:
-        st.info("No credit profile computed yet for this company (see 24_credit.py).")
+        st.info("A credit profile hasn't been computed for this company yet.")
         return
 
     st.caption("Net Debt / EBITDA trajectory - NOT the same as the Ratios tab's "
-               "\"Net Debt vs Op. Profit\" (that's Net Debt / EBIT, despite its column name "
-               "elsewhere; see 24_credit.py's module docstring for why reusing it would have "
-               "overstated leverage here). Bands are a fixed, sector-agnostic heuristic, not a "
-               "real agency rating - see the script's docstring.")
+               "\"Net Debt vs Op. Profit\" (that one is Net Debt / EBIT; reusing it here would "
+               "overstate leverage). Bands are a fixed, sector-agnostic heuristic, not a real "
+               "agency rating.")
 
     latest = df.iloc[-1]
     c1, c2, c3 = st.columns(3)
     c1.metric("Latest Net Debt/EBITDA",
-              f"{latest['net_debt_ebitda']:.2f}x" if pd.notna(latest["net_debt_ebitda"]) else "n/a")
-    c2.metric("Band", latest["band"])
-    c3.metric("Trend", latest["trend"])
+              ebitda_multiple_text(latest["net_debt_ebitda"], latest["is_da_fallback"], "{:.2f}x"))
+    c2.metric("Band", leverage_label(latest["band"], latest["is_da_fallback"]))
+    c3.metric("Trend", leverage_label(latest["trend"], latest["is_da_fallback"]))
 
     display = df.copy()
-    display["net_debt_ebitda"] = display["net_debt_ebitda"].apply(
-        lambda v: f"{v:.2f}x" if pd.notna(v) else "n/a")
+    flags = df["is_da_fallback"]
+    display["net_debt_ebitda"] = [ebitda_multiple_text(v, f, "{:.2f}x") for v, f in zip(df["net_debt_ebitda"], flags)]
+    display["band"] = [leverage_label(v, f) for v, f in zip(df["band"], flags)]
+    display["trend"] = [leverage_label(v, f) for v, f in zip(df["trend"], flags)]
     display["net_debt"] = display["net_debt"].apply(format_eur)
     display["ebitda"] = display["ebitda"].apply(format_eur)
-    display["is_da_fallback"] = display["is_da_fallback"].map(
-        {True: "⚠ EBITDA=EBIT (overstated)", False: ""})
+    display["is_da_fallback"] = flags.map(lambda f: "⚠ D&A not found: EBITDA is EBIT" if _is_true(f) else "")
     display = display[["year", "net_debt", "ebitda", "net_debt_ebitda", "band", "trend", "is_da_fallback"]].rename(
         columns={"year": "Year", "net_debt": "Net Debt", "ebitda": "EBITDA",
                  "net_debt_ebitda": "Net Debt/EBITDA", "band": "Band", "trend": "Trend",
@@ -449,14 +520,12 @@ def render_credit_profile(df: pd.DataFrame):
     st.dataframe(display, width="stretch", hide_index=True)
 
     if df["is_da_fallback"].any():
-        st.caption("⚠ Years marked above have no D&A tag matched for this company - EBITDA "
-                   "silently equals EBIT for those years, so leverage is likely overstated. "
-                   "See 11_ratio_engine.py's D&A fallback notes.")
+        st.caption(LEVERAGE_FOOTNOTE)
 
 
 def render_backtest(df: pd.DataFrame):
     if df.empty:
-        st.info("No forecast backtest computed yet for this company (see 17_backtest.py).")
+        st.info("A forecast backtest hasn't been computed for this company yet.")
         return
     display = df.copy()
     display["is_winner"] = display["is_winner"].map({True: "★ winner", False: ""})
@@ -475,13 +544,13 @@ def render_backtest(df: pd.DataFrame):
     st.dataframe(display, width="stretch", hide_index=True)
     st.caption("CAGR vs. linear regression, scored by rolling-origin backtest (not just "
                "last-year fit) - a winner picked from 1 fold is labelled low confidence, "
-               "not presented the same as a 4-fold pick. See 17_backtest.py.")
+               "not presented the same as a 4-fold pick.")
 
 
 def render_precedents(df: pd.DataFrame):
     st.caption("Curated, publicly-sourced M&A deals in this project's sectors - deliberately "
                "a small, well-verified list rather than padded with uncertain figures. Not "
-               "specific to the company selected above (see 20_precedents.py).")
+               "specific to the company selected above.")
     if df.empty:
         st.info("No precedent transactions loaded yet.")
         return
@@ -551,12 +620,15 @@ if screener_filtered.empty:
 display_screener = pd.DataFrame({
     "Company": screener_filtered["name"],
     "Country": screener_filtered["country"],
-    "Sector": screener_filtered["sector_std"],
+    "Sector": screener_filtered["sector_std"].fillna("Unclassified"),
     "Op. Margin": screener_filtered["operating_margin"].map(lambda v: f"{v:.1f}%" if pd.notna(v) else "n/a"),
     "ROIC": screener_filtered["roic"].map(lambda v: f"{v:.1f}%" if pd.notna(v) else "n/a"),
-    "EV/EBITDA": screener_filtered["ev_ebitda"].map(lambda v: f"{v:.1f}x" if pd.notna(v) else "n/a"),
-    "Net Debt/EBITDA": screener_filtered["net_debt_ebitda"].map(lambda v: f"{v:.1f}x" if pd.notna(v) else "n/a"),
-    "Credit Band": screener_filtered["credit_band"].fillna("n/a"),
+    "EV/EBITDA": [ebitda_multiple_text(v, f) for v, f in
+                  zip(screener_filtered["ev_ebitda"], screener_filtered["credit_is_da_fallback"])],
+    "Net Debt/EBITDA": [ebitda_multiple_text(v, f) for v, f in
+                        zip(screener_filtered["net_debt_ebitda"], screener_filtered["credit_is_da_fallback"])],
+    "Credit Band": [leverage_label(v, f) for v, f in
+                    zip(screener_filtered["credit_band"], screener_filtered["credit_is_da_fallback"])],
     "High Flags": screener_filtered["high_flag_count"],
 })
 
@@ -567,6 +639,8 @@ selection_event = st.dataframe(
     display_screener, width="stretch", hide_index=True,
     on_select="rerun", selection_mode="single-row",
 )
+if any(_is_true(f) for f in screener_filtered["credit_is_da_fallback"]):
+    st.caption(LEVERAGE_FOOTNOTE)
 
 selected_positions = selection_event.selection.rows if selection_event and selection_event.selection else []
 # Default to the first row so the detail view below always shows

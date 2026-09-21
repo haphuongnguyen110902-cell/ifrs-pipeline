@@ -21,49 +21,62 @@ Usage:
     python scripts/08_validate.py --company "L'Oreal"    # just one
 """
 import argparse
+import importlib.util
 import os
 import sys
-from datetime import timedelta
+from pathlib import Path
 
 import pandas as pd
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
-# tolerance for identity checks - filings round to the nearest 100k or so,
-# and cross-footing differences of a few units are normal rounding, not errors
-REL_TOLERANCE = 0.01  # 1%
+
+def _load(name, filename):
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).parent / filename)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# same fact resolution and same "is this a financial company" rule as the ratios
+r11 = _load("ratio_engine_11", "11_ratio_engine.py")
+
+# Tolerance for identity checks. Filings round to a thousand or a million, so
+# cross-footing gaps are rounding-sized: at the scale of a balance sheet that is
+# well under 0.01%. 0.1% leaves headroom for small companies reporting in
+# millions while still catching a missing line (the old 1% let a genuine 0.31%
+# gap through - Recordati 2022's held-for-distribution assets - and would let
+# a much larger real omission through too).
+REL_TOLERANCE = 0.001  # 0.1%
+
+# IFRS 5 assets held for sale / for distribution are presented on their own
+# line, neither current nor non-current, so `current + non-current` can
+# legitimately fall short of total assets by exactly this amount. Matched by
+# prefix because the mapping stores several (truncated, and `_x`-suffixed) names.
+HELD_FOR_SALE_PREFIX = "noncurrent_assets_or_disposal_groups_classified_as_held_for"
 
 
 def fetch_all(engine) -> pd.DataFrame:
-    query = """
-        SELECT
-            c.name AS company,
-            ic.statement,
-            ic.normalized_name,
-            ic.display_label,
-            p.period_type,
-            p.start_date,
-            p.end_date,
-            fv.value,
-            fv.currency
-        FROM fact_value fv
-        JOIN ifrs_concept ic ON fv.concept_id = ic.concept_id
-        JOIN period p ON fv.period_id = p.period_id
-        JOIN filing fil ON fv.filing_id = fil.filing_id
-        JOIN company c ON fil.company_id = c.company_id
-    """
-    df = pd.read_sql(query, engine)
-    if df.empty:
-        return df
+    """Every fact, reduced to ONE row per (company, year, concept) by the ratio
+    engine's deterministic rule (representative period, then latest filing).
+    This used to take whichever row the database returned first, so where two
+    filings - or two dates in one year - disagreed the checks could pass or
+    fail depending on row order."""
+    facts = r11.fetch_facts(engine)
+    if facts.empty:
+        return facts
+    resolved, _ = r11.resolve_fact_conflicts(facts)
+    return resolved
 
-    def get_year(row):
-        if row["period_type"] == "instant":
-            return (row["end_date"] - timedelta(days=1)).year
-        return row["start_date"].year
 
-    df["year"] = df.apply(get_year, axis=1)
-    df["value"] = pd.to_numeric(df["value"], errors="coerce")
-    return df
+def financial_company_names(engine) -> dict:
+    """{company name: why} for companies whose statements are not built like an
+    industrial's (see 11_ratio_engine.py) - some industrial identities do not
+    apply to them."""
+    profiles = r11.fetch_company_profiles(engine)
+    reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
+    names = dict(zip(profiles["company_id"], profiles["name"]))
+    return {names[cid]: why for cid, why in reasons.items()}
 
 
 def get_val(df, company, year, concept):
@@ -74,15 +87,26 @@ def get_val(df, company, year, concept):
     return hit.iloc[0]["value"]
 
 
-def check_identities(df) -> list:
-    """Accounting identities that must hold if the mapping is right."""
+def held_for_sale(df, company, year):
+    """Total assets classified as held for sale / distribution for one company-
+    year (0.0 when there are none). Summed across the several concept names the
+    mapping uses for it."""
+    hit = df[(df["company"] == company) & (df["year"] == year)
+             & df["normalized_name"].str.startswith(HELD_FOR_SALE_PREFIX)]
+    return float(hit["value"].sum()) if not hit.empty else 0.0
+
+
+def check_identities(df, tolerance: float = REL_TOLERANCE, skip_gross_profit=()) -> list:
+    """Accounting identities that must hold if the mapping is right. Returns
+    (company, year, label, ok, detail) tuples.
+
+    skip_gross_profit: companies for which "Gross Profit = Revenue - Cost of
+    Sales" does not apply. A financial-model statement puts other lines between
+    revenue and its "gross profit" (Adyen: 'costs incurred from financial
+    institutions' and net interest income - the exact 180.4M that the identity
+    could not explain), so the identity is inapplicable, not violated."""
     results = []
-    identities = [
-        # (label, target_concept, [component concepts to sum])
-        ("Assets = Equity + Liabilities", "assets", ["equity_and_liabilities"]),
-        ("Gross Profit = Revenue - Cost of Sales", "gross_profit", ["revenue", "cost_of_sales"]),
-        ("Current + Non-current Assets = Total Assets", "assets", ["current_assets", "noncurrent_assets"]),
-    ]
+    skip_gross_profit = set(skip_gross_profit)
 
     for company in sorted(df["company"].unique()):
         for year in sorted(df[df["company"] == company]["year"].unique()):
@@ -90,30 +114,31 @@ def check_identities(df) -> list:
             a = get_val(df, company, year, "assets")
             el = get_val(df, company, year, "equity_and_liabilities")
             if a is not None and el is not None:
-                diff = abs(a - el)
-                ok = diff <= abs(a) * REL_TOLERANCE
+                ok = bool(abs(a - el) <= abs(a) * tolerance)
                 results.append((company, year, "Assets = Equity + Liabilities", ok, f"{a:,.0f} vs {el:,.0f}"))
 
             # identity 2: GrossProfit == Revenue - CostOfSales
             gp = get_val(df, company, year, "gross_profit")
             rev = get_val(df, company, year, "revenue")
             cos = get_val(df, company, year, "cost_of_sales")
-            if gp is not None and rev is not None and cos is not None:
+            if gp is not None and rev is not None and cos is not None and company not in skip_gross_profit:
                 # cost of sales may be tagged positive (as a magnitude) or
                 # negative (as a signed deduction) - accept whichever matches
                 expected_pos = rev - abs(cos)
-                diff = abs(gp - expected_pos)
-                ok = diff <= abs(rev) * REL_TOLERANCE
+                ok = bool(abs(gp - expected_pos) <= abs(rev) * tolerance)
                 results.append((company, year, "Gross Profit = Revenue - CoS", ok, f"{gp:,.0f} vs {expected_pos:,.0f}"))
 
-            # identity 3: CurrentAssets + NoncurrentAssets == Assets
+            # identity 3: CurrentAssets + NoncurrentAssets == Assets, under EITHER
+            # presentation of held-for-sale assets: a separate line (add it) or
+            # inside current assets (already counted)
             ca = get_val(df, company, year, "current_assets")
             nca = get_val(df, company, year, "noncurrent_assets")
             if a is not None and ca is not None and nca is not None:
-                expected = ca + nca
-                diff = abs(a - expected)
-                ok = diff <= abs(a) * REL_TOLERANCE
-                results.append((company, year, "Current + Non-current = Total Assets", ok, f"{a:,.0f} vs {expected:,.0f}"))
+                base = ca + nca
+                with_hfs = base + held_for_sale(df, company, year)
+                best = min((base, with_hfs), key=lambda x: abs(a - x))
+                ok = bool(abs(a - best) <= abs(a) * tolerance)
+                results.append((company, year, "Current + Non-current = Total Assets", ok, f"{a:,.0f} vs {best:,.0f}"))
 
     return results
 
@@ -146,6 +171,83 @@ def check_coverage(df) -> pd.DataFrame:
         year_range=("year", lambda s: f"{min(s)}-{max(s)}"),
     )
     return cov
+
+
+# Known-good values verified by hand against a published annual report.
+# Each: (company, year, normalized_name, expected_value, tolerance_pct). Values
+# are in the filing's native units (full EUR, not millions). L'Oreal's are from
+# its Document d'Enregistrement Universel 2024. Add more as other companies'
+# figures are verified against their reports - a company with no case here is
+# checked only by the accounting identities above.
+REGRESSION_CASES = [
+    ("L'Oreal", 2024, "revenue",        43486800000, 0.5),
+    ("L'Oreal", 2024, "gross_profit",   32264600000, 0.5),
+    ("L'Oreal", 2024, "profit_loss_from_operating_activities", 8263100000, 0.5),
+    ("L'Oreal", 2024, "assets",         56353400000, 0.5),
+    ("L'Oreal", 2024, "cash_flows_from_used_in_operating_activities", 8294600000, 1.0),
+]
+
+
+def run_identity_and_regression_checks(df, financial=None, regression_cases=None) -> int:
+    """Prints the identity and known-value checks and returns how many FAILED.
+    The caller turns a non-zero count into a non-zero exit code: this script
+    used to print "FAILURES" and exit 0, so run_pipeline.py's validation gate
+    (and CI's `validate` mode) could never actually stop anything.
+
+    financial: {company name: reason} - the gross-profit identity is not
+    applied to these (see check_identities)."""
+    financial = financial or {}
+    regression_cases = REGRESSION_CASES if regression_cases is None else regression_cases
+    n_failed = 0
+
+    print("=" * 70)
+    print("ACCOUNTING IDENTITIES - a failure usually means a mapping error")
+    print("=" * 70)
+    results = check_identities(df, skip_gross_profit=set(financial))
+    skipped = sorted(set(financial) & set(df["company"].unique()))
+    if skipped:
+        print("Gross-profit identity not applied (financial reporting model): "
+              + ", ".join(f"{c} ({financial[c][:60]}...)" if len(financial[c]) > 60 else f"{c} ({financial[c]})"
+                          for c in skipped) + "\n")
+    if not results:
+        print("No identities could be checked (required concepts not present).")
+    else:
+        failures = [r for r in results if not r[3]]
+        for company, year, label, ok, detail in results:
+            print(f"[{'PASS' if ok else 'FAIL'}] {company:20s} {year}  {label:38s} {detail}")
+        print(f"\n{len(results) - len(failures)}/{len(results)} checks passed "
+              f"(tolerance {REL_TOLERANCE:.1%})")
+        if failures:
+            n_failed += len(failures)
+            print(f"\n*** {len(failures)} FAILURES - investigate these mappings:")
+            for company, year, label, ok, detail in failures:
+                print(f"      {company} {year}: {label} ({detail})")
+
+    print("\n" + "=" * 70)
+    print("REGRESSION TESTS - known-good values that must never silently change")
+    print("=" * 70)
+    print("Verified by hand against published annual reports (see REGRESSION_CASES).")
+    print("A failure means a mapping change broke something that was correct.\n")
+    reg_pass = reg_fail = reg_skip = 0
+    for company, year, concept, expected, tol_pct in regression_cases:
+        actual = get_val(df, company, year, concept)
+        if actual is None or pd.isna(actual):
+            print(f"[SKIP] {company} {year} {concept}: not in current data")
+            reg_skip += 1
+            continue
+        diff_pct = abs(float(actual) - expected) / abs(expected) * 100
+        ok = diff_pct <= tol_pct
+        reg_pass += ok
+        reg_fail += not ok
+        print(f"[{'PASS' if ok else 'FAIL'}] {company} {year} {concept}")
+        if not ok:
+            print(f"       expected={expected:,.0f}  actual={float(actual):,.0f}  diff={diff_pct:.2f}%")
+    print(f"\n{reg_pass} passed, {reg_fail} failed, {reg_skip} skipped")
+    if reg_fail:
+        n_failed += reg_fail
+        print("*** REGRESSION FAILURES - a mapping change broke known-good values.")
+        print("*** Check git diff data/mappings/ifrs_concepts_v0.yaml for recent changes.")
+    return n_failed
 
 
 if __name__ == "__main__":
@@ -192,80 +294,7 @@ if __name__ == "__main__":
     else:
         print(f"\nAll companies report in {sorted(all_currencies)[0]} - absolute values are comparable.")
 
-    print("\n" + "=" * 70)
-    print("ACCOUNTING IDENTITIES - a failure usually means a mapping error")
-    print("=" * 70)
-    results = check_identities(df)
-    if not results:
-        print("No identities could be checked (required concepts not present).")
-    else:
-        failures = [r for r in results if not r[3]]
-        for company, year, label, ok, detail in results:
-            status = "PASS" if ok else "FAIL"
-            print(f"[{status}] {company:20s} {year}  {label:38s} {detail}")
-        print(f"\n{len(results) - len(failures)}/{len(results)} checks passed")
-        if failures:
-            print(f"\n*** {len(failures)} FAILURES - investigate these mappings:")
-            for company, year, label, ok, detail in failures:
-                print(f"      {company} {year}: {label} ({detail})")
-
-    print("\n" + "=" * 70)
-    print("REGRESSION TESTS - known-good values that must never silently change")
-    print("=" * 70)
-    print("These are verified against L'Oreal's published 2024 annual report.")
-    print("A failure means a mapping change broke something that was correct.\n")
-
-    # Each tuple: (company, year, normalized_name, expected_value, tolerance_pct)
-    # Values are in the filing's native units (full EUR, not millions)
-    # Verified against L'Oreal Document d'Enregistrement Universel 2024
-    REGRESSION_CASES = [
-        ("L'Oreal", 2024, "revenue",        43486800000, 0.5),
-        ("L'Oreal", 2024, "gross_profit",   32264600000, 0.5),
-        ("L'Oreal", 2024, "profit_loss_from_operating_activities", 8263100000, 0.5),
-        ("L'Oreal", 2024, "assets",         56353400000, 0.5),
-        ("L'Oreal", 2024, "cash_flows_from_used_in_operating_activities", 8294600000, 1.0),
-        # Add more as you manually verify other companies
-    ]
-
-    def get_fact(df, company, year, concept):
-        mask = (
-            (df["company"] == company) &
-            (df["normalized_name"] == concept)
-        )
-        subset = df[mask].copy()
-        if subset.empty:
-            return None
-        subset["year"] = subset.apply(
-            lambda r: (r["end_date"] - timedelta(days=1)).year
-            if r["period_type"] == "instant"
-            else r["start_date"].year,
-            axis=1,
-        )
-        year_subset = subset[subset["year"] == year]
-        if year_subset.empty:
-            return None
-        vals = pd.to_numeric(year_subset["value"], errors="coerce").dropna()
-        return vals.iloc[0] if not vals.empty else None
-
-    reg_pass = reg_fail = reg_skip = 0
-    for company, year, concept, expected, tol_pct in REGRESSION_CASES:
-        actual = get_fact(df, company, year, concept)
-        if actual is None:
-            print(f"[SKIP] {company} {year} {concept}: not in current data")
-            reg_skip += 1
-            continue
-        diff_pct = abs(float(actual) - expected) / abs(expected) * 100
-        ok = diff_pct <= tol_pct
-        status = "PASS" if ok else "FAIL"
-        if ok:
-            reg_pass += 1
-        else:
-            reg_fail += 1
-        print(f"[{status}] {company} {year} {concept}")
-        if not ok:
-            print(f"       expected={expected:,.0f}  actual={float(actual):,.0f}  diff={diff_pct:.2f}%")
-
-    print(f"\n{reg_pass} passed, {reg_fail} failed, {reg_skip} skipped")
-    if reg_fail > 0:
-        print("*** REGRESSION FAILURES - a mapping change broke known-good values.")
-        print("*** Check git diff data/mappings/ifrs_concepts_v0.yaml for recent changes.")
+    n_failed = run_identity_and_regression_checks(df, financial=financial_company_names(engine))
+    if n_failed:
+        print(f"\nVALIDATION FAILED: {n_failed} check(s) did not pass.")
+        sys.exit(1)
