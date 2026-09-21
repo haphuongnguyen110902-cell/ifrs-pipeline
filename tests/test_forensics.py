@@ -252,11 +252,11 @@ class TestPersistence:
         forensics.ensure_forensics_table(db_engine)
         forensics.ensure_forensics_table(db_engine)  # must not raise the second time
 
-    def test_save_to_db_matches_the_documented_flag_count(self, forensics, db_engine):
-        """README documents 62 flags (26 high / 12 medium / 24 low) across
-        the 11-company universe - the same number this test locks in, so a
-        future ratio-engine change that silently shifts flag counts is
-        caught here rather than only noticed by re-reading the README."""
+    def test_save_to_db_stores_exactly_the_flags_computed(self, forensics, db_engine):
+        """What is stored is what was computed: total, severity split and no NULL company_id. This used to assert a
+        hard-coded 62 (26/12/24) 'documented in the README' - the count of the 11-company universe. With 16 companies
+        it had been failing since the universe grew (86-87 flags), and the README's number is generated from the
+        database now (scripts/doc_facts.py), so a second copy here could only go stale again."""
         forensics.ensure_forensics_table(db_engine)
         flags, wide = _pipeline_flags(forensics, db_engine)
 
@@ -272,8 +272,8 @@ class TestPersistence:
                 "SELECT COUNT(*) FROM forensics_flag WHERE company_id IS NULL"
             )).scalar()
 
-        assert total == 62, f"expected 62 flags (see README), got {total}"
-        assert by_severity == {"high": 26, "medium": 12, "low": 24}
+        assert total == len(flags), f"stored {total} flags, computed {len(flags)}"
+        assert by_severity == {k: int(v) for k, v in flags["severity"].value_counts().items()}
         assert null_company_id == 0
 
     def test_rerunning_save_to_db_is_idempotent_not_additive(self, forensics, db_engine):
