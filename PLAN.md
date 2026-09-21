@@ -1590,8 +1590,13 @@ in WHICH line the engine read, in labelling, and in mapping.
   separate line (Schneider 1,072 vs 1,543 printed; Amplifon, ASM, Recordati, Heineken), and fell back to a flat 3% of
   revenue where the combined line sits under an extension tag (EssilorLuxottica 795 vs 1,522; Kering 587 vs 2,611;
   L'Oreal, Pernod). `resolve_capex()` reads a combined line else adds every printed component; the extension tags now
-  map to one canonical concept through the filers' own anchors. LVMH's "operating investments" (5,531M) is NOT mapped:
-  its anchors include disposal proceeds, so it is net of disposals - ambiguous as capex, stays the flagged fallback.
+  map to one canonical concept through the filers' own anchors. LVMH's "operating investments" (5,531M) was first left
+  out because its anchors include disposal proceeds (a net line); after checking note 15.3 it is now read as capex through
+  a reviewed LVMH-only override (#61): the note gives the gross IAS 7.16(a) payments for PP&E and intangibles (5,519 /
+  7,536 / 4,948M for 2024 / 2023 / 2022) and the company line differs by +0.2% / -0.8% / +0.4% (disposals and deposits
+  are tiny). Company-defined, within 1% of the gross measure; the note carries no XBRL tags so the gross figure itself
+  cannot be read from the facts. LVMH's 3-statement capex 2,540M (3% fallback) -> 5,531M; its D&A is still the flagged
+  fallback (= capex), so the DCF level barely moves (EV 477.1bn -> 476.4bn).
 - **D&A (#47, #51, #52):** Essity 2019 was stored negative (EBITDA ~SEK 15bn too low, credit row 7.2x -> 2.25x live);
   the depreciation + amortisation pair of Recordati is now the D&A; Schneider, EssilorLuxottica and ASM print D&A under
   extension tags (anchored to the IFRS D&A / impairment elements) that are now mapped. Kering, LVMH, L'Oreal bundle D&A
@@ -1627,7 +1632,7 @@ L'Oreal, LVMH and Essity (D&A not separable).
 - Recordati capex 2023/2024 (383M / 851M) come from its printed intangible-purchase line (product-rights deals);
   compared with the printed statements only for FY2022.
 
-**Still open:** D&A for Kering / LVMH / L'Oreal / Essity (notes only); LVMH capex definition; ASM zero-debt override;
+**Still open:** D&A for Kering / LVMH / L'Oreal / Essity (notes only); ASM zero-debt override;
 statement hierarchy not stored; one-off `_x` concepts (70 tags still mapped twice) and 6 stale `concept_mapping` rows;
 `19_valuation --company` overwrites peer medians with the single company's own (run it for the whole universe);
 Pernod forecast (2 years of history); Heineken / Amplifon / Shell have no 3-statement/DCF (costs by nature).
