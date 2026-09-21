@@ -1,0 +1,136 @@
+# Reviewed figures read from the NOTES of an annual report (see scripts/33_load_note_facts.py).
+#
+# WHEN THIS FILE IS USED: a company prints a figure clearly in a note table (or in its own EBITDA reconciliation) but does
+# not tag it in XBRL - most notes of an ESEF report are only block-tagged - so the figure is missing from the facts. This is
+# a REVIEWED SPECIFICATION of where to read it; the numbers themselves are read from the report by code, refused unless
+# their checks pass, and stored as facts with raw_xbrl_tag "note:<id>" and context_ref "<report>#row<n>".
+#
+# EVERY ENTRY: report (file name of the ESEF package), row (regular expression on the printed row label), years (how the
+# fiscal years are identified: "header" = a header row of years above the row, or a list of years, newest first, one per
+# matching row), column ("all" = one value per header year, "last" = the last number of each row), scale (units of the table),
+# decimal ("," or "."), concept (the normalised concept the engine reads), the perimeter of the figure, at least one check,
+# and the evidence. Never add one from a label alone or from a language-model guess: read the report's own table.
+#
+# Checks: sane_pct_of_revenue [lo, hi]; cross_row_equals_tagged_fact {row, tag, row_offset} (a neighbouring row of the same
+# table must equal a TAGGED fact of the same report - this proves the row/year mapping); ebitda_bridge {start, end,
+# tolerance} (the company's own EBITDA reconciliation: start + the rows between = end, and end - start = the figure).
+
+figures:
+
+  # ---------------------------------------------------------------------------------------------------------------- LVMH
+  # Segment note of the consolidated financial statements: one table per year (newest first), total column last.
+  # "Charges d'amortissement et de dépréciation" = depreciation, amortisation and impairment of intangible assets, PP&E and
+  # right-of-use assets charged in the year; "Dont : Droits d'utilisation" is the IFRS 16 part and equals the tagged
+  # cash-flow line AdjustmentsForDepreciationRightOfUseAssets (3,228 / 3,031 / 3,007), which proves the year mapping.
+  # Perimeter note: the impairment of brands and goodwill booked in "Autres produits et charges opérationnels" (422M in 2024)
+  # is NOT in this line, so EBITDA computed as operating profit + this line is slightly conservative.
+  - id: lvmh_da_note_fy2024
+    company: "LVMH"
+    report: lvmh_2024-12-31.zip
+    row: '^Charges d.amortissement et de dépréciation$'
+    years: [2024, 2023, 2022]
+    column: last
+    scale: 1000000
+    decimal: ","
+    currency: EUR
+    concept: adjustments_for_depreciation_and_amortisation_expense_and_etc
+    statement: cash_flow
+    label: Depreciation, Amortization and Impairment Adjustments
+    perimeter: "depreciation, amortisation and impairment of intangibles, PP&E and right-of-use assets (segment note total)"
+    checks:
+      - sane_pct_of_revenue: [3, 12]
+      - cross_row_equals_tagged_fact: {row: '^Dont : Droits d.utilisation$', tag: "LVM:AdjustmentsForDepreciationRightOfUseAssets", row_offset: 1}
+    evidence: >-
+      FY2024 report, segment information: "Charges d'amortissement et de dépréciation" (6,702) 2024, (6,018) 2023, (5,772) 2022
+      in EUR millions, of which right-of-use assets (3,228) / (3,031) / (3,007) = the tagged cash-flow line. Recurring
+      operating profit 19,571 + other operating items (664) = operating profit 18,907 (the EBIT used here).
+
+  - id: lvmh_da_note_fy2023
+    company: "LVMH"
+    report: lvmh_2023-12-31.zip
+    row: '^Charges d.amortissement et de dépréciation$'
+    years: [2023, 2022, 2021]
+    column: last
+    scale: 1000000
+    decimal: ","
+    currency: EUR
+    concept: adjustments_for_depreciation_and_amortisation_expense_and_etc
+    statement: cash_flow
+    label: Depreciation, Amortization and Impairment Adjustments
+    perimeter: "depreciation, amortisation and impairment of intangibles, PP&E and right-of-use assets (segment note total)"
+    checks:
+      - sane_pct_of_revenue: [3, 12]
+      - cross_row_equals_tagged_fact: {row: '^Dont : Droits d.utilisation$', tag: "LVM:AdjustmentsForDepreciationRightOfUseAssets", row_offset: 1, min_verified: 2}
+    evidence: >-
+      FY2023 report, same segment table: (6,018) 2023, (5,772) 2022, (5,253) 2021; right-of-use (3,031) / (3,007) / (2,698).
+
+  # ------------------------------------------------------------------------------------------------------------- L'Oreal
+  # Note on fixed assets: "Dotations aux amortissements des immobilisations corporelles et incorporelles" with the IFRS 16
+  # part on the next line. Depreciation and amortisation only - impairment of tangible and intangible assets is a separate
+  # line (- / 50.8 / 270.6), so this is D&A without impairment. It is the item L'Oreal's own EBITDA definition adds back
+  # ("resultat d'exploitation retraite des charges d'amortissements recurrents et provisions pour depreciations des actifs
+  # immobilises (immobilisations corporelles, incorporelles, droits d'utilisation)").
+  - id: loreal_da_note_fy2025
+    company: "L'Oreal"
+    report: loreal_2025-12-31.zip
+    row: '^Dotations aux amortissements des immobilisations corporelles et incorporelles$'
+    years: header
+    column: all
+    scale: 1000000
+    decimal: ","
+    currency: EUR
+    concept: adjustments_for_depreciation_and_amortisation_expense
+    statement: cash_flow
+    label: Adjustments for depreciation and amortisation expense
+    perimeter: "depreciation and amortisation of PP&E, intangibles and IFRS 16 right-of-use assets; impairment is a separate line"
+    checks:
+      - sane_pct_of_revenue: [2, 8]
+    evidence: >-
+      FY2025 report, note on fixed assets: 1,652.4 (2025), 1,586.7 (2024), 1,429.7 (2023) EUR millions, of which IFRS 16
+      right-of-use 482.5 / 474.5 / 426.0. The tagged cash-flow line "amortissements, provisions et passifs d'impôts non
+      courants" (1,817.4 / 1,855.3 / 1,715.0) is the bundled superset.
+
+  - id: loreal_da_note_fy2024
+    company: "L'Oreal"
+    report: loreal_2024-12-31.zip
+    row: '^Dotations aux amortissements des immobilisations corporelles et incorporelles$'
+    years: header
+    column: all
+    scale: 1000000
+    decimal: ","
+    currency: EUR
+    concept: adjustments_for_depreciation_and_amortisation_expense
+    statement: cash_flow
+    label: Adjustments for depreciation and amortisation expense
+    perimeter: "depreciation and amortisation of PP&E, intangibles and IFRS 16 right-of-use assets; impairment is a separate line"
+    checks:
+      - sane_pct_of_revenue: [2, 8]
+    evidence: >-
+      FY2024 report, same note: 1,586.7 (2024), 1,429.7 (2023), 1,474.2 (2022); right-of-use 474.5 / 426.0 / 428.0.
+
+  # --------------------------------------------------------------------------------------------------------------- Essity
+  # The FY2023 and FY2024 reports do not tag their cash-flow D&A line (FY2020-FY2022 did). The cash-flow statement prints
+  # "Av- och nedskrivningar av anläggningstillgångar" = depreciation AND impairment of fixed assets, and the company's own
+  # EBITDA reconciliation confirms it: operating profit 18,295 + 7,505 = EBITDA 25,800 (2024). Includes right-of-use
+  # depreciation (1,089), amortisation of acquisition-related intangibles (1,110) and impairments (incl. items affecting
+  # comparability).
+  - id: essity_da_note_fy2024
+    company: "Essity"
+    report: essity_2024-12-31.zip
+    row: '^Av- och nedskrivningar av anläggningstillgångar$'
+    years: header
+    column: all
+    scale: 1000000
+    decimal: ","
+    currency: SEK
+    concept: adjustments_for_depreciation_and_amortisation_expense_and_etc
+    statement: cash_flow
+    label: Depreciation, Amortization and Impairment Adjustments
+    perimeter: "depreciation, amortisation (incl. acquisition-related intangibles and right-of-use) and impairment of fixed assets"
+    checks:
+      - sane_pct_of_revenue: [3, 9]
+      - ebitda_bridge: {start: '^Rörelseresultat$', end: '^EBITDA$', tolerance: 1}
+    evidence: >-
+      FY2024 report, cash flow statement: 7,505 (2024), 7,998 (2023), 9,012 (2022) SEK millions. EBITDA reconciliation:
+      operating profit 18,295 / 15,148 / 8,491 + amortisation of acquisition-related intangibles 1,110 + depreciation 5,028
+      + right-of-use 1,089 + impairment 56 + IAC impairment 152 + IAC acquisition-related 70 = EBITDA 25,800 / 23,146 / 17,502.
