@@ -397,6 +397,24 @@ def compute_flags(wide: pd.DataFrame, off_calendar_fye: dict = None) -> pd.DataF
 
 # ---------------------------------------------------------------- fetch revenue for growth
 
+def pick_revenue_per_year(df: pd.DataFrame) -> pd.DataFrame:
+    """One revenue per (company, year) from rows of (company, start_date, revenue, filing_id,
+    filing_end). When several filings report the same year - originals and later restatements,
+    or a year and its comparative - the value comes from the LATEST filing (the greatest own
+    period end), then the highest filing_id, then the larger value. This used to be `.first()`
+    over a query ordered only by (company, start_date), so which value won depended on row
+    order: 10 repeated calls happened to agree on today's data, but Essity 2022 holds two
+    different revenues (131,320M and 156,173M SEK) and the choice was left to chance. Sorting
+    here, not in SQL, makes the result independent of the order the rows arrive in."""
+    d = df.copy()
+    d["year"] = pd.to_datetime(d["start_date"]).dt.year
+    d["revenue"] = pd.to_numeric(d["revenue"], errors="coerce")
+    d["filing_end"] = pd.to_datetime(d["filing_end"]).fillna(pd.Timestamp.min)
+    d = d.sort_values(["company", "year", "filing_end", "filing_id", "revenue"],
+                      ascending=[True, True, False, False, False], kind="mergesort")
+    return d.groupby(["company", "year"], as_index=False).first()[["company", "year", "revenue"]]
+
+
 def fetch_revenue_growth(engine, company_filter=None) -> pd.DataFrame:
     """Compute YoY revenue growth directly from fact_value."""
     where = "AND c.name = :company" if company_filter else ""
@@ -404,7 +422,9 @@ def fetch_revenue_growth(engine, company_filter=None) -> pd.DataFrame:
         SELECT
             c.name AS company,
             p.start_date,
-            fv.value::numeric AS revenue
+            fv.value::numeric AS revenue,
+            fi.filing_id,
+            (SELECT MAX(p2.end_date) FROM period p2 WHERE p2.filing_id = fi.filing_id) AS filing_end
         FROM fact_value fv
         JOIN ifrs_concept ic ON fv.concept_id = ic.concept_id
         JOIN period p ON fv.period_id = p.period_id
@@ -413,15 +433,12 @@ def fetch_revenue_growth(engine, company_filter=None) -> pd.DataFrame:
         WHERE ic.normalized_name = 'revenue'
         AND p.period_type = 'duration'
         {where}
-        ORDER BY c.name, p.start_date
     """
     params = {"company": company_filter} if company_filter else {}
     df = pd.read_sql(text(query), engine, params=params)
     if df.empty:
         return pd.DataFrame()
-    df["year"] = pd.to_datetime(df["start_date"]).dt.year
-    df["revenue"] = pd.to_numeric(df["revenue"], errors="coerce")
-    df = df.groupby(["company", "year"])["revenue"].first().reset_index()
+    df = pick_revenue_per_year(df)
     df["revenue_growth"] = df.groupby("company")["revenue"].pct_change() * 100
     return df[["company", "year", "revenue_growth"]]
 
