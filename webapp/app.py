@@ -458,6 +458,12 @@ def render_three_statement(df: pd.DataFrame):
     st.dataframe(formatted, width="stretch")
     st.caption("FCF here is LEVERED (net of interest expense) - NOT the unlevered FCFF the "
                "DCF tab discounts, so the two must not be mixed.")
+    capex_label = df["capex_basis_label"].iloc[0] if "capex_basis_label" in df.columns else None
+    if pd.notna(capex_label) and capex_label:
+        st.caption(f"Capex is read from this company's own line \"{capex_label}\" - a company-defined figure, "
+                   f"not a standard combined capex tag. It was accepted here because the company's own notes let "
+                   f"it be checked against the gross purchases of property, plant, equipment and intangible "
+                   f"assets required under IFRS, and it matched within about 1% in every year available.")
 
 
 def render_dcf(df: pd.DataFrame):

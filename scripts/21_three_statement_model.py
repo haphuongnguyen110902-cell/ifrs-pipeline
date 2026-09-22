@@ -68,6 +68,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import yaml
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
@@ -104,6 +105,23 @@ DIVIDEND_CONCEPTS = (
     "dividends_paid_classified_as_financing_activities",
     "dividends_paid",
 )
+
+OVERRIDES_PATH = Path(__file__).parent.parent / "data" / "mappings" / "company_tag_overrides.yaml"
+
+
+def capex_override_label(company: str, basis: str):
+    """The company's own printed line name (e.g. LVMH's "Investissements d'exploitation") when `basis` - the
+    concept(s) resolve_capex() read capex from - came from a reviewed per-company override
+    (company_tag_overrides.yaml) rather than a standard tag: i.e. a company-defined figure, reviewed against
+    IFRS/global-standard evidence in that file (see PLAN.md). None for the normal case (a standard tag)."""
+    if not basis or not OVERRIDES_PATH.exists():
+        return None
+    data = yaml.safe_load(OVERRIDES_PATH.read_text(encoding="utf-8")) or {}
+    basis_concepts = set(basis.split("+"))
+    for e in data.get("overrides", []):
+        if e.get("company") == company and e.get("statement") == "cash_flow" and e.get("concept") in basis_concepts:
+            return e.get("printed_label")
+    return None
 
 
 def select_base_year_row(ratios: pd.DataFrame):
@@ -163,6 +181,7 @@ def fetch_base_year(engine, company: str) -> dict:
     capex_rows = resolve_capex(wide).loc[wide["year"] == latest_year]
     capex_value = capex_rows["capex"].iloc[0] if not capex_rows.empty and pd.notna(capex_rows["capex"].iloc[0]) else None
     capex_basis = capex_rows["basis"].iloc[0] if capex_value is not None else ""
+    capex_basis_label = capex_override_label(company, capex_basis)
 
     dividends = r11.get_best(wide, *DIVIDEND_CONCEPTS)
     dividends_latest = dividends.loc[wide["year"] == latest_year]
@@ -218,6 +237,7 @@ def fetch_base_year(engine, company: str) -> dict:
         "capex": capex_final,
         "capex_is_fallback": capex_value is None,
         "capex_basis": capex_basis,
+        "capex_basis_label": capex_basis_label,
         "payout_ratio": payout_ratio, "payout_ratio_is_fallback": payout_ratio_is_fallback,
         "receivables": latest["_revenue"] * latest["dso"] / 365,
         "inventory": cogs_latest * latest["dio"] / 365,
@@ -343,10 +363,10 @@ def save_to_db(engine, company: str, base: dict, growth: float, interest_rate: f
                 INSERT INTO three_statement_projection
                     (company, company_id, base_year, forecast_year, growth_assumption, interest_rate_assumption,
                      revenue, ebit, interest_expense, net_income, dividends, payout_ratio_assumption,
-                     fcf, net_debt_end, computed_at)
+                     fcf, net_debt_end, capex_basis, capex_basis_label, computed_at)
                 VALUES
                     (:company, :company_id, :base_year, :year, :growth, :ir, :rev, :ebit, :ie, :ni, :div, :payout,
-                     :fcf, :nd, now())
+                     :fcf, :nd, :cbasis, :cbasis_label, now())
                 ON CONFLICT (company_id, base_year, forecast_year)
                 DO UPDATE SET company = EXCLUDED.company, growth_assumption = EXCLUDED.growth_assumption,
                               interest_rate_assumption = EXCLUDED.interest_rate_assumption,
@@ -355,7 +375,8 @@ def save_to_db(engine, company: str, base: dict, growth: float, interest_rate: f
                               net_income = EXCLUDED.net_income, dividends = EXCLUDED.dividends,
                               payout_ratio_assumption = EXCLUDED.payout_ratio_assumption,
                               fcf = EXCLUDED.fcf,
-                              net_debt_end = EXCLUDED.net_debt_end, computed_at = now()
+                              net_debt_end = EXCLUDED.net_debt_end, capex_basis = EXCLUDED.capex_basis,
+                              capex_basis_label = EXCLUDED.capex_basis_label, computed_at = now()
             """), {
                 "company": company, "company_id": company_id, "base_year": base["base_year"], "year": int(r["year"]),
                 "growth": float(growth), "ir": float(interest_rate), "rev": float(r["revenue"]),
@@ -363,6 +384,7 @@ def save_to_db(engine, company: str, base: dict, growth: float, interest_rate: f
                 "ni": float(r["net_income"]), "div": float(r["dividends"]),
                 "payout": float(base.get("payout_ratio", 0.0)),
                 "fcf": float(r["fcf"]), "nd": float(r["net_debt_end"]),
+                "cbasis": base.get("capex_basis") or None, "cbasis_label": base.get("capex_basis_label"),
             })
             rows_written += 1
     return rows_written

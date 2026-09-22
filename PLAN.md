@@ -1692,3 +1692,24 @@ exists (EV 9.2bn vs a market EV of about 30bn+, driven by the 16.3% historical C
 figure comes from a maturity table, so it can be slightly above the carrying amount (about 3% of cash, immaterial). ASM's ROIC
 and ROE stay blank: it prints only total equity, not equity attributable to owners (the same tool can carry a reviewed
 "no non-controlling interests" statement if wanted).
+
+### 2026-09-22: LVMH's company-defined capex now labelled on the dashboard (PR #67, applied to the live DB)
+
+**Problem:** LVMH's capex (5,531M, see the 2026-09-21 section above) is read from a per-company override
+(`company_tag_overrides.yaml`) because it is the company's own net "Investissements d'exploitation" line, not the standard
+combined capex tag every other filer uses. The distinction previously lived only in that YAML file's evidence and in this
+document - a dashboard visitor had no way to know LVMH's 3-Statement Model tab was built on a different kind of figure than
+everyone else's.
+
+**Fix:** `resolve_capex()`'s `basis` (which concept(s) capex was read from) is now cross-checked, in `fetch_base_year()`,
+against `company_tag_overrides.yaml` for a `statement: cash_flow` entry on that concept for that company - generic (any
+future capex override gets the same treatment automatically), not an LVMH-only condition. When one matches, the company's
+own `printed_label` from that file is carried through `three_statement_projection.capex_basis_label` (new nullable column,
+one value per base-year run, same pattern as `growth_assumption`) into the webapp, which now shows a caption on the
+3-Statement Model tab for that company only, in plain language: no filename or doc pointer, per
+`tests/test_webapp_plain_language.py`'s guard against developer references in visitor-facing text.
+
+**Live-DB result:** re-ran `21_three_statement_model.py --company "LVMH"`; snapshot-diffed `three_statement_projection`
+before/after - 0 changes to any pre-existing column on any row (60 rows before and after), only LVMH's 5 rows gained
+`capex_basis` / `capex_basis_label`; every other company's `capex_basis_label` is NULL (verified on Danone - no caption).
+Confirmed live in the dashboard preview (LVMH's 3-Statement Model tab shows the caption; Danone's does not).
