@@ -270,3 +270,53 @@ figures:
       - no_row_matching: {from: '^Cash flows from financing activities$', to: '^Net cash used in financing activities$', pattern: 'borrow|loan|debt|repay|proceeds|credit facilit'}
     evidence: >-
       Same structural evidence as asm_no_noncurrent_borrowings_2024.
+
+  # ASM prints ONE combined "Equity" line (ifrs-full:Equity, already tagged and loaded) for every year shown - the
+  # consolidated balance sheet, the five-year summary (2021-2025) and the statement of changes in equity's own column
+  # headers (Common shares, Capital in excess of par value, Treasury shares at cost, Retained earnings, Other reserves,
+  # Total equity) - never a split into "attributable to owners of the parent" and "non-controlling interests". The
+  # consolidation accounting-policy note only says NCI "is disclosed separately, where appropriate" - conditional
+  # boilerplate describing what ASM WOULD do if a partly-owned subsidiary existed, not a disclosure that one does. With
+  # no NCI line anywhere across five years of statements, ASM is treated as having none, which lets ROIC and ROE be
+  # computed: 11_ratio_engine.py's ROIC/ROE fall back to the tagged total "Equity" as equity attributable to owners of
+  # the parent only when noncontrolling_interests is a PROVEN zero (this note figure), never merely missing - a company
+  # that just doesn't tag the split stays blank, as before.
+  - id: asm_no_noncontrolling_interests_2025
+    kind: stated_zero
+    company: "ASM International"
+    report: asm_international.zip
+    years: [2025]
+    period: instant
+    currency: EUR
+    concept: noncontrolling_interests
+    statement: balance_sheet
+    label: Non-controlling Interests
+    perimeter: "no non-controlling interests: the balance sheet, the five-year summary and the equity statement print one combined 'Equity' line with no NCI split"
+    checks:
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'non.controlling|minority'}
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'non.controlling|minority', occurrence: 2}
+    evidence: >-
+      FY2025 report: consolidated balance sheet (note 12) prints one line "Equity" 4,005.8 (2025) / 3,747.2 (2024), no
+      "non-controlling interests" or "attributable to owners of the parent" row; the five-year summary (2021-2025) repeats
+      the same single "Equity" line for all five years (2,241.8 / 2,749.3 / 3,226.8 / 3,747.2 / 4,005.8); the statement of
+      changes in equity's columns are Common shares, Capital in excess of par value, Treasury shares at cost, Retained
+      earnings, Other reserves, Total equity - no non-controlling-interests column. The consolidation policy note states
+      NCI "is disclosed separately, where appropriate" (conditional boilerplate, not an actual balance).
+
+  - id: asm_no_noncontrolling_interests_2024
+    kind: stated_zero
+    company: "ASM International"
+    report: asm_international.zip
+    years: [2024]
+    period: instant
+    currency: EUR
+    concept: noncontrolling_interests
+    statement: balance_sheet
+    label: Non-controlling Interests
+    perimeter: "no non-controlling interests at 31 December 2024: same balance sheet and five-year summary as the 2025 entry"
+    checks:
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'non.controlling|minority'}
+      - no_row_matching: {from: '^Equity and liabilities$', to: '^Total equity and liabilities$', pattern: 'non.controlling|minority', occurrence: 2}
+    evidence: >-
+      Same statements as asm_no_noncontrolling_interests_2025 (both years appear side by side on the same balance sheet
+      and across all five years of the summary table).

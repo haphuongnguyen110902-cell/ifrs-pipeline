@@ -481,10 +481,19 @@ class TestAsmSpec:
 
     def test_the_lease_lines_and_the_stated_zero_borrowings_are_there_for_both_years(self, specs):
         assert set(specs) == {"asm_lease_current_fy2025", "asm_lease_noncurrent_fy2025", "asm_no_noncurrent_borrowings_2025",
-                              "asm_no_current_borrowings_2025", "asm_no_noncurrent_borrowings_2024", "asm_no_current_borrowings_2024"}
+                              "asm_no_current_borrowings_2025", "asm_no_noncurrent_borrowings_2024", "asm_no_current_borrowings_2024",
+                              "asm_no_noncontrolling_interests_2025", "asm_no_noncontrolling_interests_2024"}
         assert {s["concept"] for s in specs.values()} == {"current_lease_liabilities", "noncurrent_lease_liabilities",
-                                                          "longterm_borrowings", "shortterm_borrowings"}
+                                                          "longterm_borrowings", "shortterm_borrowings", "noncontrolling_interests"}
         assert all(s["period"] == "instant" for s in specs.values())
+
+    def test_the_no_nci_entries_rest_on_two_independent_statements_not_a_stated_sentence(self, specs):
+        for i in ("asm_no_noncontrolling_interests_2025", "asm_no_noncontrolling_interests_2024"):
+            checks = specs[i]["checks"]
+            assert not any("report_states" in c for c in checks)
+            no_row = [c["no_row_matching"] for c in checks if "no_row_matching" in c]
+            assert len(no_row) == 2
+            assert {arg.get("occurrence", 1) for arg in no_row} == {1, 2}
 
     def test_2025_rests_on_the_companys_own_sentences_and_2024_only_on_structure(self, specs):
         say = lambda s: any("report_states" in c for c in s["checks"])
@@ -511,3 +520,5 @@ class TestAsmSpec:
         assert got["asm_lease_current_fy2025"] == pytest.approx({2025: 13.9e6, 2024: 11.7e6})
         assert got["asm_lease_noncurrent_fy2025"] == pytest.approx({2025: 19.6e6, 2024: 25.0e6})
         assert got["asm_no_noncurrent_borrowings_2025"] == {2025: 0.0} and got["asm_no_current_borrowings_2024"] == {2024: 0.0}
+        assert got["asm_no_noncontrolling_interests_2025"] == {2025: 0.0}
+        assert got["asm_no_noncontrolling_interests_2024"] == {2024: 0.0}

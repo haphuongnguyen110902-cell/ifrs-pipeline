@@ -41,9 +41,9 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Measured on | 2026-09-22 |
 | Companies loaded | 16: ASM International, Adyen, Amplifon, Danone, EssilorLuxottica, Essity, Heineken, Kering, L'Oreal, LVMH, Moncler, Pernod Ricard, Puig Brands, Recordati, Schneider Electric, Shell |
 | Countries | France, Italy, Netherlands, Spain, Sweden, United Kingdom |
-| Facts in database | 19,809 |
+| Facts in database | 19,811 |
 | Years with ratios, per company | 3-8 (median 7); calendar span 2017-2025 |
-| Ratios computed | 12 distinct ratios: 886 values, 362 blank (an input is missing or the ratio is not meaningful for that company - stored blank, never as zero) |
+| Ratios computed | 12 distinct ratios: 890 values, 358 blank (an input is missing or the ratio is not meaningful for that company - stored blank, never as zero) |
 | Trading comps | 15/16 companies |
 | 3-statement model | 12/16 companies |
 | DCF valuation | 12/16 companies |
@@ -53,7 +53,7 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Forecast backtest | 14/16 companies |
 | Forensics flags | 89 across 15 companies (32 high / 20 medium / 37 low severity) |
 | Candidate universe | 156 distinct entities over 4 snapshots (latest 2026-09-17); 13 linked to a loaded company |
-| Tests | 746 (710 run in CI without a database, 36 need a live database and skip there) |
+| Tests | 758 (722 run in CI without a database, 36 need a live database and skip there) |
 <!-- FACTS:END -->
 
 The table above is **generated** from the database and the test suite (`python scripts/doc_facts.py --write`) - no number in it is typed by hand, and `python scripts/doc_facts.py --check` fails if it drifts from reality.

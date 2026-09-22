@@ -1713,3 +1713,38 @@ one value per base-year run, same pattern as `growth_assumption`) into the webap
 before/after - 0 changes to any pre-existing column on any row (60 rows before and after), only LVMH's 5 rows gained
 `capex_basis` / `capex_basis_label`; every other company's `capex_basis_label` is NULL (verified on Danone - no caption).
 Confirmed live in the dashboard preview (LVMH's 3-Statement Model tab shows the caption; Danone's does not).
+
+### 2026-09-22 (later): ASM's ROIC and ROE filled - proven-zero non-controlling interests (PR #68, applied to the live DB)
+
+**Problem:** ROIC needs invested capital (`equity_attributable_to_owners_of_parent` + non-controlling interests + net
+debt) and ROE needs that same equity-attributable-to-owners figure. ASM only tags total `Equity`
+(`ifrs-full:Equity`) - it never prints the split into owners' equity and non-controlling interests - so both ratios
+stayed blank even after the 2026-09-21 zero-debt fix filled net debt.
+
+**Evidence, read from ASM's FY2025 report:** the consolidated balance sheet (note 12), the five-year summary
+(2021-2025) and the statement of changes in equity all print ONE "Equity" line, with no non-controlling-interests row
+or column anywhere across five years of statements. The consolidation accounting-policy note only says NCI "is
+disclosed separately, where appropriate" - conditional boilerplate describing what ASM would do if a partly-owned
+subsidiary existed, not a disclosure that one does. With no NCI line anywhere, ASM has none.
+
+**Fix:** two reviewed `stated_zero` figures (`asm_no_noncontrolling_interests_2025`/`_2024` in
+`reviewed_note_figures.yaml`) store a proven-zero `noncontrolling_interests` fact, checked against BOTH the
+consolidated balance sheet and the five-year summary (no `report_states` sentence exists for this one, unlike the
+debt fix - purely structural evidence for both years). `11_ratio_engine.py`'s ROIC/ROE now treat a PROVEN zero
+(this note figure) - never a merely-missing one - as licence to use total equity as equity attributable to owners of
+the parent, a plain accounting identity (total equity = owners' equity + NCI; NCI = 0 implies they're equal), not a
+per-company guess or condition: any future company with the same kind of note figure gets the same treatment
+automatically. The audit trail (`ratio.source_concepts`, same mechanism as DPO's `_payables_basis`) records when this
+happened, and the dashboard's Ratios tab captions it in plain language.
+
+**Live-DB result:** applied the two note figures, then re-ran `11_ratio_engine.py --company "ASM International"`.
+Snapshot-diffed `ratio` and `company_latest_metrics` before/after: exactly 4 rows changed (ASM's `roic`/`roe` for
+2024 and 2025, all filled from blank), 0 rows changed for any other company. ROIC 22.2% (2024) / 24.4% (2025), ROE
+18.3% / 18.1%. `tests/test_screener.py`'s `EXPECTED_BLANKS` for ASM is now empty (every metric this view computes is
+now real data) - Adyen remains the only deliberate-blank company (payment processor, "net cash" is merchants' money).
+
+**Limits:** the same 2024-vs-2025 asymmetry as the debt fix - 2025 could in principle carry a stated sentence if one
+existed (it doesn't for NCI either), so both years rest on structural evidence only, cross-checked against two
+independent tables rather than one, which is the strongest evidence available without downloading ASM's older
+reports. Any company whose non-controlling interests are simply untagged (not proven zero) stays exactly as blank as
+before - this fix cannot silently fill in a real, undisclosed NCI split.

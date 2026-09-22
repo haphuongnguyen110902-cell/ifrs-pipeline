@@ -413,6 +413,9 @@ def source_concepts_for(ratio_name: str, row) -> list | None:
     if ratio_name in ("dpo", "ccc"):
         basis = row.get("_payables_basis")
         return [basis] if isinstance(basis, str) and basis else None
+    if ratio_name in ("roic", "roe"):
+        basis = row.get("_equity_basis")
+        return [basis] if isinstance(basis, str) and basis else None
     return None
 
 
@@ -548,8 +551,18 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["_debt_basis"] = debt["basis"].where(debt["complete"], "incomplete: " + debt["basis"])   # audit trail
 
     # --- ROIC ---
+    nci_raw = get_col(wide, "noncontrolling_interests")
     equity_parent = get_col(wide, "equity_attributable_to_owners_of_parent")
-    nci = get_col(wide, "noncontrolling_interests").fillna(0)
+    # A company that prints one combined "Equity" line, with no split, still lets ROIC/ROE be computed once a
+    # reviewed note figure PROVES non-controlling interests are zero (never merely missing - a company that just
+    # doesn't tag the split stays blank, as before). Total equity is then, by definition, all attributable to the
+    # owners of the parent - a plain accounting identity, not a per-company guess (see reviewed_note_figures.yaml's
+    # asm_no_noncontrolling_interests_* entries for what "proven" means here). _equity_basis is the audit trail
+    # (ratio.source_concepts, like _payables_basis below), so the dashboard can caption it.
+    via_proven_zero_nci = equity_parent.isna() & (nci_raw == 0)
+    r["_equity_basis"] = ["equity (no non-controlling interests)" if v else "" for v in via_proven_zero_nci]
+    equity_parent = equity_parent.fillna(get_col(wide, "equity").where(nci_raw == 0))
+    nci = nci_raw.fillna(0)
     invested_capital = equity_parent + nci + r["_net_debt"]
     nopat = ebit * (1 - r["tax_rate"].clip(0, 40) / 100)  # tax_rate is in %, divide back
     r["roic"] = safe_div(nopat, invested_capital, scale=100)

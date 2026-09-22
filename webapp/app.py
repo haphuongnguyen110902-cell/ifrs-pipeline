@@ -288,6 +288,21 @@ def payables_basis_caption(ratios: pd.DataFrame):
             "report trade payables on their own line.")
 
 
+def equity_basis_caption(ratios: pd.DataFrame):
+    """A caption when this company's ROIC/ROE are built on total equity rather than a printed equity-attributable-to-
+    owners split, or None. Only happens where a reviewed check confirmed the company has no non-controlling interests
+    to carve out - a company that simply doesn't disclose the split stays blank instead, with no caption to show."""
+    if "source_concepts" not in ratios.columns:
+        return None
+    hits = ratios[ratios["ratio_name"].isin(["roic", "roe"])].dropna(subset=["source_concepts"])
+    flagged = [r for r in hits["source_concepts"] if any("non-controlling" in c for c in r)]
+    if not flagged:
+        return None
+    return ("ROIC and ROE here use total equity as equity attributable to owners of the parent: this company's own "
+            "statements were checked and confirmed to carry no non-controlling interests, so the two are the same "
+            "number.")
+
+
 def render_ratio_table(ratios: pd.DataFrame):
     if ratios.empty:
         st.info("No ratios computed yet for this company.")
@@ -317,6 +332,9 @@ def render_ratio_table(ratios: pd.DataFrame):
     payables_caption = payables_basis_caption(ratios)
     if payables_caption:
         st.caption(payables_caption)
+    equity_caption = equity_basis_caption(ratios)
+    if equity_caption:
+        st.caption(equity_caption)
 
 
 @st.cache_data(ttl=3600)
