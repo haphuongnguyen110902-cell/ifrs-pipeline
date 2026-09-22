@@ -68,9 +68,10 @@ def test_the_pernod_ricard_null_year_case_is_skipped_not_selected(engine):
 EXPECTED_BLANKS = {
     # a payment processor: its "net cash" is merchants' money, so ROIC, comps, EV and credit are skipped on purpose
     "Adyen": {"roic", "ev_ebitda", "net_debt_ebitda", "credit_band", "credit_is_da_fallback"},
-    # ASM prints only TOTAL equity, not "equity attributable to owners of the parent", so ROIC (equity + net debt) stays blank
-    # rather than assumed (net debt itself is now filled from its reviewed zero-debt evidence and IFRS 16 leases)
-    "ASM International": {"roic"},
+    # ASM prints only TOTAL equity, not "equity attributable to owners of the parent" - ROIC used to stay blank here
+    # rather than assumed. It is filled now that a reviewed check (data/mappings/reviewed_note_figures.yaml's
+    # asm_no_noncontrolling_interests_* entries) proved ASM's non-controlling interests are exactly zero, which lets
+    # 11_ratio_engine.py use total equity as equity attributable to owners by definition, not a guess.
 }
 
 
