@@ -1748,3 +1748,33 @@ existed (it doesn't for NCI either), so both years rest on structural evidence o
 independent tables rather than one, which is the strongest evidence available without downloading ASM's older
 reports. Any company whose non-controlling interests are simply untagged (not proven zero) stays exactly as blank as
 before - this fix cannot silently fill in a real, undisclosed NCI split.
+
+### 2026-09-22 (later still): 69 duplicate concepts removed from ifrs_concepts_v0.yaml
+
+**Problem:** `09_batch_load.py`'s `load_mapping()` builds a plain `{xbrl_tag: concept}` dict from the mapping file -
+when the SAME tag is listed under two different concept names, whichever is declared later in the file silently
+overwrites the earlier one, so the earlier concept is permanently dead config: it looks live (it has a
+`display_label`, it shows up in `ifrs_concept`/`concept_mapping`), but no fact has been routed there since the
+duplicate was introduced. Found 69 such pairs - every one an `_x` or `_x_x`-suffixed near-duplicate of an existing
+concept, all across Danone, EssilorLuxottica, Kering, L'Oreal, Pernod Ricard and Shell's extension-tag concepts,
+apparently from an earlier concept-generation run that re-added tags already mapped instead of noticing they existed.
+
+**Verification before touching anything:** for all 69 tags, confirmed live `fact_value` rows are already stored
+under the concept that `load_mapping()` currently resolves to (the later-declared, "winning" one) - i.e. every load
+since the duplicate was created has already been using the winner; the shadowed "loser" concept has zero live facts
+under it. One exception (`kering:AdjustmentsForDepreciationAndAmortisationAndProvisionExpense`) is superseded
+entirely by a reviewed company override (see the D&A section above), so neither duplicate is live for it either.
+
+**Fix:** removed the 69 shadowed entries (never the one holding live data) from `ifrs_concepts_v0.yaml` by exact
+key-block match - a line-level edit, not a full YAML re-dump, so nothing else in the file's formatting moved.
+Verified `load_mapping()`'s output is byte-identical before and after (775 tags, same dict) - proof this is a pure
+dead-config removal with zero effect on any future load. `scripts/32_remap_facts.py --all` still shows only the
+pre-existing, unrelated Recordati borrowings drift (a real open item, not something this touched). Added a
+regression test (`test_remap_facts.py::TestTheRealMappingFile::test_no_tag_is_mapped_under_two_concepts`),
+mutation-tested by reintroducing a duplicate and confirming it fails.
+
+**Not done in this pass:** the DB side. `concept_mapping` still has stale rows for the 69 now-removed concept names
+(pointing tag -> the old, now-gone concept) - harmless (nothing reads `concept_mapping` for fact routing, only
+`32_remap_facts.py`'s own drift-detection logic, which already keys off the current mapping file, not that table),
+but a future reader could still be misled by them. Left alone pending a decision on whether to clean the live DB too
+- a separate, DB-touching change from this YAML-only one.
