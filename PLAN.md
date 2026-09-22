@@ -1778,3 +1778,34 @@ mutation-tested by reintroducing a duplicate and confirming it fails.
 `32_remap_facts.py`'s own drift-detection logic, which already keys off the current mapping file, not that table),
 but a future reader could still be misled by them. Left alone pending a decision on whether to clean the live DB too
 - a separate, DB-touching change from this YAML-only one.
+
+### 2026-09-22 (later still): stale concept_mapping rows deleted from the live DB
+
+**Problem:** the 69 duplicate concepts removed above left 69 stale `concept_mapping` rows behind (each still says a
+tag maps to the now-deleted concept name). A fresh re-check of the WHOLE `concept_mapping` table (not just those 69
+tags) found 75 stale rows total - the 69 from the dedup, plus 4 left over from an earlier session's extension-tag
+consolidation (`kering:PurchaseOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill`,
+`el:AmortissementsDepreciationsEtPertesDeValeur`, `el:AcquisitionsDimmobilisationsCorporellesEtIncorporelles`,
+`pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill` - each remapped to the canonical
+capex/D&A concept by `32_remap_facts.py` at the time, without updating its own `concept_mapping` row), and 2 that are
+NOT stale metadata but a real, still-unresolved drift: Recordati's `Rec:FinanziamentiDovutiOltreUnAnno` /
+`EntroUnAnno` still have 4 live facts each parked on the OLD concept (`finanziamenti_dovuti_oltre/entro_un_anno`)
+because `32_remap_facts.py --apply` refuses to move them (`would_stay_clash`) - this is the same known open item as
+PLAN.md's other Recordati borrowings mention, not something this pass created or should paper over.
+
+**Verified before deleting anything:** for the 73 genuinely stale rows, zero `fact_value` rows use their
+`concept_id` (checked across the WHOLE table, not just the one tag each row names), zero other `concept_mapping`
+rows point at the same `concept_id`, and zero `ratio.source_concepts` entries mention their name - triple-checked
+inside the same transaction as the delete, which asserts and aborts if any of the 73 turns out to have a live fact
+after all.
+
+**Fix:** deleted exactly those 73 `concept_mapping` rows (772 -> 699). Left the 2 Recordati rows untouched - they
+have live facts, so deleting the row would just hide the drift, not fix it; the actual fix needs the `would_stay_clash`
+investigated first. Left the now-mappingless `ifrs_concept` rows in place (an `ifrs_concept` row with no
+`concept_mapping` row is normal for this schema - every reviewed-override and note-figure concept already works
+that way).
+
+**Verification:** snapshot-diffed `concept_mapping` before/after - removed set is byte-identical to the intended 73
+mapping_ids, zero rows added, zero of the remaining 699 rows changed. `fact_value` (19,811) and `ifrs_concept` (840)
+row counts unchanged. `32_remap_facts.py --all` (dry run) shows the exact same output before and after - only the
+pre-existing Recordati clash, nothing new. Full test suite: 723 passed / 36 skipped (no DB), 759 passed (live DB).
