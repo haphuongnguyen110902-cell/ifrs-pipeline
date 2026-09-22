@@ -138,6 +138,23 @@ class TestTheRealMappingFile:
     def test_the_capex_logic_reads_the_canonical_concept(self, load_script):
         assert CANON in load_script("21_three_statement_model.py").CAPEX_CONCEPTS
 
+    def test_no_tag_is_mapped_under_two_concepts(self):
+        """A tag listed under two concepts is dead config, not two live mappings: load_mapping() is a plain
+        {tag: concept} dict, so whichever entry is declared LAST silently shadows the earlier one - a reader has
+        no way to tell the shadowed entry is inert. Found and removed 2026-09-22: 69 such pairs, each an
+        _x/_x_x-suffixed near-duplicate of an existing concept pointing at the exact same tag (confirmed dead by
+        diffing load_mapping()'s output before and after removal - byte-identical)."""
+        import yaml
+        from collections import defaultdict
+        data = yaml.safe_load(MAPPING.read_text(encoding="utf-8"))
+        owners = defaultdict(list)
+        for statement, concepts in data.items():
+            for name, info in concepts.items():
+                for tag in info.get("xbrl_tags", []) or []:
+                    owners[tag].append((statement, name))
+        dupes = {t: o for t, o in owners.items() if len(o) > 1}
+        assert not dupes, dupes
+
 
 class TestExtensionDaLinesAreMapped:
     """Read from each company's own cash-flow statement and anchors (definition linkbase), 2026-09-21:

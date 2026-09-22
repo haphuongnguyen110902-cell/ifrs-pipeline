@@ -53,7 +53,7 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Forecast backtest | 14/16 companies |
 | Forensics flags | 89 across 15 companies (32 high / 20 medium / 37 low severity) |
 | Candidate universe | 156 distinct entities over 4 snapshots (latest 2026-09-17); 13 linked to a loaded company |
-| Tests | 758 (722 run in CI without a database, 36 need a live database and skip there) |
+| Tests | 759 (723 run in CI without a database, 36 need a live database and skip there) |
 <!-- FACTS:END -->
 
 The table above is **generated** from the database and the test suite (`python scripts/doc_facts.py --write`) - no number in it is typed by hand, and `python scripts/doc_facts.py --check` fails if it drifts from reality.
