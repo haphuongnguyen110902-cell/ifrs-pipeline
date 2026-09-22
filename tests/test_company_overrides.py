@@ -211,3 +211,56 @@ class TestKeringDaLine:
                            "profit_loss_from_operating_activities": 4_500.0, self.COMBINED: 1_823.0}])
         r = r11.compute_ratios(w)
         assert r["_da_total"].iloc[0] == 1_823.0 and r["_ebitda"].iloc[0] == 6_323.0
+
+
+class TestCapexBasisLabelOnDashboard:
+    """A capex figure built from a reviewed per-company override (not a standard tag) carries the company's own
+    printed line name through fetch_base_year -> three_statement_projection.capex_basis_label, so the dashboard
+    can label it as company-defined instead of presenting it like any other filer's combined-line capex. Built
+    straight from company_tag_overrides.yaml - never hand-typed, so it can't drift from that file's evidence."""
+
+    CANON = TestLvmhOperatingInvestmentsAsCapex.CANON
+
+    def test_lvmh_capex_basis_carries_its_own_printed_label(self, load_script):
+        m21 = load_script("21_three_statement_model.py")
+        assert m21.capex_override_label("LVMH", self.CANON) == "Investissements d'exploitation"
+
+    def test_the_same_concept_carries_no_label_for_a_company_without_that_override(self, load_script):
+        m21 = load_script("21_three_statement_model.py")
+        assert m21.capex_override_label("Danone", self.CANON) is None
+
+    def test_a_component_sum_basis_with_no_matching_override_carries_no_label(self, load_script):
+        m21 = load_script("21_three_statement_model.py")
+        assert m21.capex_override_label(
+            "Schneider", "purchase_of_property_plant_and_equipment_classified_as_inves_etc"
+                         "+purchase_of_intangible_assets_classified_as_investing_activi_etc") is None
+
+    def test_an_empty_basis_or_missing_file_carries_no_label(self, load_script, tmp_path):
+        m21 = load_script("21_three_statement_model.py")
+        assert m21.capex_override_label("LVMH", "") is None
+        original = m21.OVERRIDES_PATH
+        try:
+            m21.OVERRIDES_PATH = tmp_path / "missing.yaml"
+            assert m21.capex_override_label("LVMH", self.CANON) is None
+        finally:
+            m21.OVERRIDES_PATH = original
+
+    def test_fetch_base_year_carries_the_label_through_for_lvmh(self, load_script, monkeypatch):
+        m21 = load_script("21_three_statement_model.py")
+        row = {"company": "LVMH", "company_id": 1, "year": 2024,
+               "revenue": 1_000.0, "cost_of_sales": -600.0, "gross_profit": 400.0,
+               "profit_loss_from_operating_activities": 100.0, "profit_loss_before_tax": 90.0,
+               "income_tax_expense_continuing_operations": -20.0,
+               "profit_loss_attributable_to_owners_of_parent": 60.0,
+               "current_trade_receivables": 150.0, "inventories": 90.0,
+               "trade_and_other_current_payables_to_trade_suppliers": 60.0,
+               "longterm_borrowings": 200.0, "shortterm_borrowings": 30.0, "cash_and_cash_equivalents": 50.0,
+               "equity_attributable_to_owners_of_parent": 500.0,
+               "adjustments_for_depreciation_and_amortisation_expense_and_etc": 40.0,
+               self.CANON: 5_531.0}
+        w = pd.DataFrame([row])
+        monkeypatch.setattr(m21.r11, "fetch_facts", lambda *a, **k: pd.DataFrame({"x": [1]}))
+        monkeypatch.setattr(m21.r11, "pivot_to_wide", lambda df, *a, **k: w)
+        base = m21.fetch_base_year(None, "LVMH")
+        assert base["capex_basis"] == self.CANON
+        assert base["capex_basis_label"] == "Investissements d'exploitation"

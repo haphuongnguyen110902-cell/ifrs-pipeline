@@ -30,3 +30,10 @@ CREATE INDEX IF NOT EXISTS idx_three_statement_company ON three_statement_projec
 -- EXISTS makes this safe to re-run on an existing table.
 ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS dividends NUMERIC;
 ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS payout_ratio_assumption NUMERIC;
+
+-- Provenance for the base-year capex assumption (same value on every forecast_year row of one run, like
+-- growth_assumption): which concept(s) it was read from, and - only when that concept came from a reviewed
+-- per-company override (company_tag_overrides.yaml) rather than a standard tag - the company's own printed
+-- line name, so the dashboard can label a company-defined figure instead of presenting it as a generic one.
+ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS capex_basis TEXT;
+ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS capex_basis_label TEXT;
