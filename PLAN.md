@@ -1707,7 +1707,10 @@ future capex override gets the same treatment automatically), not an LVMH-only c
 own `printed_label` from that file is carried through `three_statement_projection.capex_basis_label` (new nullable column,
 one value per base-year run, same pattern as `growth_assumption`) into the webapp, which now shows a caption on the
 3-Statement Model tab for that company only, in plain language: no filename or doc pointer, per
-`tests/test_webapp_plain_language.py`'s guard against developer references in visitor-facing text.
+`tests/test_webapp_plain_language.py`'s guard against developer references in visitor-facing text. [Corrected
+2026-09-23: the caption's generic code stated LVMH's own finding ("within about 1% in every year available") for ANY
+company with a capex override - and "every year" overstated even LVMH's check (2022-2024 of 5 stored years). Fixed:
+see the 2026-09-23 capex caption section below.]
 
 **Live-DB result:** re-ran `21_three_statement_model.py --company "LVMH"`; snapshot-diffed `three_statement_projection`
 before/after - 0 changes to any pre-existing column on any row (60 rows before and after), only LVMH's 5 rows gained
@@ -1847,3 +1850,30 @@ the 8 groups in the pre-fix Recordati snapshot and 0 in the post-fix one. Tests:
 **Root cause still in the loader (deliberately not changed here):** re-loading after a remap will leave a stale row
 again. The documented remedy is `--reset-facts`, which is off-limits on the live DB. The new live guard now catches
 it; the fix is `32_remap_facts.py` BEFORE any reload, which moves the facts instead of duplicating them.
+
+### 2026-09-23 (later): capex caption - company-specific finding moved out of generic code
+
+**Problem (found in a review of PR #67):** `webapp/app.py`'s capex caption is shown for any company whose capex
+comes through a reviewed override, but its wording stated LVMH's own finding: "it matched within about 1% in every
+year available". That was true only because LVMH is the only such company today, and "every year" overstated even
+LVMH's check. The DB holds LVMH's line for FY2020-FY2024. The note 15.3 table in the FY2024 report checks only
+FY2022-FY2024 (0.2% / 0.8% / 0.4%).
+
+**Fix:** the caption is now `capex_basis_caption()`. Its own wording only states what holds for every override:
+the company's printed line, "company-defined", and "used only after a reviewed check against the company's own
+report" (the loader refuses an override without `printed_label` and `evidence`). The company-specific sentence
+moved into the LVMH entry of `company_tag_overrides.yaml` as an optional `dashboard_note`: within 1% in each of 2022,
+2023 and 2024, and 2024 EUR 5,531M vs 5,519M. It travels through `capex_override()` to
+`three_statement_projection.capex_basis_note` (a new nullable column, added the same additive way as
+`capex_basis_label`) and is appended to the caption.
+
+**Guards (both mutation-checked; the files were restored automatically):**
+- The generic wording must contain no digit. Putting the old sentence back makes the test fail.
+- Every figure in a `dashboard_note` must appear in the same entry's `evidence`, and the note must pass the
+  plain-language rule. Changing 5,519 to 5,512 in the note makes the test fail.
+
+**Live DB:** re-ran `21_three_statement_model.py --company "LVMH"`. A snapshot diff of `three_statement_projection`
+showed 0 changes to any existing column on all 60 rows; the new column is filled on LVMH's 5 rows only. Checked in
+the dashboard preview: LVMH's 3-Statement Model tab shows the generic sentence plus its note. Kering, which has an
+override but for D&A rather than capex, shows no capex caption. No console or server errors. Tests: 727 passed /
+39 skipped (no DB), 766 passed (live DB).

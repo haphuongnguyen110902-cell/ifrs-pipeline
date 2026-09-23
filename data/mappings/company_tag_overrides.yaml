@@ -10,6 +10,9 @@
 # Never add one from a tag name alone, and never from a language-model guess: read the company's own statement.
 #
 # Format: company, tag, concept (normalized name), statement, label, printed_label, evidence.
+# Optional: dashboard_note - one plain-language sentence the dashboard shows beside a figure read through this entry.
+# It is company-specific on purpose (the dashboard's own wording stays generic), and may only state what the evidence
+# above it states.
 
 overrides:
 
@@ -70,6 +73,10 @@ overrides:
       intangibles (837) and PP&E (4,715) before the change in fixed-asset suppliers. 2023: (7,478) vs (7,536) gross;
       2022: (4,969) vs (4,948) gross. Company-defined, within 1% of the IAS 7.16(a) gross payments in all three years.
       Read 2026-09-21 from the report's own rows.
+    dashboard_note: >-
+      LVMH's own note splits this line into gross purchases of property, plant, equipment and intangible assets,
+      disposal proceeds and deposits; the line was within 1% of the gross purchases in each of 2022, 2023 and 2024
+      (2024: EUR 5,531M vs 5,519M).
 
   # Kering - FY2023 URD, consolidated cash flow statement and note 3.1 (segment information / EBITDA reconciliation, French
   # ESEF report kering-2023-12-31-fr.xhtml). The cash-flow line "Dotations nettes courantes aux amortissements et provisions
