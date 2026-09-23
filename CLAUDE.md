@@ -114,7 +114,9 @@ tag at all) should stay flagged as a fallback rather than be guessed at.
 A tag can be used for something else (Puig files its trade payables under the
 income-tax-liability tag): such a case is a reviewed entry in
 `data/mappings/company_tag_overrides.yaml` (printed label + evidence mandatory,
-one company only), never a condition in core analytics. When a mapping is
+one company only), never a condition in core analytics. Anything the dashboard says about one company's figure lives
+in that entry's optional `dashboard_note` (only what its evidence states); the dashboard's own wording stays generic,
+so it cannot state one company's finding for another. When a mapping is
 corrected, `scripts/32_remap_facts.py` re-points the facts already loaded
 (dry run first; `fact_value.raw_xbrl_tag` keeps the original tag). A fact's
 fiscal year is the year its period ENDS (`fiscal_year_label` in

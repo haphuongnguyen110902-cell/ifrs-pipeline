@@ -37,3 +37,6 @@ ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS payout_ratio_ass
 -- line name, so the dashboard can label a company-defined figure instead of presenting it as a generic one.
 ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS capex_basis TEXT;
 ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS capex_basis_label TEXT;
+-- That override entry's optional dashboard_note: the company-specific evidence sentence (the dashboard's own caption
+-- wording is generic, so it stays true whichever company carries an override).
+ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS capex_basis_note TEXT;

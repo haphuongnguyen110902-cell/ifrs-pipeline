@@ -215,35 +215,47 @@ class TestKeringDaLine:
 
 class TestCapexBasisLabelOnDashboard:
     """A capex figure built from a reviewed per-company override (not a standard tag) carries the company's own
-    printed line name through fetch_base_year -> three_statement_projection.capex_basis_label, so the dashboard
-    can label it as company-defined instead of presenting it like any other filer's combined-line capex. Built
-    straight from company_tag_overrides.yaml - never hand-typed, so it can't drift from that file's evidence."""
+    printed line name - and the override's optional dashboard_note - through fetch_base_year ->
+    three_statement_projection.capex_basis_label / capex_basis_note, so the dashboard can label it as company-defined.
+    Built straight from company_tag_overrides.yaml - never hand-typed, so it can't drift from that file's evidence."""
 
     CANON = TestLvmhOperatingInvestmentsAsCapex.CANON
 
-    def test_lvmh_capex_basis_carries_its_own_printed_label(self, load_script):
-        m21 = load_script("21_three_statement_model.py")
-        assert m21.capex_override_label("LVMH", self.CANON) == "Investissements d'exploitation"
+    def test_lvmh_capex_basis_carries_its_own_printed_label_and_note(self, load_script):
+        e = load_script("21_three_statement_model.py").capex_override("LVMH", self.CANON)
+        assert e["printed_label"] == "Investissements d'exploitation" and "within 1%" in e["dashboard_note"]
 
-    def test_the_same_concept_carries_no_label_for_a_company_without_that_override(self, load_script):
-        m21 = load_script("21_three_statement_model.py")
-        assert m21.capex_override_label("Danone", self.CANON) is None
+    def test_the_same_concept_carries_no_entry_for_a_company_without_that_override(self, load_script):
+        assert load_script("21_three_statement_model.py").capex_override("Danone", self.CANON) is None
 
-    def test_a_component_sum_basis_with_no_matching_override_carries_no_label(self, load_script):
-        m21 = load_script("21_three_statement_model.py")
-        assert m21.capex_override_label(
+    def test_a_component_sum_basis_with_no_matching_override_carries_no_entry(self, load_script):
+        assert load_script("21_three_statement_model.py").capex_override(
             "Schneider", "purchase_of_property_plant_and_equipment_classified_as_inves_etc"
                          "+purchase_of_intangible_assets_classified_as_investing_activi_etc") is None
 
-    def test_an_empty_basis_or_missing_file_carries_no_label(self, load_script, tmp_path):
+    def test_an_empty_basis_or_missing_file_carries_no_entry(self, load_script, tmp_path):
         m21 = load_script("21_three_statement_model.py")
-        assert m21.capex_override_label("LVMH", "") is None
+        assert m21.capex_override("LVMH", "") is None
         original = m21.OVERRIDES_PATH
         try:
             m21.OVERRIDES_PATH = tmp_path / "missing.yaml"
-            assert m21.capex_override_label("LVMH", self.CANON) is None
+            assert m21.capex_override("LVMH", self.CANON) is None
         finally:
             m21.OVERRIDES_PATH = original
+
+    def test_every_dashboard_note_only_states_what_its_evidence_states(self):
+        """A note is shown to visitors, so each of its numbers must appear in the same entry's evidence, and it must
+        read as plain language (no file or document references - same rule as tests/test_webapp_plain_language.py)."""
+        import re
+
+        import yaml
+        from test_webapp_plain_language import DEVELOPER_REFERENCE
+        notes = [e for e in yaml.safe_load(OVERRIDES.read_text(encoding="utf-8"))["overrides"] if e.get("dashboard_note")]
+        assert notes, "LVMH's capex entry carries a dashboard_note"
+        for e in notes:
+            for figure in re.findall(r"\d[\d,.]*\d|\d", e["dashboard_note"]):    # amounts, percentages, years
+                assert figure in e["evidence"], (e["company"], figure)
+            assert not DEVELOPER_REFERENCE.search(e["dashboard_note"]), e["company"]
 
     def test_fetch_base_year_carries_the_label_through_for_lvmh(self, load_script, monkeypatch):
         m21 = load_script("21_three_statement_model.py")
@@ -264,3 +276,42 @@ class TestCapexBasisLabelOnDashboard:
         base = m21.fetch_base_year(None, "LVMH")
         assert base["capex_basis"] == self.CANON
         assert base["capex_basis_label"] == "Investissements d'exploitation"
+        assert "5,531M vs 5,519M" in base["capex_basis_note"]
+
+
+class TestCapexCaption:
+    """webapp/app.py is a Streamlit script (top-level code runs on import): pull the helper out of its source. Its own
+    wording once stated LVMH's "within about 1%" for any company with a capex override - true only because LVMH was
+    the only one. The generic wording must now carry no company-specific figure; the note carries those."""
+
+    @pytest.fixture
+    def caption(self):
+        import ast
+        tree = ast.parse((Path(__file__).parent.parent / "webapp" / "app.py").read_text(encoding="utf-8"))
+        parts = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "capex_basis_caption"]
+        assert len(parts) == 1
+        ns = {"pd": pd}
+        exec(compile(ast.Module(body=parts, type_ignores=[]), "app.py", "exec"), ns)
+        return ns["capex_basis_caption"]
+
+    @staticmethod
+    def frame(label, note):
+        return pd.DataFrame({"capex_basis_label": [label], "capex_basis_note": [note]})
+
+    def test_the_generic_wording_carries_no_figure_whatever_the_company(self, caption):
+        """Also re-applies the plain-language rule: tests/test_webapp_plain_language.py only scans literals written
+        directly inside st.<text>() calls, and this wording now lives in a helper."""
+        import re
+
+        from test_webapp_plain_language import DEVELOPER_REFERENCE
+        text_ = caption(self.frame("Any Company Line", None))
+        assert '"Any Company Line"' in text_ and not re.search(r"\d", text_)
+        assert not DEVELOPER_REFERENCE.search(text_)
+
+    def test_the_company_note_is_appended_verbatim(self, caption):
+        text_ = caption(self.frame("Investissements d'exploitation", "Within 1% in 2022-2024."))
+        assert text_.endswith(" Within 1% in 2022-2024.") and text_.count("Investissements d'exploitation") == 1
+
+    def test_no_label_or_no_columns_means_no_caption(self, caption):
+        assert caption(self.frame(None, "orphan note")) is None
+        assert caption(pd.DataFrame({"revenue": [1.0]})) is None
