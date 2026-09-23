@@ -13,6 +13,9 @@
 # Optional: dashboard_note - one plain-language sentence the dashboard shows beside a figure read through this entry.
 # It is company-specific on purpose (the dashboard's own wording stays generic), and may only state what the evidence
 # above it states.
+# checked_years (required for an entry that feeds capex): the fiscal years in which the company's line was verified
+# against the IFRS measure it stands in for. The 3-statement model's base year moves forward every year; when it is not
+# in this list, the dashboard says the year has not been checked instead of claiming it was.
 
 overrides:
 
@@ -72,11 +75,17 @@ overrides:
       acquisitions (5,519) + cash effect of disposals 21 + guarantee deposits and other (33); acquisitions of
       intangibles (837) and PP&E (4,715) before the change in fixed-asset suppliers. 2023: (7,478) vs (7,536) gross;
       2022: (4,969) vs (4,948) gross. Company-defined, within 1% of the IAS 7.16(a) gross payments in all three years.
-      Read 2026-09-21 from the report's own rows.
+      Read 2026-09-21 from the report's own rows. FY2025 report (BDIF D.26-0195), note 15.3: (4,567) vs gross (4,595) =
+      intangibles (819) + PP&E (3,851) + suppliers 63 + lease set-up 12; disposals 38, deposits (10): 0.6%, within 1%.
+      FY2021 report (PDF-layout XHTML, same note): 2021 (2,664) vs gross (3,071) - 13.3% below, because disposal
+      proceeds of 444 (mainly the sale of the Belmond Charleston hotel) are netted in; 2020 (2,478) vs (2,526) - 1.9%;
+      2019 (3,294) vs (3,287) - 0.2%. So the company-defined line stands in for IFRS capex only in checked_years; 2020 and
+      2021 fail the 1% test (read 2026-09-23; the FY2022 report restates 2021 and 2020 identically).
+    checked_years: [2019, 2022, 2023, 2024, 2025]
     dashboard_note: >-
       LVMH's own note splits this line into gross purchases of property, plant, equipment and intangible assets,
-      disposal proceeds and deposits; the line was within 1% of the gross purchases in each of 2022, 2023 and 2024
-      (2024: EUR 5,531M vs 5,519M).
+      disposal proceeds and deposits; the line was within 1% of the gross purchases in each of 2022, 2023, 2024 and 2025
+      (2025: EUR 4,567M vs 4,595M).
 
   # Kering - FY2023 URD, consolidated cash flow statement and note 3.1 (segment information / EBITDA reconciliation, French
   # ESEF report kering-2023-12-31-fr.xhtml). The cash-flow line "Dotations nettes courantes aux amortissements et provisions

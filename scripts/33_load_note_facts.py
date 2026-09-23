@@ -134,6 +134,21 @@ def numeric_values(cells: list, decimal: str) -> list:
     return [v for v in (parse_cell(c, decimal) for c in cells[1:]) if v is not None]
 
 
+def column_values(cells: list, decimal: str) -> list:
+    """Like numeric_values, but a bare dash counts as 0 so every number keeps its column. Used where columns of
+    DIFFERENT rows are added up (the EBITDA bridge): Essity's FY2025 reconciliation prints "–" for 2025 on its IAC
+    row and 70 for 2024 - dropping the dash shifted 70 into the 2025 column and refused a bridge that adds up."""
+    out = []
+    for c in cells[1:]:
+        if c.strip() in {"-", "–", "—"}:
+            out.append(0.0)
+        else:
+            v = parse_cell(c, decimal)
+            if v is not None:
+                out.append(v)
+    return out
+
+
 def header_years(rows: list, pos: int, n: int):
     """The fiscal years of the table row at position `pos`: the nearest row above it (within 12 rows) whose numeric cells are
     all years. Returns the last `n` of them, or None."""
@@ -298,7 +313,7 @@ def extract(spec: dict, rows: list, facts: list, text_lines=None) -> list:
                 raise FigureError(f"{spec['id']}: no {arg['start']!r} row within 12 rows above the {arg['end']!r} row")
             n = len(picked)
             for k, (pos, y, v) in enumerate(picked):
-                col = lambda p: numeric_values(rows[p][1], decimal)[-n:][k]
+                col = lambda p: column_values(rows[p][1], decimal)[-n:][k]
                 between = sum(col(p) for p in range(start_pos + 1, end_pos))
                 if abs(col(start_pos) + between - col(end_pos)) > tol:
                     raise FigureError(f"{spec['id']} {y}: bridge {col(start_pos)} + {between} != {col(end_pos)}")

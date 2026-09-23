@@ -53,6 +53,13 @@ python run_pipeline.py --mode full       # parse+load+everything, first run (nee
 python run_pipeline.py --mode analyze    # forensics+forecast+backtest only, DB-only, what CI runs weekly
 # other modes: discover, load, historical, validate, ratios, report
 
+# fetch a company's ESEF packages from an official source into data/raw/historical/<key>_<period-end>.zip:
+# French issuers from the AMF's BDIF, anyone else from one official URL (national storage or the company's IR site)
+python scripts/download_bdif.py --only kering --dry-run
+python scripts/download_package.py essity <official package url>
+python scripts/load_historical.py --skip-loaded          # load every package not loaded yet
+python scripts/reconcile_reports.py --zip data/raw/historical/kering_2025-12-31.zip   # every printed line vs the DB
+
 # dashboard, from repo root
 streamlit run webapp/app.py
 ```
@@ -125,6 +132,24 @@ in a NOTE but not tagged (ESEF only block-tags most notes) is never typed in:
 `scripts/33_load_note_facts.py` reads it from the report by a reviewed
 specification (`data/mappings/reviewed_note_figures.yaml`), refuses it unless
 its checks pass, and stores it as a `note:` fact with its row as provenance.
+Both downloaders name a package after the period and LEI read from its own XBRL
+contexts (never its filename) and check the archive before keeping it. When a
+filer renames an extension tag between years, `scripts/34_link_renamed_tags.py`
+links the new tag to the old concept only on an exact value match in every
+shared period (evidence in `data/mappings/LINKED_renames.yaml`); new concept keys
+come from `scripts/concept_keys.py`, never an `_x` suffix.
+
+**Restated comparatives vs figures as first reported.** When two reports give
+different numbers for one year, `pivot_to_wide` takes the latest report's
+(restated, so margins and growth compare like for like). Ratios that combine a
+balance sheet with a flow (days, ROIC, ROE, cash conversion, net debt/EBITDA -
+`AS_REPORTED_COLUMNS` in `11_ratio_engine.py`) use each year's own report instead
+(`prefer_own_filing=True`): IFRS 5 re-presents earlier income statements when a
+business is discontinued, but never earlier balance sheets. Net margin's
+numerator is the owners' profit from continuing operations (IFRS 5.33); it is
+blank when a report tags only the total discontinued result. The 3-statement
+model and DCF refuse a financial company (`financial_company_reasons`, the same
+list that gates its ratios).
 
 **Two separate `requirements.txt` on purpose.** The root one (used by
 pipeline scripts and CI's `tests.yml`/`pipeline.yml`) includes `arelle-release`,

@@ -139,9 +139,12 @@ def load_comps(_engine, company_id: int):
 
 @st.cache_data(ttl=3600)
 def load_three_statement(_engine, company_id: int):
+    # Only the run from the latest base year: the table keeps earlier runs on purpose (schema_three_statement.sql), and
+    # once a newer annual report moves the base year, returning every run would show two overlapping projections.
     return pd.read_sql(text(
         "SELECT * FROM three_statement_projection WHERE company_id = :cid "
-        "ORDER BY base_year DESC, forecast_year ASC"
+        "AND base_year = (SELECT MAX(base_year) FROM three_statement_projection WHERE company_id = :cid) "
+        "ORDER BY forecast_year ASC"
     ), _engine, params={"cid": company_id})
 
 
@@ -256,9 +259,9 @@ def format_ratio_value(ratio_name: str, value) -> str:
 
 def gating_caption(ratios: pd.DataFrame):
     """Why some ratios read n/a ON PURPOSE (not because data is missing), or
-    None. `note` is written by 11_ratio_engine.py's gate_financial_ratios; a
-    database the engine hasn't run against since that fix has no such column,
-    which just means no caption."""
+    None. `note` is written by 11_ratio_engine.py (gate_financial_ratios and
+    net_margin_notes); a database the engine hasn't run against since that fix
+    has no such column, which just means no caption."""
     if "note" not in ratios.columns:
         return None
     gated = ratios.dropna(subset=["note"])
@@ -303,6 +306,27 @@ def equity_basis_caption(ratios: pd.DataFrame):
             "number.")
 
 
+def net_basis_caption(ratios: pd.DataFrame):
+    """A caption when a net margin here excludes a discontinued operation (IFRS 5), or None. `source_concepts` names the
+    continuing-operations basis only in the years where one was taken out."""
+    if "source_concepts" not in ratios.columns:
+        return None
+    hits = ratios[ratios["ratio_name"] == "net_margin"].dropna(subset=["source_concepts"])
+    years = sorted(int(y) for y, src in zip(hits["year"], hits["source_concepts"])
+                   if any("continuing operations" in c for c in src))
+    if not years:
+        return None
+    return (f"Net margin in {', '.join(map(str, years))} uses profit attributable to owners from continuing "
+            f"operations: the company reported a discontinued operation (IFRS 5), which is left out of revenue, so "
+            f"its result is left out of the profit too.")
+
+
+RATIO_BASIS_CAPTION = ("Margins and the tax rate use each year as the latest report presents it, restatements "
+                       "included, so years compare like for like. Ratios that combine the balance sheet with a flow "
+                       "(days, ROIC, ROE, leverage) use each year's own report: when a business is discontinued, IFRS 5 "
+                       "re-presents earlier income statements but not earlier balance sheets.")
+
+
 def render_ratio_table(ratios: pd.DataFrame):
     if ratios.empty:
         st.info("No ratios computed yet for this company.")
@@ -335,6 +359,10 @@ def render_ratio_table(ratios: pd.DataFrame):
     equity_caption = equity_basis_caption(ratios)
     if equity_caption:
         st.caption(equity_caption)
+    net_caption = net_basis_caption(ratios)
+    if net_caption:
+        st.caption(net_caption)
+    st.caption(RATIO_BASIS_CAPTION)
 
 
 @st.cache_data(ttl=3600)
@@ -487,11 +515,16 @@ def capex_basis_caption(df: pd.DataFrame):
     specific to one company - such as how closely the line matched its gross purchases - is that override's own
     dashboard_note, carried in capex_basis_note. Older databases lack the columns, which just means no caption."""
     first = lambda col: df[col].iloc[0] if col in df.columns and not df.empty else None
-    label, note = first("capex_basis_label"), first("capex_basis_note")
+    label, note, checked = first("capex_basis_label"), first("capex_basis_note"), first("capex_basis_checked")
     if pd.isna(label) or not label:
         return None
-    text_ = (f"Capex is read from this company's own line \"{label}\": a company-defined figure rather than the "
-             f"standard capex line, used here only after a reviewed check against the company's own report.")
+    if checked is False or checked == 0:
+        text_ = (f"Capex is read from this company's own line \"{label}\": a company-defined figure rather than the "
+                 f"standard capex line. It has not yet been checked for this base year against the company's gross "
+                 f"purchases of fixed assets, so treat the capex-driven figures with care.")
+    else:
+        text_ = (f"Capex is read from this company's own line \"{label}\": a company-defined figure rather than the "
+                 f"standard capex line, used here only after a reviewed check against the company's own report.")
     return f"{text_} {note}" if pd.notna(note) and note else text_
 
 

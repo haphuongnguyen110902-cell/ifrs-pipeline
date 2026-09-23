@@ -10,8 +10,13 @@ Usage:
     python scripts/12_apply_review.py --review data/mappings/REVIEW_extensions.yaml
 """
 import argparse
+import importlib.util
 from pathlib import Path
 import yaml
+
+_ck_spec = importlib.util.spec_from_file_location("concept_keys", Path(__file__).parent / "concept_keys.py")
+_ck = importlib.util.module_from_spec(_ck_spec)
+_ck_spec.loader.exec_module(_ck)   # one naming rule for new concepts, shared - see concept_keys.py
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--review", default="data/mappings/REVIEW_extensions.yaml")
@@ -43,9 +48,7 @@ for entry in entries:
         skipped_invalid += 1
         continue
 
-    key = entry["suggested_key"]
-    while key in existing[stmt]:
-        key += "_x"
+    key = _ck.unique_concept_key(existing, entry["suggested_key"], entry["xbrl_tag"])
     existing[stmt][key] = {
         "display_label": entry["display_label"],
         "xbrl_tags": [entry["xbrl_tag"]],

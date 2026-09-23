@@ -77,3 +77,51 @@ def test_default_ratios_includes_working_capital_metrics(f16):
     again."""
     for ratio in ("dso", "dio", "dpo", "ccc"):
         assert ratio in f16.DEFAULT_RATIOS
+
+
+class _Conn:
+    def __init__(self):
+        self.calls = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def execute(self, stmt, params=None):
+        self.calls.append((" ".join(str(stmt).split()), params or {}))
+
+
+class _Engine:
+    def __init__(self):
+        self.conn = _Conn()
+
+    def begin(self):
+        return self.conn
+
+
+class TestSaveReplacesOlderRows:
+    """Upserting on (company, ratio, method, forecast_year) kept an older base year's rows: after the FY2025 reports
+    were loaded, 119 stored rows still forecast 2025 from 2024 next to the 2025 actuals, and 87 kept an older run's
+    base year."""
+
+    @staticmethod
+    def frame(f16):
+        import pandas as pd
+        return pd.DataFrame([
+            {"company_id": 1, "ratio_name": "dso", "n_years": 4, "first_year": 2022, "last_year": 2025,
+             "cagr": 0.01, "linreg_r2": 0.5, "cagr_fc_y1_2026": 50.0, "linreg_fc_y1_2026": 51.0},
+            {"company_id": 1, "ratio_name": "roe", "n_years": 2, "first_year": 2024, "last_year": 2025},   # too short
+        ])
+
+    def test_every_computed_pair_is_cleared_before_it_is_written(self, f16):
+        engine = _Engine()
+        written = f16.save_to_db(engine, self.frame(f16), horizon=1)
+        sql = [s for s, _ in engine.conn.calls]
+        deletes = [p for s, p in engine.conn.calls if s.startswith("DELETE FROM forecast")]
+        assert {(p["cid"], p["rn"]) for p in deletes} == {(1, "dso"), (1, "roe")}   # roe: no forecast now, none kept
+        first_insert = next(i for i, s in enumerate(sql) if s.startswith("INSERT INTO forecast"))
+        assert all(i < first_insert for i, s in enumerate(sql) if s.startswith("DELETE"))
+        assert written == 2
+

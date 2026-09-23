@@ -223,10 +223,12 @@ income_statement:
     display_label: Income from Continuing Operations Attributable to Owners
     xbrl_tags:
     - ifrs-full:IncomeFromContinuingOperationsAttributableToOwnersOfParent
+    - essi:ProfitLossFromContinuingOperationsAttributableToOwnersOfParent
   income_from_discontinued_operations_attributable_to_owner_etc:
     display_label: Income from Discontinued Operations Attributable to Owners
     xbrl_tags:
     - ifrs-full:IncomeFromDiscontinuedOperationsAttributableToOwnersOfParent
+    - essi:ProfitLossFromDiscontinuedOperationsAttributableToOwnersOfParent
   interest_expense:
     display_label: Interest Expense
     xbrl_tags:
@@ -449,10 +451,12 @@ income_statement:
     display_label: Gross Profit After Logistics and Advertising Expenses
     xbrl_tags:
     - pernod:ContributionApresFraisPubliPromotionnels
+    - pernod:GrossProfitAfterLogisticCostsAndAdvertisingExpenses
   resultat_operationnel_courant_x:
     display_label: Recurring Operating Profit (Pernod Ricard)
     xbrl_tags:
     - pernod:ResultatOperationnelCourant
+    - pernod:ProfitLossOfCurrentOperatingActivities
   amp_other_gains_losses_and_impairment_loss_on_financial_assets:
     display_label: Other gains (losses) and impairment loss on financial assets
     xbrl_tags:
@@ -571,6 +575,14 @@ income_statement:
     display_label: Finance income (cost), after foreign exchange gain (loss)
     xbrl_tags:
     - asm:FinanceIncomeCostAfterForeignExchangeGainLoss
+  shares_of_results_of_associates_and_joint_ventures1:
+    display_label: Resultat från andelar i intresseföretag och joint ventures1
+    xbrl_tags:
+    - essi:SharesOfResultsOfAssociatesAndJointVentures1
+  shares_of_results_of_associates_and_joint_ventures2:
+    display_label: Resultat från andelar i intresseföretag och joint ventures2
+    xbrl_tags:
+    - essi:SharesOfResultsOfAssociatesAndJointVentures2
 balance_sheet:
   accumulated_other_comprehensive_income:
     display_label: Accumulated Other Comprehensive Income
@@ -1249,6 +1261,45 @@ balance_sheet:
     display_label: Derivative financial liabilities held for hedging
     xbrl_tags:
     - ifrs-full:DerivativeFinancialLiabilitiesHeldForHedging
+  current_financial_assets:
+    display_label: Current financial assets
+    xbrl_tags:
+    - ifrs-full:CurrentFinancialAssets
+  autres_reserves:
+    display_label: Other reserves
+    xbrl_tags:
+    - el:AutresReserves.
+  assets_from_continuing_operations:
+    display_label: Tillgångar från kvarvarande verksamhet
+    xbrl_tags:
+    - essi:AssetsFromContinuingOperations
+  liabilities_from_continuing_operations:
+    display_label: Summa skulder från kvarvarande verksamhet
+    xbrl_tags:
+    - essi:LiabilitiesFromContinuingOperations
+  immobilisations_corporelles_y_compris_les_actifs_lies_au_dro_etc:
+    display_label: Immobilisations corporelles, y compris les actifs liés au droit
+      d'utilisation
+    xbrl_tags:
+    - pernod:ImmobilisationsCorporellesYComprisLesActifsLiesAuDroitDutilisation
+  autres_actifs_courants_dont_les_creances_fiscales_hors_i_s:
+    display_label: Other current assets including current receivables from taxes other
+      than income tax
+    xbrl_tags:
+    - pernod:AutresActifsCourantsDontLesCreancesFiscalesHorsIS
+  autres_passifs_courants_dont_dettes_fiscales_et_sociales:
+    display_label: Other current liabilities, including current payables on taxes
+      other than income taxes and social security
+    xbrl_tags:
+    - pernod:AutresPassifsCourantsDontDettesFiscalesEtSociales
+  reserves_accumulated_net_income_and_exchanges_differences_on_etc:
+    display_label: Reserves, accumulated net income and exchanges differences on translation
+    xbrl_tags:
+    - pernod:ReservesAccumulatedNetIncomeAndExchangesDifferencesOnTranslation
+  retained_earnings_profit_or_loss_for_reporting_period:
+    display_label: Retained earnings profit or loss for reporting period
+    xbrl_tags:
+    - pernod:RetainedEarningsProfitOrLossForReportingPeriod
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense
@@ -1286,6 +1337,7 @@ cash_flow:
     display_label: Cash Flow from Operations before Working Capital Changes
     xbrl_tags:
     - ifrs-full:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapital
+    - pernod:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapitalInterestAndIncomeTaxPaidReceived
   cash_outflow_for_leases:
     display_label: Cash Outflow for Leases
     xbrl_tags:
@@ -1410,6 +1462,7 @@ cash_flow:
     display_label: Purchase/(Sale) of Non-current AFS Financial Assets
     xbrl_tags:
     - LVM:PurchaseAndProceedsFromSaleOfNonCurrentAvailableForSaleFinancialAssetsClassifiedAsInvestingActivities
+    - LVM:PurchaseOfInvestmentsOtherThanInvestmentsAccountedForUsingEquityMethodAndProceedsFromSalesOfInvestmentsOtherThanInvestmentsAccountedForUsingEquityMethod
   capitalized_expenditure_to_fulfill_contracts_with_customers:
     display_label: Capitalized Expenditure to Fulfill Customer Contracts
     xbrl_tags:
@@ -1418,10 +1471,12 @@ cash_flow:
     display_label: Net Cash Flow for the Period (Continuing Operations)
     xbrl_tags:
     - essi:CashFlowForThePeriodContinuingOperations
+    - essi:IncreaseDecreaseInCashAndCashEquivalentsBeforeEffectOfExchangeRateChangesContinuingOperations
   change_in_liabilities_relating_to_restructuring_programs_etc:
     display_label: Change in Restructuring-related Liabilities
     xbrl_tags:
     - essi:ChangeInLiabilitiesRelatingToRestructuringProgramsEtc
+    - essi:ChangeInProvisionsRelatingToRestructuringProgramsEtc
   adjustments_for_decrease_increase_in_inventories:
     display_label: Adjustments for Decrease/(Increase) in Inventories
     xbrl_tags:
@@ -1818,6 +1873,8 @@ cash_flow:
     - kering:PurchaseOfPropertyPlantEquipmentAndIntangibleAssetsOtherThanGoodwill
     - loreal:AcquisitionsDImmobilisationsCorporellesEtIncorporelles
     - pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
+    - el:PurchaseOfPropertyPlantAndEquipmentAndIntangibleAssets
+    - pernod:PurchaseOfPropertyPlantAndEquipmentAndIntangibleAssetsOtherThanGoodwill
   other_inflows_outflows_of_cash_classified_as_investing_activ_etc:
     display_label: Other inflows (outflows) of cash, classified as investing activities
     xbrl_tags:
@@ -1948,6 +2005,7 @@ cash_flow:
     display_label: Change in Other Operating Receivables and Payables
     xbrl_tags:
     - el:VariationDesAutresCréancesEtDettesOpérationnelles
+    - el:ChangesInOtherOperatingReceivablesAndPayables
   cession_dimmobilisations_corporelles_et_incorporelles_x:
     display_label: Proceeds from Disposal of PP&E and Intangibles (EssilorLuxottica)
     xbrl_tags:
@@ -1972,6 +2030,7 @@ cash_flow:
     display_label: Purchases of Financial Assets and Activities
     xbrl_tags:
     - pernod:AchatsDactifsFinanciersEtActivites
+    - pernod:PurchasesOfFinancialAssetsAndActivities
   cessions_dactifs_financiers_et_dactivites_x:
     display_label: Disposals of Financial Assets and Activities
     xbrl_tags:
@@ -2377,6 +2436,71 @@ cash_flow:
     display_label: Autres investissements nets
     xbrl_tags:
     - schneiderelectric:NetCashUsedByInvestmentInOtherAssets
+  proceeds_from_sales_or_issue_of_treasury_shares_and_payments_etc:
+    display_label: ProceedsFromSalesOrIssueOfTreasurySharesAndPaymentsToAcquireOrRedeemEntityShares
+    xbrl_tags:
+    - kering:ProceedsFromSalesOrIssueOfTreasurySharesAndPaymentsToAcquireOrRedeemEntityShares
+  autres_ajustements_au_titre_delements_sans_effet_de_tresorer_etc:
+    display_label: Autres ajustements au titre d’éléments sans effet de trésorerie
+    xbrl_tags:
+    - kering:AutresAjustementsAuTitreDelementsSansEffetDeTresorerie
+  inflows_of_cash_from_investing_activities:
+    display_label: Inflows of cash from investing activities
+    xbrl_tags:
+    - ifrs-full:InflowsOfCashFromInvestingActivities
+  disposal_of_propertyplant_and_equipment_and_intangible_asset_etc:
+    display_label: Disposal Of Property Plant And Equipment And Intangible Assets
+    xbrl_tags:
+    - el:DisposalOfPropertyplantAndEquipmentAndIntangibleAssets
+  changes_in_other_non_financial_assets:
+    display_label: Changes In Other Non-Financial Assets
+    xbrl_tags:
+    - el:ChangesInOtherNon-FinancialAssets
+  contribution_des_interets_ne_conferant_pas_le_controle_aux_a_etc:
+    display_label: Contribution des intérêts ne conférant pas le contrôle aux augmentations
+      de capital
+    xbrl_tags:
+    - dan:ContributionDesInteretsNeConferantPasLeControleAuxAugmentationsDeCapital
+  capitalized_expenditures_to_fulfill_contracts_with_customers:
+    display_label: Aktiverade utgifter för att fullgöra avtal med kund
+    xbrl_tags:
+    - essi:CapitalizedExpendituresToFulfillContractsWithCustomers
+  cash_flows_from_used_in_increases_in_operating_capacity:
+    display_label: Cash flows from (used in) increases in operating capacity
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInIncreasesInOperatingCapacity
+  cash_flows_from_used_in_maintaining_operating_capacity:
+    display_label: Cash flows from (used in) maintaining operating capacity
+    xbrl_tags:
+    - ifrs-full:CashFlowsFromUsedInMaintainingOperatingCapacity
+  total_investments_in_tangible_and_intangible_assets_includin_etc:
+    display_label: Summa investering i immateriella och materiella anläggningstillgångar
+      inklusive betald aktiverad ränta
+    xbrl_tags:
+    - essi:TotalInvestmentsInTangibleAndIntangibleAssetsIncludingPaidCapitalizedInterest
+  share_of_net_profit_loss_of_investment_accounted_for_using_e_etc:
+    display_label: Share of Net Profit Loss of investment accounted for using equity
+      method net of divivends received
+    xbrl_tags:
+    - pernod:ShareOfNetProfitLossOfInvestmentAccountedForUsingEquityMethodNetOfDivivendsReceived
+  proceeds_from_property_plant_and_equipment_and_intangible_as_etc:
+    display_label: Proceeds from property, plant and equipment and intangible assets
+      other than goodwill
+    xbrl_tags:
+    - pernod:ProceedsFromPropertyPlantAndEquipmentAndIntangibleAssetsOtherThanGoodwill
+  cash_and_cash_equivalents_in_subsidiary_or_businesses_acquir_etc:
+    display_label: Cash and cash equivalents in subsidiary or businesses acquired
+      or disposed
+    xbrl_tags:
+    - ifrs-full:CashAndCashEquivalentsInSubsidiaryOrBusinessesAcquiredOrDisposed2013
+  disposals_of_financial_assets_and_activities:
+    display_label: Disposals of financial assets and activities
+    xbrl_tags:
+    - pernod:DisposalsOfFinancialAssetsAndActivities
+  acquisition_disposal_of_treasury_shares:
+    display_label: Acquisition (disposal) of treasury shares
+    xbrl_tags:
+    - pernod:AcquisitionDisposalOfTreasuryShares
 other:
   income_tax_relating_to_cash_flow_hedges_of_other_comprehe_etc:
     display_label: Income Tax on Cash Flow Hedges (OCI)
@@ -2478,6 +2602,7 @@ other:
     display_label: OCI - Hedges of Net Investments in Foreign Operations
     xbrl_tags:
     - essi:GainsLossesFromHedgesOfNetInvestmentsInForeignOperationsContinuingOperations
+    - essi:GainsLossesOnHedgesOfNetInvestmentsInForeignOperationsBeforeTaxContinuingOperations
   income_tax_attributable_to_components_in_other_comprehens_etc:
     display_label: Income Tax on OCI Components
     xbrl_tags:
@@ -2486,6 +2611,7 @@ other:
     display_label: Other Comprehensive Income, Net of Tax (Continuing Operations)
     xbrl_tags:
     - essi:OtherComprehensiveIncomeForThePeriodNetOfTaxContinuingOperations
+    - essi:OtherComprehensiveIncomeFromContinuingOperations
   other_comprehensive_income_for_the_period_net_of_tax_disc_etc:
     display_label: Other Comprehensive Income, Net of Tax (Discontinued Operations)
     xbrl_tags:
@@ -2498,6 +2624,7 @@ other:
     display_label: OCI Items Reclassifiable to P&L (Continuing Operations)
     xbrl_tags:
     - essi:TotalItemsThatHaveBeenOrMayBeReclassifiedSubsequentlyToTheIncomeStatementContinuingOperations
+    - essi:OtherComprehensiveIncomeFromContinuingOperationsThatWillBeReclassifiedToProfitOrLossNetOfTax
   total_items_that_have_been_or_may_be_reclassified_subsequ_etc_v2:
     display_label: OCI Items Reclassifiable to P&L (Discontinued Operations)
     xbrl_tags:
@@ -2514,6 +2641,7 @@ other:
     display_label: Translation Differences in Foreign Operations (OCI)
     xbrl_tags:
     - essi:TranslationDifferencesInForeignOperationsContinuingOperations
+    - essi:GainsLossesOnExchangeDifferencesOnTranslationBeforeTaxContinuingOperations
   amount_removed_from_reserve_of_cash_flow_hedges_and_inclu_etc:
     display_label: Cash Flow Hedge Reserve Reclassified to Asset/Liability Cost
     xbrl_tags:
@@ -2841,6 +2969,7 @@ other:
     display_label: Changes in Scope of Consolidation and Non-controlling Interests
     xbrl_tags:
     - el:VariationsDuPérimètreDeConsolidationEtDesParticipationsNeDonnantPasLeContrôle
+    - el:ChangesInConsolidationScopeAndNonControllingInterests
   actions_emises_livrees_aux_salaries_etc_x:
     display_label: Shares Issued to Employees and Options Exercised
     xbrl_tags:
@@ -3128,3 +3257,74 @@ other:
       from (used in) investing activities
     xbrl_tags:
     - asm:CashFlowsFromUsedInOperatingActivitiesAfterCashFlowsFromUsedInInvestingActivities
+  comprehensive_income_from_discontinued_operations_attributab_etc:
+    display_label: Comprehensive income from discontinued operations, attributable
+      to owners of parent
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeFromDiscontinuedOperationsAttributableToOwnersOfParent
+  comprehensive_income_from_discontinued_operations_attributab_etc_ifrsfull:
+    display_label: Comprehensive income from discontinued operations, attributable
+      to non-controlling interests
+    xbrl_tags:
+    - ifrs-full:ComprehensiveIncomeFromDiscontinuedOperationsAttributableToNoncontrollingInterests
+  other_comprehensive_income_before_tax_gains_losses_on_remeas_etc:
+    display_label: Övrigt totalresultat, före skatt, omvärderingar av förmånsbestämda
+      planer, kvarvarande verksamhet
+    xbrl_tags:
+    - essi:OtherComprehensiveIncomeBeforeTaxGainsLossesOnRemeasurementsOfDefinedBenefitPlansContinuingOperations
+  other_comprehensive_income_that_will_not_be_reclassified_to_etc:
+    display_label: Totalt övrigt totalresultat som inte ska omklassiciferas till resultatet,
+      efter avdrag för skatt, verksamhet under avveckling
+    xbrl_tags:
+    - essi:OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTaxDiscontinuingOperations
+  income_tax_relating_to_components_of_other_comprehensive_inc_etc_essi:
+    display_label: Inkomstskatt hänförlig till komponenter i övrigt totalresultat,
+      kvarvarande verksamhet
+    xbrl_tags:
+    - essi:IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossContinuingOperations
+  other_comprehensive_income_from_discontinuing_operations_tha_etc:
+    display_label: Övrigt totalresultat från verksamhet under avveckling som ska omklassificeras
+      till resultatet, efter avdrag för skatt
+    xbrl_tags:
+    - essi:OtherComprehensiveIncomeFromDiscontinuingOperationsThatWillBeReclassifiedToProfitOrLossNetOfTax
+  other_comprehensive_income_from_discontinuing_operations:
+    display_label: Övrigt totalresultat från verksamhet under avveckling
+    xbrl_tags:
+    - essi:OtherComprehensiveIncomeFromDiscontinuingOperations
+  operaciones_con_accionistas:
+    display_label: Operaciones con accionistas
+    xbrl_tags:
+    - puig:OperacionesConAccionistas
+  otras_variaciones_de_patrimonio:
+    display_label: Otras variaciones de patrimonio
+    xbrl_tags:
+    - puig:OtrasVariacionesDePatrimonio
+  par_value_per_share:
+    display_label: Par value per share
+    xbrl_tags:
+    - ifrs-full:ParValuePerShare
+  other_comprehensive_income_that_will_not_be_reclassified_to_etc_essi:
+    display_label: Totalt övrigt totalresultat som inte ska omklassiciferas till resultatet,
+      efter avdrag för skatt, kvarvarande verksamhet
+    xbrl_tags:
+    - essi:OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTaxContinuingOperations
+  increase_decrease_of_issued_capital:
+    display_label: Increase decrease of issued capital
+    xbrl_tags:
+    - pernod:IncreaseDecreaseOfIssuedCapital
+  change_in_equity:
+    display_label: Change In Equity
+    xbrl_tags:
+    - pernod:ChangeInEquity
+  footnote_increase_decrease_due_to_changes_in_accounting_poli_etc:
+    display_label: 'Footnote Increase Decrease Due To Changes In Accounting Policy
+      Required By Ifrss Cumulative Effect At Date Of Initial Application Member For
+      IFRIC IAS19 '
+    xbrl_tags:
+    - pernod:FootnoteIncreaseDecreaseDueToChangesInAccountingPolicyRequiredByIfrssCumulativeEffectAtDateOfInitialApplicationMemberForIfricIas19
+  footnote_increase_decrease_due_to_changes_in_accounting_poli_etc_pernod:
+    display_label: Footnote Increase decrease due to changes in accounting policy
+      required by IFRSs cumulative effect at date of initial application For IFRIC
+      IAS 38 [member]
+    xbrl_tags:
+    - pernod:FootnoteIncreaseDecreaseDueToChangesInAccountingPolicyRequiredByIfrssCumulativeEffectAtDateOfInitialApplicationForIfricIas38Member
