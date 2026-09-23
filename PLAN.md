@@ -1776,7 +1776,9 @@ mutation-tested by reintroducing a duplicate and confirming it fails.
 **Not done in this pass:** the DB side. `concept_mapping` still has stale rows for the 69 now-removed concept names
 (pointing tag -> the old, now-gone concept) - harmless (nothing reads `concept_mapping` for fact routing, only
 `32_remap_facts.py`'s own drift-detection logic, which already keys off the current mapping file, not that table),
-but a future reader could still be misled by them. Left alone pending a decision on whether to clean the live DB too
+but a future reader could still be misled by them. [Corrected 2026-09-23: `32_remap_facts.py` does not read it for
+drift detection either - it only UPDATEs the tag's row after moving facts. The only other writer is the loader, which
+inserts a row for a tag that has none (one row per tag, first mapping wins). No analytics or dashboard code reads it.] Left alone pending a decision on whether to clean the live DB too
 - a separate, DB-touching change from this YAML-only one.
 
 ### 2026-09-22 (later still): stale concept_mapping rows deleted from the live DB
@@ -1801,7 +1803,10 @@ after all.
 
 **Fix:** deleted exactly those 73 `concept_mapping` rows (772 -> 699). Left the 2 Recordati rows untouched - they
 have live facts, so deleting the row would just hide the drift, not fix it; the actual fix needs the `would_stay_clash`
-investigated first. Left the now-mappingless `ifrs_concept` rows in place (an `ifrs_concept` row with no
+investigated first. [Corrected 2026-09-23: deleting was the wrong fix. `concept_mapping` is the one-row-per-tag
+registry, so these rows should have been re-pointed to the current concept, not removed - the delete left 72 loaded
+tags with no row at all. Functionally harmless (nothing reads the table), but the registry was incomplete. Repaired
+in the next section.] Left the now-mappingless `ifrs_concept` rows in place (an `ifrs_concept` row with no
 `concept_mapping` row is normal for this schema - every reviewed-override and note-figure concept already works
 that way).
 
@@ -1809,3 +1814,36 @@ that way).
 mapping_ids, zero rows added, zero of the remaining 699 rows changed. `fact_value` (19,811) and `ifrs_concept` (840)
 row counts unchanged. `32_remap_facts.py --all` (dry run) shows the exact same output before and after - only the
 pre-existing Recordati clash, nothing new. Full test suite: 723 passed / 36 skipped (no DB), 759 passed (live DB).
+
+### 2026-09-23: Recordati's "clash" was 8 stale duplicate facts; concept_mapping registry repaired
+
+**What the clash really was:** `fact_value` is unique per (filing, period, CONCEPT), not per tag. When a filing is
+re-loaded after a tag's mapping has changed, the loader adds a row under the new concept and never deletes the old
+one. Recordati's `Rec:FinanziamentiDovutiOltreUnAnno` / `EntroUnAnno` had 8 such leftovers (filings 56 and 77, four
+periods each) under the old concepts `finanziamenti_dovuti_oltre/entro_un_anno`. Each was an exact copy (same tag,
+filing, period, value, currency) of a row already under `longterm_borrowings` / `shortterm_borrowings`. That copy is
+what blocked `32_remap_facts.py` (`would_stay_clash`), so there was no real conflict to resolve. A scan of the whole
+DB found no other case of one filing + period + tag stored under two concepts.
+
+**Review of PR #70 (own error):** that cleanup deleted 73 stale `concept_mapping` rows instead of re-pointing them,
+which left 72 loaded tags with no registry row (see the corrections above).
+
+**Fix (one transaction, every precondition asserted again inside it, dry run shown first):** (a) deleted the 8 stale
+facts; (b) re-pointed `concept_mapping` 798/800 to `longterm_borrowings` / `shortterm_borrowings`, which is what
+`32_remap_facts.py` does after a move; (c) re-registered the 72 tags, each to the concept its facts are stored under
+(asserted equal to the current mapping, and each tag asserted to have been in the registry before PR #70).
+
+**Verification:** `fact_value` 19,811 -> 19,803, and the rows removed are exactly the 8 intended `value_id`s. No other
+company's facts changed. `concept_mapping` 699 -> 771: +72 rows, 798/800 changed, 0 removed, no tag registered twice.
+`ratio` and `company_latest_metrics` are unchanged. Recordati's ratios recomputed from the post-fix facts (read-only)
+match the stored values exactly, so the deleted rows never fed any figure. Whole-DB end state: 0 drift
+(`32_remap_facts.py --all`: "No drift"), 0 duplicated filing + period + tag, 0 loaded tags without a registry row, 0
+registry rows disagreeing with the mapping file. New live-DB guard `tests/test_mapping_consistency_live.py` (read-only,
+skipped without `DATABASE_URL`) checks those three invariants. It was mutation-checked without writing to the DB:
+with an in-memory mapping where one tag is re-pointed, both mapping checks fail; the duplicate check's own SQL finds
+the 8 groups in the pre-fix Recordati snapshot and 0 in the post-fix one. Tests: 723 passed / 39 skipped (no DB),
+762 passed (live DB).
+
+**Root cause still in the loader (deliberately not changed here):** re-loading after a remap will leave a stale row
+again. The documented remedy is `--reset-facts`, which is off-limits on the live DB. The new live guard now catches
+it; the fix is `32_remap_facts.py` BEFORE any reload, which moves the facts instead of duplicating them.

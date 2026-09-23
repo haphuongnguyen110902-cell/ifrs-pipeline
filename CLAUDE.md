@@ -136,7 +136,7 @@ alongside it avoids a slow/failed Cloud build. Don't merge these back into one.
 builds an in-memory DataFrame (see `make_wide_row()`-style helpers per test
 file) and asserts against a hand-calculated expected value; that is why
 `tests.yml` runs on every push with no `DATABASE_URL` secret. A minority
-(`test_screener`, `test_baseline_regression`, `test_migration_company_id`, and the
+(`test_screener`, `test_baseline_regression`, `test_migration_company_id`, `test_mapping_consistency_live`, and the
 live classes in `test_forensics`, `test_onepager` and `test_valuation`; the exact
 number is in README's status table) need the real database and are *skipped* when
 `DATABASE_URL` is empty. Run locally with a `.env` present and they hit the
