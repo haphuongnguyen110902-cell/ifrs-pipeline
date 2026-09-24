@@ -52,6 +52,16 @@ class TestEffectiveTaxRate:
         r = r11.compute_ratios(row(profit_loss_before_tax=70.0, income_tax_expense_continuing_operations=20.0))
         assert r["tax_rate"].iloc[0] == pytest.approx(100 * 20.0 / 70.0)
 
+    def test_the_rate_is_never_clipped(self, r11):
+        """Heineken 2020: tax 245 on an accounting profit of 157 - 156%, not a plausible-looking 60.0%."""
+        r = r11.compute_ratios(row(profit_loss=-88.0, income_tax_expense_continuing_operations=245.0))
+        assert r["tax_rate"].iloc[0] == pytest.approx(100 * 245.0 / 157.0)
+
+    def test_a_tax_credit_on_a_loss_is_a_positive_rate(self, r11):
+        """Shell 2020: a credit of 5,433 on an accounting loss of 26,967 - 20.1%, as IAS 12.86 divides it."""
+        r = r11.compute_ratios(row(profit_loss=-21_534.0, income_tax_expense_continuing_operations=-5_433.0))
+        assert r["tax_rate"].iloc[0] == pytest.approx(100 * 5_433.0 / 26_967.0)
+
     def test_nothing_is_approximated_from_operating_profit(self, r11):
         """No profit line and no profit before tax: blank - not operating profit + a financial result taken as 0."""
         r = r11.compute_ratios(row(profit_loss_from_operating_activities=2_940.0,
@@ -115,3 +125,24 @@ class TestDashboardCaption:
     def test_a_printed_operating_profit_has_no_caption(self, caption):
         assert caption(pd.DataFrame({"ratio_name": ["operating_margin"], "source_concepts": [None]})) is None
         assert caption(pd.DataFrame({"ratio_name": ["operating_margin"], "value": [1.0]})) is None
+
+
+class TestNormalisedTaxRate:
+    @pytest.fixture(scope="class")
+    def tsm(self, load_script):
+        return load_script("21_three_statement_model.py")
+
+    def test_the_median_of_five_years_leaves_a_one_off_out(self, tsm):
+        """Kering: 25-29% for years, then 90% in FY2025 (non-deductible impairments)."""
+        ratios = pd.DataFrame({"year": [2020, 2021, 2022, 2023, 2024, 2025],
+                               "tax_rate": [25.7, 28.3, 27.6, 27.4, 28.9, 90.1]})
+        rate, years = tsm.normalised_tax_rate(ratios, 2025)
+        assert rate == pytest.approx(28.3) and years == [2021, 2022, 2023, 2024, 2025]
+
+    def test_rates_that_are_not_positive_are_left_out(self, tsm):
+        ratios = pd.DataFrame({"year": [2023, 2024, 2025], "tax_rate": [-12.0, 22.0, 24.0]})
+        assert tsm.normalised_tax_rate(ratios, 2025) == (pytest.approx(23.0), [2024, 2025])
+
+    def test_no_usable_year_is_none(self, tsm):
+        assert tsm.normalised_tax_rate(pd.DataFrame({"year": [2025], "tax_rate": [float("nan")]}), 2025) == (None, [])
+

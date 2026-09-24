@@ -110,6 +110,14 @@ _val_spec.loader.exec_module(val19)
 MARKET_RISK_SCHEMA = Path(__file__).parent.parent / "sql" / "schema_market_risk.sql"
 
 DEFAULT_BENCHMARK = "^STOXX"  # STOXX Europe 600 - see module docstring for why not CAC 40
+
+# A beta needs the stock and the benchmark priced in the SAME trading session. Where the valuation ticker is a listing
+# outside Europe, the regression uses the company's European listing instead. Shell: SHEL (NYSE, USD) against the
+# STOXX Europe 600 gave a beta of -0.03 with a correlation of -0.02 - two markets closing hours apart - so its
+# Euronext Amsterdam line, quoted in EUR, is used.
+REGRESSION_LISTING = {
+    "Shell": "SHELL.AS",
+}
 TRADING_DAYS_PER_YEAR = 252
 ROLLING_WINDOW = 60  # trading days (~3 months)
 
@@ -319,6 +327,7 @@ if __name__ == "__main__":
         ), {"n": args.company}).fetchone()
     db_ticker, db_currency = (db_row.ticker, db_row.ticker_currency) if db_row else (None, None)
     ticker, _quote_ccy = val19.resolve_ticker_currency(args.company, db_ticker, db_currency)
+    ticker = REGRESSION_LISTING.get(args.company, ticker)
     if not ticker:
         print(f"No ticker mapped for {args.company} (checked 19_valuation.py's TICKER_MAP and "
               f"company.ticker) - cannot fetch price history. Run scripts/26_entity_resolution.py "

@@ -250,7 +250,11 @@ if __name__ == "__main__":
     market = dcf22.val19.fetch_market_data(ticker)
     live_rate = dcf22.val19.fetch_live_fx_rate(quote_ccy)
     market_cap_eur = market["market_cap"] / live_rate if quote_ccy != "EUR" else market["market_cap"]
-    beta = dcf22.fetch_beta(ticker)
+    beta_info = dcf22.dcf_beta(engine, args.company)       # the same beta as the DCF - see 22_dcf.py
+    if "reason" in beta_info:
+        print(f"Not built for {args.company}: {beta_info['reason']}.")
+        sys.exit(0)
+    beta = beta_info["adjusted"]
     wacc_info = dcf22.compute_wacc(market_cap_eur, base["net_debt"], beta, base["tax_rate"],
                                     dcf22.DEFAULT_RISK_FREE_RATE, dcf22.DEFAULT_ERP, args.interest_rate)
     wacc = wacc_info["wacc"]

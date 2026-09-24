@@ -486,6 +486,25 @@ def net_margin_notes(ratios: pd.DataFrame) -> dict:
             for cid, y in zip(hit["company_id"], hit["year"])}
 
 
+BY_NATURE_NOTE = ("The income statement classifies expenses by nature (IAS 1.99): it has no cost of sales, the base "
+                  "of gross margin and of inventory and payables days (IAS 2.39)")
+BY_NATURE_RATIOS = ("gross_margin", "dio", "dpo", "ccc")
+
+
+def by_nature_notes(ratios: pd.DataFrame) -> dict:
+    """{(company_id, year, ratio): why it is blank} for the cost-of-sales ratios of a company-year that classifies
+    expenses by nature - only where the ratio is actually blank."""
+    if "_by_nature" not in ratios.columns:
+        return {}
+    notes = {}
+    hit = ratios[ratios["_by_nature"].fillna(False).astype(bool)]
+    for _, row in hit.iterrows():
+        for name in BY_NATURE_RATIOS:
+            if name in row.index and pd.isna(row[name]):
+                notes[(int(row["company_id"]), int(row["year"]), name)] = BY_NATURE_NOTE
+    return notes
+
+
 def source_concepts_for(ratio_name: str, row) -> list | None:
     """The stored concepts a ratio was built from where that matters for reading it (ratio.source_concepts): DPO and
     the cash conversion cycle carry the payables line they were read from, ROIC/ROE the equity basis, net margin the
@@ -515,7 +534,7 @@ def source_concepts_for(ratio_name: str, row) -> list | None:
 # rate and growth keep the restated, like-for-like figures.
 AS_REPORTED_COLUMNS = ("dso", "dio", "dpo", "ccc", "roic", "roe", "cash_conversion", "net_debt_ebitda_proxy",
                        "_payables_basis", "_equity_basis", "_net_debt", "_debt_basis", "_ebitda", "_da_total",
-                       "_da_basis")
+                       "_da_basis", "_receivables", "_inventories", "_payables")
 
 
 def compute_ratios(wide: pd.DataFrame, wide_as_reported: pd.DataFrame = None) -> pd.DataFrame:
@@ -613,6 +632,12 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     gp = gp_tag.combine_first(rev - cogs_tag)
     cogs = cogs_tag.combine_first(rev - gp_tag)
     r["gross_margin"] = safe_div(gp, rev, scale=100)
+    # IAS 1.99: expenses are classified by nature or by function, and the function method must show cost of sales
+    # (IAS 1.103) - so an income statement with revenue but neither cost of sales nor gross profit classifies by
+    # nature (Heineken, Amplifon, Shell). IAS 2.39: such a company discloses raw materials, labour and other costs
+    # INSTEAD of the cost of inventories sold, so gross margin and inventory/payables days have no IFRS base. They are
+    # blank on purpose, and the reason is stored (by_nature_notes).
+    r["_by_nature"] = rev.notna() & gp_tag.isna() & cogs_tag.isna()
 
     # --- net margin ---
     net = get_col(wide, "profit_loss_attributable_to_owners_of_parent")
@@ -647,10 +672,17 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["dio"] = safe_div(inventory, cogs, scale=365)
     r["dpo"] = safe_div(payables, cogs, scale=365)
     r["ccc"] = r["dso"] + r["dio"] - r["dpo"]  # NaN if any component is NaN - never fake a CCC
+    # the printed balances themselves: the 3-statement model grows working capital with revenue from them
+    r["_receivables"] = receivables.abs()
+    r["_inventories"] = inventory.abs()
+    r["_payables"] = payables.abs()
 
     # --- effective tax rate (IAS 12.86): tax expense / accounting profit, see above ---
-    # abs() handles sign convention differences across filers; x100 matches the % scale of the other ratios
-    r["tax_rate"] = safe_div(tax.abs(), accounting_profit.abs(), scale=100).clip(0, 60)
+    # As the division gives it - never clipped: a 0-60% clip showed Heineken 2020 (tax 245 on an accounting profit of
+    # 157, 156%) and Kering 2025 (90%, non-deductible impairments) as a plausible-looking 60.0%. Signed: a tax credit
+    # on a loss (Shell 2020: -5,433 on -26,967) is a 20.1% rate, as IAS 12.86 has it. The 3-statement model projects
+    # on a normalised rate instead (21_three_statement_model.normalised_tax_rate).
+    r["tax_rate"] = safe_div(tax, accounting_profit, scale=100)
 
     # --- net debt ---
     # Financial debt = the financial-liability lines the company PRINTS on its balance sheet (IAS 1.54(m):
@@ -773,6 +805,27 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
             basis.append("+".join(parts))
     r["_da_basis"] = basis
     r["_ebitda"] = ebit + r["_da_total"]
+
+    # --- banks and insurers (FINANCIAL_RATIO_META; stored for financial companies only) ---
+    # A bank's income statement has no cost of sales and its borrowings are its raw material, so the corporate ratios
+    # above are blanked for it (gate_financial_ratios). These are the measures its own statements support. A bank
+    # that prints one of these lines under its own extension (BNP's "Revenues", the Italian banks' "Costi operativi")
+    # has it mapped to the concept, with evidence, when it is loaded - never guessed here.
+    operating_income = get_col(wide, "revenue_and_operating_income")            # "total operating income"
+    operating_expenses = get_best(wide, "expense_by_nature", "bank_operating_expenses").abs()
+    # a bank that prints no expense total but prints the pre-impairment subtotal (BNP: "gross operating income")
+    operating_expenses = operating_expenses.combine_first(
+        operating_income - get_col(wide, "operating_profit_before_impairment"))
+    r["cost_income_ratio"] = safe_div(operating_expenses, operating_income, scale=100)
+    customer_loans = get_col(wide, "loans_and_advances_to_customers")
+    # IFRS 9 impairment losses (a reversal is negative) over year-end customer loans, in basis points
+    r["cost_of_risk"] = safe_div(get_col(wide, "impairment_loss_ifrs_9"), customer_loans, scale=10_000)
+    r["loan_to_deposit"] = safe_div(customer_loans, get_col(wide, "deposits_from_customers"), scale=100)
+    r["equity_to_assets"] = safe_div(get_col(wide, "equity"), get_col(wide, "assets"), scale=100)
+    # IFRS 17: insurance service expenses over insurance revenue - the claims-and-expenses share of what the insurance
+    # contracts earned (the IFRS 17 counterpart of a combined ratio, before reinsurance)
+    r["insurance_service_ratio"] = safe_div(get_col(wide, "insurance_service_expenses").abs(),
+                                            get_col(wide, "insurance_revenue"), scale=100)
     return r
 
 
@@ -792,6 +845,28 @@ RATIO_META = {
     "roe":                  ("ROE",                       True,  "%"),
     "net_debt_ebitda_proxy":("Net Debt vs Op. Profit",  False, "x"),
 }
+
+
+FINANCIAL_RATIO_META = {
+    "cost_income_ratio":       ("Cost/Income Ratio",                          True, "%"),
+    "cost_of_risk":            ("Cost of Risk (bp of customer loans)",        True, "bp"),
+    "loan_to_deposit":         ("Customer Loans / Customer Deposits",         True, "%"),
+    "equity_to_assets":        ("Equity / Total Assets",                      True, "%"),
+    "insurance_service_ratio": ("Insurance Service Expenses / Revenue (IFRS 17)", True, "%"),
+}
+
+
+def financial_ratios_to_store(ratios: pd.DataFrame, financial: dict) -> set:
+    """{(company_id, ratio)} of the FINANCIAL_RATIO_META measures to store: for financial companies only, and only a
+    measure the company has at least one value for - a payment processor has no customer loans, and a row of blanks
+    for every year would say nothing."""
+    out = set()
+    fin = ratios[ratios["company_id"].isin(list(financial))]
+    for name in FINANCIAL_RATIO_META:
+        if name in fin.columns:
+            for cid in fin.loc[fin[name].notna(), "company_id"].unique():
+                out.add((int(cid), name))
+    return out
 
 
 # ---------------------------------------------------------------- financial-sector gating
@@ -906,6 +981,8 @@ def format_ratio(value, unit):
         return f"{value:.1f}x"
     if unit == "days":
         return f"{value:.0f}d"
+    if unit == "bp":
+        return f"{value:.0f}bp"
     return f"{value:.2f}"
 
 
@@ -934,7 +1011,7 @@ def print_comps_table(ratios: pd.DataFrame):
 
 # ---------------------------------------------------------------- save
 
-def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict, notes: dict = None):
+def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict, notes: dict = None, financial_store: set = None):
     """Upsert ratios into the ratio table. `notes` maps (company_id, year,
     ratio_name) -> why that cell is blank on purpose (see
     gate_financial_ratios); rows without one get NULL, so a company that stops
@@ -967,7 +1044,9 @@ def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict, notes: dict = No
         for _, row in ratios.iterrows():
             cid = row.get("company_id")
             year = row["year"]
-            for ratio_name, (label, neutral, unit) in RATIO_META.items():
+            metas = list(RATIO_META.items()) + [
+                (n, m) for n, m in FINANCIAL_RATIO_META.items() if (int(cid), n) in (financial_store or set())]
+            for ratio_name, (label, neutral, unit) in metas:
                 if ratio_name not in row.index:
                     continue
                 val = row[ratio_name]
@@ -1076,6 +1155,8 @@ if __name__ == "__main__":
     financial = financial_company_reasons(fetch_company_profiles(engine), load_reporting_model_overrides())
     ratios, notes, n_blanked = gate_financial_ratios(ratios, financial)
     notes.update(net_margin_notes(ratios))
+    for key, text_note in by_nature_notes(ratios).items():
+        notes.setdefault(key, text_note)              # a financial-company reason, if any, stays the stated one
     gated_names = sorted(ratios.loc[ratios["company_id"].isin(list(financial)), "company"].unique())
     if gated_names:
         print(f"Financial-sector gating: blanked {n_blanked} value(s) that are not meaningful for "
@@ -1091,7 +1172,7 @@ if __name__ == "__main__":
 
     # save to database
     if not args.no_db:
-        rows = save_to_db(engine, ratios, {}, notes)
+        rows = save_to_db(engine, ratios, {}, notes, financial_ratios_to_store(ratios, financial))
         print(f"\nWrote {rows} ratio rows to database")
 
     # save to Excel

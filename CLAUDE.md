@@ -156,7 +156,16 @@ the year on the same basis (same revenue; `representing_filings`). The effective
 tax rate is IAS 12.86's: tax expense over accounting profit (profit from
 continuing operations + tax, IAS 12.5), the same for every company. A company that
 prints no operating-profit line gets EBIT = profit before tax + finance costs,
-recorded in `_ebit_basis` and captioned. `scripts/35_trace_figures.py` checks that
+recorded in `_ebit_basis` and captioned. A company that classifies expenses by nature
+(IAS 1.99: no cost of sales printed) has gross margin, DIO, DPO and CCC blank on purpose
+with the reason in `ratio.note`; the 3-statement model grows the printed working-capital
+balances with revenue, so it needs no cost of sales, and projects on the median tax rate
+of five years (`normalised_tax_rate`). Banks and insurers get `FINANCIAL_RATIO_META`
+(cost/income, cost of risk, loans/deposits, equity/assets, IFRS 17 service ratio) instead
+of the corporate ratios; a bank's own extension lines are mapped to those concepts with
+evidence when it is loaded. The DCF's beta is 23_market_risk.py's regression against STOXX
+Europe 600 (Blume-adjusted), never a vendor beta; a beta that is not positive refuses the
+DCF. `scripts/35_trace_figures.py` checks that
 every input the dashboard's figures are built from equals a printed figure; after
 changing which line the engine reads, run it (it fetches packages that are no
 longer on disk into memory, never to disk).
