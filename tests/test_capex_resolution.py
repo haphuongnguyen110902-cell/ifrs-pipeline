@@ -89,7 +89,7 @@ class TestBaseYear:
         row = {"company": "X", "company_id": 1, "year": 2025,
                "revenue": 1_000.0, "cost_of_sales": -600.0, "gross_profit": 400.0,
                "profit_loss_from_operating_activities": 100.0, "profit_loss_before_tax": 90.0,
-               "income_tax_expense_continuing_operations": -20.0,
+               "income_tax_expense_continuing_operations": 20.0,
                "profit_loss_attributable_to_owners_of_parent": 60.0,
                "current_trade_receivables": 150.0, "inventories": 90.0,
                "trade_and_other_current_payables_to_trade_suppliers": 60.0,

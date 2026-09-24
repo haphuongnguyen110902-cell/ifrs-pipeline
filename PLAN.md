@@ -2107,3 +2107,99 @@ gone unchecked; Essity's trace listed cash but no debt line. The debt lines now 
 - The trace does not run in CI: it needs the database and the report packages. Phase 5 decides where it runs.
 - The Shell and Danone decisions are about definitions. IFRS decides where it defines the measure (IAS 12.86), and
   where IFRS defines none (operating profit before IFRS 18), the formula is stated on the dashboard.
+
+### 2026-09-24 (Phase 3 of 5): IFRS-complete models - expenses by nature, banks and insurers; the DCF's beta
+
+**Expenses by nature (IAS 1.99): Heineken, Amplifon and Shell.**
+- **The IFRS rule.** The function method must show cost of sales (IAS 1.103). The nature method has none: IAS 2.39
+  has such a company disclose raw materials, labour and other costs *instead of* the cost of inventories sold.
+- **Checked in their FY2025 reports.** None of the three prints cost of sales. None discloses the IAS 2.36(d) amount
+  either; each inventories note is a text block with write-downs only.
+- **Before.** Gross margin, DIO, DPO and the cash conversion cycle were silently blank. The 3-statement model and
+  DCF refused all three ("missing required inputs: gross_margin, dio, dpo").
+- **Ratios now.** The four ratios are blank on purpose. The IAS 1.99 reason is stored in `ratio.note` and shown as
+  "blank on purpose". An income statement with revenue but neither cost of sales nor gross profit is by nature;
+  that is the IAS 1.103 inference, not a company list.
+- **3-statement model now.** It carries working capital from the printed balances (receivables, inventories,
+  payables, now kept by the engine as `_receivables`/`_inventories`/`_payables`) as shares of revenue, so it needs
+  no cost of sales. For a function-method company this is the same projection: inventory = revenue x (1 - gross
+  margin) x DIO / 365 is revenue x inventory / revenue when margin and days are held flat. Recomputed live, the 12
+  existing projections matched to within 1e-14.
+- **Result.** Heineken, Amplifon and Shell now have a 3-statement model; Heineken and Amplifon also have a DCF.
+
+**The DCF's beta.** Building Shell's DCF gave WACC 2.47% and an enterprise value of EUR 3.6 trillion against a
+EUR 240bn market cap.
+- **The mismatch.** The cost of equity used yfinance's `info["beta"]`, which is Yahoo's beta against the S&P 500:
+  -0.22 for Shell, 0.18 for Danone. That US-market beta sat next to a German Bund risk-free rate and a mature-market
+  ERP. The Market Risk tab, meanwhile, says its beta is computed in-house against STOXX Europe 600.
+- **The new beta.** The DCF (and `25_scenario.py`) now uses that same in-house regression beta, Blume-adjusted
+  (0.67 x beta + 0.33, the adjusted beta of Bloomberg and most brokers). It is stored in `dcf_valuation.beta_raw` /
+  `beta_adjusted` / `beta_source` and stated on the DCF tab.
+- **Shell's listing.** Shell's regression had been run on SHEL, its NYSE listing (beta -0.03, correlation -0.02
+  against an index that closes hours earlier). `23_market_risk.py`'s `REGRESSION_LISTING` now uses Euronext
+  Amsterdam (SHELL.AS). The valuation ticker stays SHEL: the code uses the quote currency as a stand-in for the
+  reporting currency, and a EUR quote would have treated Shell's USD figures as EUR.
+- **Shell's DCF is refused.** Even on Amsterdam, Shell's one-year beta is -0.34, and TotalEnergies' is -0.40:
+  European energy moved against the market over the year. The 2-year weekly and 5-year monthly betas are 0.28 and
+  0.06. A regression beta that is not positive now refuses the DCF: the stored row is removed and the tab says
+  why. A USD 3.6 trillion number does not stand in for "no basis".
+- **Effect on WACC.** Most WACCs rose (Danone 3.8% to 4.9%, LVMH 6.4% to 7.7%, Schneider 7.8% to 9.5%).
+- **Not changed.** The DCF levels still ride on the historical-CAGR growth assumption (Heineken: 7.6% a year),
+  which is an open item from before.
+
+**Effective tax rate, unclipped.** The IAS 12.86 rate was clipped to 0-60%, so Heineken 2020 (tax 245 on an
+accounting profit of 157, 156%) and Kering 2025 (90%, non-deductible impairments) showed a plausible-looking 60.0%.
+- **Display.** It is now shown as IAS 12.86 divides it, signed. Shell 2020's credit on a loss is 20.1%. The
+  forensics tax-rate flag now reports the real values.
+- **Projections.** The 3-statement model and DCF project on a normalised rate: the median of the latest five
+  years' rates (`normalised_tax_rate`), printed when it differs from the base year by more than 5 points. Kering
+  goes from 90.1% to 28.3%. LVMH goes from 32.8% to 26.7%; its FY2025 rate carries France's one-year surtax on
+  large companies.
+- **Test data sign fixed.** Four synthetic test rows tagged the tax expense negative. The old `abs()` hid the sign;
+  `IncomeTaxExpenseContinuingOperations` is a debit element, so an expense is positive. The rows now use the IFRS
+  sign.
+
+**Banks and insurers: IFRS-statement measures (`FINANCIAL_RATIO_META`).** The corporate ratios were only ever
+blanked for a financial company; nothing took their place. There are five measures, stored for financial companies
+only and only where the company has a value:
+
+| Measure | Definition |
+|---|---|
+| Cost/income | Operating expenses / total operating income. Where no expense total is printed, operating income less the pre-impairment subtotal. |
+| Cost of risk | IFRS 9 impairment losses / year-end customer loans, in basis points (a reversal is negative). |
+| Customer loans / customer deposits | As named. |
+| Equity / total assets | As named. |
+| IFRS 17 insurance service ratio | Insurance service expenses / insurance revenue. |
+
+- **Mapping.** Seven standard IFRS tags are mapped for these (`revenue_and_operating_income`, `expense_by_nature`,
+  `impairment_loss_ifrs_9`, `deposits_from_customers`, `insurance_revenue`, `insurance_service_expenses`,
+  `insurance_service_result`). No loaded fact carried any of them, so nothing had to be remapped.
+- **Checked on two banks** read in memory from `data/raw/gate40` (not loaded yet):
+
+  | Bank | Cost/income | Cost of risk | Loans / deposits | Equity / assets | IFRS 17 ratio |
+  |---|---|---|---|---|---|
+  | BNP Paribas FY2025 | 61.2% | 37bp | 83% | 4.7% | 78.9% |
+  | Handelsbanken FY2024 | 40.4% | -2.6bp (a net reversal) | 175% | 5.9% | – |
+
+- **Live.** Adyen, the one financial company loaded, gains equity / total assets (29-43%, 7 rows). Its other
+  measures need lines a payments processor does not print.
+
+**Live DB:** snapshots before and after each write, row-level diff. What changed, and why:
+- 72 ratio notes (IAS 1.99).
+- 15 new 3-statement rows and 2 new DCFs.
+- Every DCF's beta and WACC.
+- Shell's market-risk row (SHELL.AS).
+- 2 tax-rate cells.
+- 13 projections (normalised tax rate).
+- 7 new Adyen rows.
+
+The golden baselines were reviewed and regenerated.
+
+**Trace after the changes** (`35_trace_figures.py`, all 16 companies): 3,806 inputs - 3,777 equal to a line printed on a primary statement, 29 reviewed note figures, 0 different or missing.
+
+**Deliberately not done (Phase 4):**
+- **Each bank's own lines.** BNP's "Revenues", "Gross operating income", customer loans and deposits are
+  extensions, and so are the Italian banks' "Costi operativi". They will be mapped with evidence when each bank is
+  loaded, never guessed in code.
+- **KBC's statements** are not located by `reconcile_reports.py`'s statement patterns.
+- **A longer beta window** (2-year weekly), if the 1-year daily one proves too noisy, is a separate decision.

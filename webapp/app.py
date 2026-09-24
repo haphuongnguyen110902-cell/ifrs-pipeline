@@ -254,6 +254,8 @@ def format_ratio_value(ratio_name: str, value) -> str:
         return f"{value:.0f}d"
     if ratio_name == "net_debt_ebitda_proxy":
         return f"{value:.1f}x"
+    if ratio_name == "cost_of_risk":
+        return f"{value:.0f}bp"
     return f"{value:.1f}%"
 
 
@@ -546,10 +548,21 @@ def capex_basis_caption(df: pd.DataFrame):
     return f"{text_} {note}" if pd.notna(note) and note else text_
 
 
-def render_dcf(df: pd.DataFrame):
+def dcf_absence_reason(market_risk: pd.DataFrame) -> str:
+    """Why there is no DCF. 22_dcf.py refuses one when the regression beta the cost of equity rests on is not
+    positive - say so, rather than the generic 'not computed yet'."""
+    if not market_risk.empty and pd.notna(market_risk.iloc[0].get("beta")) and market_risk.iloc[0]["beta"] <= 0:
+        r = market_risk.iloc[0]
+        return (f"Not built on purpose: this company's regression beta against STOXX Europe 600 is {r['beta']:.2f} "
+                f"({r['ticker']}, {r['period_start']} to {r['period_end']}, Market Risk tab). A beta that is not "
+                f"positive gives CAPM no cost of equity, so any DCF here would be a number without a basis.")
+    return ("A DCF valuation hasn't been computed for this company yet. It needs the "
+            "projected 3-statement model and a stock ticker for market data.")
+
+
+def render_dcf(df: pd.DataFrame, market_risk: pd.DataFrame = None):
     if df.empty:
-        st.info("A DCF valuation hasn't been computed for this company yet. It needs the "
-                "projected 3-statement model and a stock ticker for market data.")
+        st.info(dcf_absence_reason(market_risk if market_risk is not None else pd.DataFrame()))
         return
     r = df.iloc[0]
     st.caption(f"Base year {int(r['base_year'])} · WACC built up via CAPM, unlevered FCFF "
@@ -565,6 +578,10 @@ def render_dcf(df: pd.DataFrame):
     c5.metric("Equity Value", format_eur(r["equity_value"]))
     c6.metric("% of EV from Terminal Value", format_pct_fraction(r["pct_ev_from_terminal"]))
 
+    if "beta_adjusted" in r.index and pd.notna(r["beta_adjusted"]):
+        st.caption(f"Cost of equity = risk-free rate + beta x equity risk premium, with beta "
+                   f"{r['beta_adjusted']:.2f}: the Market Risk tab's regression beta against STOXX Europe 600 "
+                   f"({r['beta_raw']:.2f}), Blume-adjusted toward 1 (0.67 x beta + 0.33).")
     st.caption("A DCF's precision is illusory when terminal value drives most of EV - see "
                "the % above before treating Equity Value as a precise number rather than a "
                "range. Cross-check against the Comps tab's EV for the same company.")
@@ -782,7 +799,8 @@ with tab_3stmt:
     render_three_statement(load_three_statement(engine, int(selected_row["company_id"])))
 
 with tab_dcf:
-    render_dcf(load_dcf(engine, int(selected_row["company_id"])))
+    render_dcf(load_dcf(engine, int(selected_row["company_id"])),
+               load_market_risk(engine, int(selected_row["company_id"])))
 
 with tab_market_risk:
     render_market_risk(load_market_risk(engine, int(selected_row["company_id"])))

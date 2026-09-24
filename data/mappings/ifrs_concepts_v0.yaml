@@ -583,6 +583,30 @@ income_statement:
     display_label: Resultat från andelar i intresseföretag och joint ventures2
     xbrl_tags:
     - essi:SharesOfResultsOfAssociatesAndJointVentures2
+  revenue_and_operating_income:
+    display_label: Total operating income (banks)
+    xbrl_tags:
+    - ifrs-full:RevenueAndOperatingIncome
+  expense_by_nature:
+    display_label: Total expenses by nature
+    xbrl_tags:
+    - ifrs-full:ExpenseByNature
+  impairment_loss_ifrs_9:
+    display_label: Impairment losses on financial assets (IFRS 9)
+    xbrl_tags:
+    - ifrs-full:ImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIFRS9
+  insurance_revenue:
+    display_label: Insurance revenue (IFRS 17)
+    xbrl_tags:
+    - ifrs-full:InsuranceRevenue
+  insurance_service_expenses:
+    display_label: Insurance service expenses (IFRS 17)
+    xbrl_tags:
+    - ifrs-full:InsuranceServiceExpensesFromInsuranceContractsIssued
+  insurance_service_result:
+    display_label: Insurance service result (IFRS 17)
+    xbrl_tags:
+    - ifrs-full:InsuranceServiceResult
 balance_sheet:
   accumulated_other_comprehensive_income:
     display_label: Accumulated Other Comprehensive Income
@@ -1300,6 +1324,10 @@ balance_sheet:
     display_label: Retained earnings profit or loss for reporting period
     xbrl_tags:
     - pernod:RetainedEarningsProfitOrLossForReportingPeriod
+  deposits_from_customers:
+    display_label: Deposits from customers
+    xbrl_tags:
+    - ifrs-full:DepositsFromCustomers
 cash_flow:
   adjustments_for_deferred_tax_expense:
     display_label: Adjustments for Deferred Tax Expense

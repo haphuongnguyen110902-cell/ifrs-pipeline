@@ -37,7 +37,9 @@ WACC ASSUMPTIONS (sourced, dated, overridable)
   WILL go stale - override with --risk-free-rate for a fresher figure.
 - Equity risk premium: 4.2% - Damodaran's mature-market implied ERP,
   July 2026 update (4.17%, rounded). Override with --erp.
-- Beta: fetched live from yfinance per company.
+- Beta: the regression beta against STOXX Europe 600 that 23_market_risk.py
+  computes from daily prices (the Market Risk tab's number), Blume-adjusted
+  (0.67 x beta + 0.33) - see dcf_beta(). Not built when it is not positive.
 - Cost of debt: same --interest-rate assumption as Phase 5 (default 4%),
   tax-shielded at the company's own effective tax rate.
 - Capital structure weights: today's market cap (equity) vs. today's net
@@ -64,7 +66,6 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-import yfinance as yf
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
@@ -144,14 +145,46 @@ def compute_fcff(projection: pd.DataFrame, tax_rate_pct: float) -> pd.DataFrame:
 
 # ---------------------------------------------------------------- WACC
 
-def fetch_beta(ticker: str) -> float:
-    """UNTESTED against a live yfinance call from this sandbox - same
-    caveat as 19_valuation.py's market data calls."""
-    info = yf.Ticker(ticker).info
-    beta = info.get("beta")
-    if beta is None:
-        raise ValueError(f"No beta available for {ticker}")
-    return float(beta)
+# Blume (1971) adjustment toward the market beta of 1 - the "adjusted beta" of Bloomberg and most brokers: a regression
+# beta measured over one window is a noisy estimate, and estimates regress toward 1 over time.
+BLUME_WEIGHT = 0.67
+
+
+def blume_adjusted(raw_beta: float) -> float:
+    return BLUME_WEIGHT * raw_beta + (1 - BLUME_WEIGHT) * 1.0
+
+
+def dcf_beta(engine, company: str) -> dict:
+    """{raw, adjusted, source} or {reason} - the beta the cost of equity is built on.
+
+    The regression beta against STOXX Europe 600 that 23_market_risk.py computes from daily prices and stores in
+    market_risk (the Market Risk tab's own number), Blume-adjusted. It replaces yfinance's info["beta"], which is
+    Yahoo's beta against the S&P 500: a US-market beta next to a German Bund risk-free rate and a mature-market ERP,
+    and for Shell -0.22 - a 2.5% cost of equity and a EUR 3.6 trillion enterprise value. A regression beta that is not
+    positive means the price series does not move with the market it is measured against; CAPM then gives no cost of
+    equity, so the DCF is not built."""
+    with engine.connect() as conn:
+        row = conn.execute(text("""
+            SELECT mr.beta, mr.correlation, mr.n_observations, mr.ticker, mr.benchmark, mr.period_start, mr.period_end
+            FROM market_risk mr JOIN company c ON c.company_id = mr.company_id
+            WHERE c.name = :n AND mr.benchmark = '^STOXX'"""), {"n": company}).fetchone()
+    if row is None or row.beta is None:
+        return {"reason": "no regression beta against STOXX Europe 600 is stored (run 23_market_risk.py)"}
+    raw = float(row.beta)
+    if raw <= 0:
+        return {"reason": f"the regression beta against STOXX Europe 600 is {raw:.2f} ({row.ticker}, "
+                          f"{row.period_start} to {row.period_end}): not positive, so CAPM gives no cost of equity"}
+    return {"raw": raw, "adjusted": blume_adjusted(raw),
+            "source": f"{row.ticker} vs STOXX Europe 600, {row.n_observations} daily returns "
+                      f"{row.period_start} to {row.period_end}"}
+
+
+def delete_dcf(engine, company: str) -> int:
+    """Remove a company's stored DCF rows when it is refused for a reason of method - a stale or wrong valuation
+    must not stay on the dashboard."""
+    with engine.begin() as conn:
+        return conn.execute(text("""DELETE FROM dcf_valuation WHERE company_id =
+                                     (SELECT company_id FROM company WHERE name = :n)"""), {"n": company}).rowcount
 
 
 def compute_wacc(market_cap: float, net_debt: float, beta: float, tax_rate_pct: float,
@@ -247,19 +280,25 @@ def save_to_db(engine, company, base_year, wacc_info, dcf_result, equity_value, 
         conn.execute(text("""
             INSERT INTO dcf_valuation
                 (company, company_id, base_year, wacc, cost_of_equity, after_tax_cost_of_debt,
-                 enterprise_value, equity_value, pct_ev_from_terminal, computed_at)
+                 enterprise_value, equity_value, pct_ev_from_terminal, beta_raw, beta_adjusted, beta_source,
+                 computed_at)
             VALUES
-                (:company, :company_id, :base_year, :wacc, :coe, :cod, :ev, :eq, :pct, now())
+                (:company, :company_id, :base_year, :wacc, :coe, :cod, :ev, :eq, :pct, :beta_raw, :beta_adj,
+                 :beta_src, now())
             ON CONFLICT (company_id, base_year)
             DO UPDATE SET company = EXCLUDED.company, wacc = EXCLUDED.wacc, cost_of_equity = EXCLUDED.cost_of_equity,
                           after_tax_cost_of_debt = EXCLUDED.after_tax_cost_of_debt,
                           enterprise_value = EXCLUDED.enterprise_value,
                           equity_value = EXCLUDED.equity_value,
-                          pct_ev_from_terminal = EXCLUDED.pct_ev_from_terminal, computed_at = now()
+                          pct_ev_from_terminal = EXCLUDED.pct_ev_from_terminal, beta_raw = EXCLUDED.beta_raw,
+                          beta_adjusted = EXCLUDED.beta_adjusted, beta_source = EXCLUDED.beta_source,
+                          computed_at = now()
         """), {
             "company": company, "company_id": company_id, "base_year": base_year, "wacc": float(wacc_info["wacc"]),
             "coe": float(wacc_info["cost_of_equity"]), "cod": float(wacc_info["after_tax_cost_of_debt"]),
             "ev": float(dcf_result["enterprise_value"]), "eq": float(equity_value),
+            "beta_raw": wacc_info.get("beta_raw"), "beta_adj": wacc_info.get("beta_adjusted"),
+            "beta_src": wacc_info.get("beta_source"),
             "pct": float(dcf_result["pct_of_ev_from_terminal"]),
         })
 
@@ -344,11 +383,19 @@ if __name__ == "__main__":
     market = val19.fetch_market_data(ticker)
     live_rate = val19.fetch_live_fx_rate(quote_ccy)
     market_cap_eur = market["market_cap"] / live_rate if quote_ccy != "EUR" else market["market_cap"]
-    beta = fetch_beta(ticker)
+    beta_info = dcf_beta(engine, args.company)
+    if "reason" in beta_info:
+        print(f"\nNot built for {args.company}: {beta_info['reason']}.")
+        if not args.no_db:
+            print(f"Removed {delete_dcf(engine, args.company)} stored DCF row(s) for {args.company}.")
+        sys.exit(0)
+    beta = beta_info["adjusted"]
 
     wacc_info = compute_wacc(market_cap_eur, base["net_debt"], beta, base["tax_rate"],
                               args.risk_free_rate, args.erp, args.interest_rate)
-    print(f"\nBeta: {beta:.2f} | Cost of equity: {wacc_info['cost_of_equity']:.1%} | "
+    wacc_info.update(beta_raw=beta_info["raw"], beta_adjusted=beta, beta_source=beta_info["source"])
+    print(f"\nBeta: {beta:.2f} (Blume-adjusted from {beta_info['raw']:.2f}, {beta_info['source']}) | "
+          f"Cost of equity: {wacc_info['cost_of_equity']:.1%} | "
           f"After-tax cost of debt: {wacc_info['after_tax_cost_of_debt']:.1%}")
     print(f"Weights: {wacc_info['weight_equity']:.0%} equity / {wacc_info['weight_debt']:.0%} debt "
           f"{'(net-cash company, all-equity WACC)' if wacc_info['weight_debt'] == 0 else ''}")

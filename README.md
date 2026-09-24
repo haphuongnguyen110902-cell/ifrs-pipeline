@@ -43,17 +43,17 @@ An end-to-end pipeline that turns raw ESEF/XBRL regulatory filings into the kind
 | Countries | France, Italy, Netherlands, Spain, Sweden, United Kingdom |
 | Facts in database | 23,307 |
 | Years with ratios, per company | 4-9 (median 7); calendar span 2017-2026 |
-| Ratios computed | 12 distinct ratios: 1,020 values, 360 blank (an input is missing or the ratio is not meaningful for that company - stored blank, never as zero) |
+| Ratios computed | 13 distinct ratios: 1,027 values, 360 blank (an input is missing or the ratio is not meaningful for that company - stored blank, never as zero) |
 | Trading comps | 15/16 companies |
-| 3-statement model | 12/16 companies |
-| DCF valuation | 12/16 companies |
+| 3-statement model | 15/16 companies |
+| DCF valuation | 14/16 companies |
 | Market risk | 16/16 companies |
 | Credit profile | 15/16 companies |
 | Ratio forecasts | 16/16 companies |
 | Forecast backtest | 15/16 companies |
 | Forensics flags | 97 across 14 companies (36 high / 27 medium / 34 low severity) |
 | Candidate universe | 156 distinct entities over 4 snapshots (latest 2026-09-17); 13 linked to a loaded company |
-| Tests | 835 (796 run in CI without a database, 39 need a live database and skip there) |
+| Tests | 864 (825 run in CI without a database, 39 need a live database and skip there) |
 <!-- FACTS:END -->
 
 The table above is **generated** from the database and the test suite (`python scripts/doc_facts.py --write`) - no number in it is typed by hand, and `python scripts/doc_facts.py --check` fails if it drifts from reality.

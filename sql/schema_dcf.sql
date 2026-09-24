@@ -14,3 +14,8 @@ CREATE TABLE IF NOT EXISTS dcf_valuation (
     computed_at             TIMESTAMP DEFAULT now(),
     UNIQUE(company, base_year)
 );
+
+-- the beta the cost of equity was built on (22_dcf.py's dcf_beta): regression against STOXX Europe 600, Blume-adjusted
+ALTER TABLE dcf_valuation ADD COLUMN IF NOT EXISTS beta_raw NUMERIC;
+ALTER TABLE dcf_valuation ADD COLUMN IF NOT EXISTS beta_adjusted NUMERIC;
+ALTER TABLE dcf_valuation ADD COLUMN IF NOT EXISTS beta_source TEXT;

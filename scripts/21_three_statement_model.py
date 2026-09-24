@@ -203,9 +203,16 @@ def fetch_base_year(engine, company: str) -> dict:
 
     history = ratios[["year", "_revenue"]].dropna().sort_values("year")
 
-    required = ["_revenue", "_ebit", "_net_debt", "_da_total", "gross_margin",
-                "operating_margin", "tax_rate", "dso", "dio", "dpo"]
+    # Working capital is carried forward from the PRINTED balances as a share of revenue - no cost of sales needed,
+    # so a company that classifies expenses by nature (IAS 1.99: Heineken, Amplifon, Shell) is modelled too. For a
+    # function-method company this is the same projection as before: inventory = revenue x (1 - gross margin) x
+    # DIO / 365 IS revenue x inventory / revenue when margin and days are held flat.
+    required = ["_revenue", "_ebit", "_net_debt", "_da_total", "operating_margin",
+                "_receivables", "_inventories", "_payables"]
     missing = [c for c in required if c not in latest.index or pd.isna(latest[c])]
+    tax_rate, tax_years = normalised_tax_rate(ratios, latest_year)
+    if tax_rate is None:
+        missing.append("tax_rate")
     if missing:
         return {"error": f"missing required inputs for base year: {missing}"}
 
@@ -223,7 +230,6 @@ def fetch_base_year(engine, company: str) -> dict:
     if payout_ratio is None:
         payout_ratio = 0.0
 
-    cogs_latest = latest["_revenue"] * (1 - latest["gross_margin"] / 100)
     capex_final = capex_value if capex_value is not None else latest["_revenue"] * 0.03
 
     # _da_total is EXACTLY 0.0 (not NaN, so the `missing` check above
@@ -246,7 +252,8 @@ def fetch_base_year(engine, company: str) -> dict:
         "net_debt": latest["_net_debt"], "da_total": da_final,
         "da_total_is_fallback": da_is_fallback,
         "gross_margin": latest["gross_margin"], "operating_margin": latest["operating_margin"],
-        "tax_rate": latest["tax_rate"], "dso": latest["dso"], "dio": latest["dio"],
+        "tax_rate": tax_rate, "tax_rate_base_year": latest["tax_rate"], "tax_rate_years": tax_years,
+        "dso": latest["dso"], "dio": latest["dio"],
         "dpo": latest["dpo"],
         "capex": capex_final,
         "capex_is_fallback": capex_value is None,
@@ -255,9 +262,11 @@ def fetch_base_year(engine, company: str) -> dict:
         "capex_basis_note": capex_entry.get("dashboard_note"),
         "capex_basis_checked": capex_basis_checked,
         "payout_ratio": payout_ratio, "payout_ratio_is_fallback": payout_ratio_is_fallback,
-        "receivables": latest["_revenue"] * latest["dso"] / 365,
-        "inventory": cogs_latest * latest["dio"] / 365,
-        "payables": cogs_latest * latest["dpo"] / 365,
+        "receivables": latest["_receivables"], "inventory": latest["_inventories"], "payables": latest["_payables"],
+        # currency-neutral shares of revenue (22_dcf.py converts the balances, never these)
+        "receivables_share": latest["_receivables"] / latest["_revenue"],
+        "inventory_share": latest["_inventories"] / latest["_revenue"],
+        "payables_share": latest["_payables"] / latest["_revenue"],
         "history_years": history["year"].tolist(),
         "history_revenue": history["_revenue"].tolist(),
     }
@@ -310,6 +319,30 @@ def solve_circularity(prev_debt, ebit, da, delta_wc, capex, tax_rate_pct,
     return interest_expense, new_debt, net_income, cfo, fcf, dividends
 
 
+NORMALISED_TAX_YEARS = 5
+
+
+def normalised_tax_rate(ratios: pd.DataFrame, base_year: int):
+    """(rate, years used) for the projection: the median effective tax rate (IAS 12.86) of the latest
+    NORMALISED_TAX_YEARS years up to the base year with a positive rate. One year's rate, applied to five projected
+    years, carries its one-offs forward: Kering's FY2025 rate is 90% (non-deductible impairments) against 25-29% before;
+    Heineken's FY2020 156%. The median of five years is the plain, stated way to leave such a year out."""
+    hist = ratios[(ratios["year"] <= base_year) & (ratios["tax_rate"] > 0)].sort_values("year").tail(NORMALISED_TAX_YEARS)
+    if hist.empty:
+        return None, []
+    return float(hist["tax_rate"].median()), [int(y) for y in hist["year"]]
+
+
+def working_capital_shares(base: dict) -> tuple:
+    """(receivables, inventory, payables) as shares of revenue. From the printed balances when the base carries them;
+    otherwise from days and gross margin - the same numbers: receivables = revenue x DSO / 365, inventory = revenue x
+    (1 - gross margin) x DIO / 365, payables = revenue x (1 - gross margin) x DPO / 365."""
+    if "receivables_share" in base:
+        return base["receivables_share"], base["inventory_share"], base["payables_share"]
+    cost_share = 1 - base["gross_margin"] / 100
+    return base["dso"] / 365, cost_share * base["dio"] / 365, cost_share * base["dpo"] / 365
+
+
 def project(base: dict, years: int, growth: float, interest_rate: float) -> pd.DataFrame:
     rows = []
     prev_revenue = base["revenue"]
@@ -318,16 +351,16 @@ def project(base: dict, years: int, growth: float, interest_rate: float) -> pd.D
     prev_debt = base["net_debt"]
     da_pct_of_revenue = base["da_total"] / base["revenue"]
     capex_pct_of_revenue = base["capex"] / base["revenue"]
+    receivables_share, inventory_share, payables_share = working_capital_shares(base)
 
     for t in range(1, years + 1):
         year = base["base_year"] + t
         revenue = prev_revenue * (1 + growth)
         ebit = revenue * base["operating_margin"] / 100
-        cogs = revenue * (1 - base["gross_margin"] / 100)
 
-        receivables = revenue * base["dso"] / 365
-        inventory = cogs * base["dio"] / 365
-        payables = cogs * base["dpo"] / 365
+        receivables = revenue * receivables_share
+        inventory = revenue * inventory_share
+        payables = revenue * payables_share
         delta_wc = (receivables + inventory - payables) - (prev_receivables + prev_inventory - prev_payables)
 
         da = revenue * da_pct_of_revenue
@@ -465,6 +498,10 @@ if __name__ == "__main__":
         if base.get("capex_basis_checked") is False:
             print(f"*** Capex is the company's own line \"{base['capex_basis_label']}\", not verified against IFRS gross "
                   f"purchases for {base['base_year']} (see checked_years in company_tag_overrides.yaml).")
+    if pd.notna(base["tax_rate_base_year"]) and abs(base["tax_rate"] - base["tax_rate_base_year"]) > 5:
+        years = base["tax_rate_years"]
+        print(f"*** Tax rate for the projection: {base['tax_rate']:.1f}%, the median of FY{years[0]}-FY{years[-1]}, not "
+              f"FY{base['base_year']}'s {base['tax_rate_base_year']:.1f}% (see normalised_tax_rate).")
     if base["capex_is_fallback"]:
         print("*** No capex figure found in filings - using generic 3% of revenue fallback. "
               "Treat FCF/DCF outputs as illustrative only for this company.")
