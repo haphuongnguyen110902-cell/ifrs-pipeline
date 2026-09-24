@@ -515,6 +515,27 @@ class TestAsReportedBasis:
         assert own.loc[own["year"] == 2021, "da"].iloc[0] == 7391.0
         assert _value(r11, df, "da") == 6122.0                                      # default: the latest
 
+    def test_a_report_that_re_presents_the_year_never_lends_a_flow(self, r11):
+        """Essity 2021: the FY2021 report has no discontinued operation; the FY2023 report re-presents 2021 without
+        Vinda (revenue 101,466 against 121,867) and adds a discontinued result of 1,797. As first reported there is
+        none - borrowing it took Vinda out of a 2021 profit that still contains it. The FY2022 report presents 2021 as
+        first reported (same revenue), so it may still lend a line the FY2021 report lacks."""
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)), _anchors(3, date(2024, 1, 1)),
+                    _fact("revenue", 121867.0, 1), _fact("revenue", 121867.0, 2), _fact("revenue", 101466.0, 3),
+                    _fact("profit_loss_from_discontinued_operations", 1797.0, 3),
+                    _fact("adjustments_for_interest_expense", 450.0, 2), _fact("adjustments_for_interest_expense", 390.0, 3))
+        own = r11.pivot_to_wide(df, prefer_own_filing=True).set_index("year")
+        assert "profit_loss_from_discontinued_operations" not in own.columns             or pd.isna(own.loc[2021, "profit_loss_from_discontinued_operations"])
+        assert own.loc[2021, "adjustments_for_interest_expense"] == 450.0          # same basis: may lend
+        latest = r11.pivot_to_wide(df).set_index("year")
+        assert latest.loc[2021, "profit_loss_from_discontinued_operations"] == 1797.0    # restated basis keeps it
+
+    def test_representing_filings_compares_revenue_with_the_own_report(self, r11):
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(3, date(2024, 1, 1)),
+                    _fact("revenue", 121867.0, 1), _fact("revenue", 101466.0, 3), _fact("revenue", 90.0, 3, year=2020))
+        d = df.assign(_filing_year=df["filing_id"].map(r11.filing_reporting_years(df)), _gap=0)
+        assert r11.representing_filings(d) == {(1, 2021, 3)}                 # 2020 has no own report to compare with
+
     def test_combination_ratios_are_as_reported_and_margins_restated(self, r11):
         restated = make_wide_row(revenue=800.0, cost_of_sales=-400.0, gross_profit=400.0)
         as_reported = make_wide_row()                                               # revenue 1000, gross profit 400

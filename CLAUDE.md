@@ -59,6 +59,7 @@ python scripts/download_bdif.py --only kering --dry-run
 python scripts/download_package.py essity <official package url>
 python scripts/load_historical.py --skip-loaded          # load every package not loaded yet
 python scripts/reconcile_reports.py --zip data/raw/historical/kering_2025-12-31.zip   # every printed line vs the DB
+python scripts/35_trace_figures.py --csv trace.csv   # every input of every displayed figure vs its printed report
 
 # dashboard, from repo root
 streamlit run webapp/app.py
@@ -149,7 +150,16 @@ business is discontinued, but never earlier balance sheets. Net margin's
 numerator is the owners' profit from continuing operations (IFRS 5.33); it is
 blank when a report tags only the total discontinued result. The 3-statement
 model and DCF refuse a financial company (`financial_company_reasons`, the same
-list that gates its ratios).
+list that gates its ratios). Under the as-first-reported basis a line missing
+from the year's own report is borrowed only from a later report that presents
+the year on the same basis (same revenue; `representing_filings`). The effective
+tax rate is IAS 12.86's: tax expense over accounting profit (profit from
+continuing operations + tax, IAS 12.5), the same for every company. A company that
+prints no operating-profit line gets EBIT = profit before tax + finance costs,
+recorded in `_ebit_basis` and captioned. `scripts/35_trace_figures.py` checks that
+every input the dashboard's figures are built from equals a printed figure; after
+changing which line the engine reads, run it (it fetches packages that are no
+longer on disk into memory, never to disk).
 
 **Two separate `requirements.txt` on purpose.** The root one (used by
 pipeline scripts and CI's `tests.yml`/`pipeline.yml`) includes `arelle-release`,

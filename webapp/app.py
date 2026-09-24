@@ -321,10 +321,25 @@ def net_basis_caption(ratios: pd.DataFrame):
             f"its result is left out of the profit too.")
 
 
+def ebit_basis_caption(ratios: pd.DataFrame):
+    """A caption when this company prints no operating-profit line and its EBIT is derived, or None. `source_concepts`
+    of operating_margin names the derived basis in the years where it was used."""
+    if "source_concepts" not in ratios.columns:
+        return None
+    hits = ratios[ratios["ratio_name"] == "operating_margin"].dropna(subset=["source_concepts"])
+    if not any(any("no operating profit printed" in c for c in src) for src in hits["source_concepts"]):
+        return None
+    return ("This company's income statement has no operating-profit line. Operating profit (EBIT) here is profit "
+            "before tax plus finance costs, both printed lines; the operating margin, ROIC, EBITDA and the multiples "
+            "built on them use it.")
+
+
 RATIO_BASIS_CAPTION = ("Margins and the tax rate use each year as the latest report presents it, restatements "
                        "included, so years compare like for like. Ratios that combine the balance sheet with a flow "
                        "(days, ROIC, ROE, leverage) use each year's own report: when a business is discontinued, IFRS 5 "
-                       "re-presents earlier income statements but not earlier balance sheets.")
+                       "re-presents earlier income statements but not earlier balance sheets. The effective tax "
+                       "rate is tax expense over profit before deducting tax (IAS 12.86), share of associates "
+                       "included, so it can differ slightly from a rate a company computes on its own subtotal.")
 
 
 def render_ratio_table(ratios: pd.DataFrame):
@@ -362,6 +377,9 @@ def render_ratio_table(ratios: pd.DataFrame):
     net_caption = net_basis_caption(ratios)
     if net_caption:
         st.caption(net_caption)
+    ebit_caption = ebit_basis_caption(ratios)
+    if ebit_caption:
+        st.caption(ebit_caption)
     st.caption(RATIO_BASIS_CAPTION)
 
 
