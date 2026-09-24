@@ -1,0 +1,180 @@
+_about: Renamed extension tags linked to their predecessor's concept by value evidence
+  (scripts/34_link_renamed_tags.py).
+links:
+- company: LVMH
+  report: lvmh_2025-12-31.zip
+  tag: LVM:PurchaseOfInvestmentsOtherThanInvestmentsAccountedForUsingEquityMethodAndProceedsFromSalesOfInvestmentsOtherThanInvestmentsAccountedForUsingEquityMethod
+  concept: purchase_and_proceeds_from_sale_of_non_current_available__etc
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 579000000.0
+    stored_under: LVM:PurchaseAndProceedsFromSaleOfNonCurrentAvailableForSaleFinancialAssetsClassifiedAsInvestingActivities
+- company: EssilorLuxottica
+  report: essilorluxottica_2025-12-31.zip
+  tag: el:ChangesInConsolidationScopeAndNonControllingInterests
+  concept: variations_du_perimetre_de_consolidation_etc_x
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: -239000000.0
+    stored_under: el:VariationsDuPérimètreDeConsolidationEtDesParticipationsNeDonnantPasLeContrôle
+- company: EssilorLuxottica
+  report: essilorluxottica_2025-12-31.zip
+  tag: el:ChangesInOtherOperatingReceivablesAndPayables
+  concept: variation_des_autres_creances_et_dettes_operationnelles_x
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: -133000000.0
+    stored_under: el:VariationDesAutresCréancesEtDettesOpérationnelles
+- company: EssilorLuxottica
+  report: essilorluxottica_2025-12-31.zip
+  tag: el:PurchaseOfPropertyPlantAndEquipmentAndIntangibleAssets
+  concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 1522000000.0
+    stored_under: el:AcquisitionsDimmobilisationsCorporellesEtIncorporelles
+- company: Essity
+  report: essity_2023-12-31.zip
+  tag: essi:GainsLossesOnExchangeDifferencesOnTranslationBeforeTaxContinuingOperations
+  concept: translation_differences_in_foreign_operations_continuing__etc
+  matched:
+  - start: '2023-01-01'
+    end: '2024-01-01'
+    value: -270000000.0
+    stored_under: essi:TranslationDifferencesInForeignOperationsContinuingOperations
+  - start: '2022-01-01'
+    end: '2023-01-01'
+    value: 8216000000.0
+    stored_under: essi:TranslationDifferencesInForeignOperationsContinuingOperations
+- company: Essity
+  report: essity_2023-12-31.zip
+  tag: essi:GainsLossesOnHedgesOfNetInvestmentsInForeignOperationsBeforeTaxContinuingOperations
+  concept: gains_losses_from_hedges_of_net_investments_in_foreign_op_etc
+  matched:
+  - start: '2023-01-01'
+    end: '2024-01-01'
+    value: 572000000.0
+    stored_under: essi:GainsLossesFromHedgesOfNetInvestmentsInForeignOperationsContinuingOperations
+  - start: '2022-01-01'
+    end: '2023-01-01'
+    value: -1435000000.0
+    stored_under: essi:GainsLossesFromHedgesOfNetInvestmentsInForeignOperationsContinuingOperations
+- company: Essity
+  report: essity_2023-12-31.zip
+  tag: essi:IncreaseDecreaseInCashAndCashEquivalentsBeforeEffectOfExchangeRateChangesContinuingOperations
+  concept: cash_flow_for_the_period_continuing_operations
+  matched:
+  - start: '2023-01-01'
+    end: '2024-01-01'
+    value: 602000000.0
+    stored_under: essi:CashFlowForThePeriodContinuingOperations
+- company: Essity
+  report: essity_2023-12-31.zip
+  tag: essi:OtherComprehensiveIncomeFromContinuingOperations
+  concept: other_comprehensive_income_for_the_period_net_of_tax_cont_etc
+  matched:
+  - start: '2023-01-01'
+    end: '2024-01-01'
+    value: -587000000.0
+    stored_under: essi:OtherComprehensiveIncomeForThePeriodNetOfTaxContinuingOperations
+  - start: '2022-01-01'
+    end: '2023-01-01'
+    value: 7118000000.0
+    stored_under: essi:OtherComprehensiveIncomeForThePeriodNetOfTaxContinuingOperations
+- company: Essity
+  report: essity_2023-12-31.zip
+  tag: essi:OtherComprehensiveIncomeFromContinuingOperationsThatWillBeReclassifiedToProfitOrLossNetOfTax
+  concept: total_items_that_have_been_or_may_be_reclassified_subsequ_etc
+  matched:
+  - start: '2023-01-01'
+    end: '2024-01-01'
+    value: -1765000000.0
+    stored_under: essi:TotalItemsThatHaveBeenOrMayBeReclassifiedSubsequentlyToTheIncomeStatementContinuingOperations
+  - start: '2022-01-01'
+    end: '2023-01-01'
+    value: 5495000000.0
+    stored_under: essi:TotalItemsThatHaveBeenOrMayBeReclassifiedSubsequentlyToTheIncomeStatementContinuingOperations
+- company: Essity
+  report: essity_2023-12-31.zip
+  tag: essi:ProfitLossFromContinuingOperationsAttributableToOwnersOfParent
+  concept: income_from_continuing_operations_attributable_to_owners__etc
+  matched:
+  - start: '2023-01-01'
+    end: '2024-01-01'
+    value: 9440000000.0
+    stored_under: ifrs-full:IncomeFromContinuingOperationsAttributableToOwnersOfParent
+  - start: '2022-01-01'
+    end: '2023-01-01'
+    value: 5110000000.0
+    stored_under: ifrs-full:IncomeFromContinuingOperationsAttributableToOwnersOfParent
+- company: Essity
+  report: essity_2023-12-31.zip
+  tag: essi:ProfitLossFromDiscontinuedOperationsAttributableToOwnersOfParent
+  concept: income_from_discontinued_operations_attributable_to_owner_etc
+  matched:
+  - start: '2022-01-01'
+    end: '2023-01-01'
+    value: 457000000.0
+    stored_under: ifrs-full:IncomeFromDiscontinuedOperationsAttributableToOwnersOfParent
+- company: Essity
+  report: essity_2025-12-31.zip
+  tag: essi:ChangeInProvisionsRelatingToRestructuringProgramsEtc
+  concept: change_in_liabilities_relating_to_restructuring_programs_etc
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 271000000.0
+    stored_under: essi:ChangeInLiabilitiesRelatingToRestructuringProgramsEtc
+  - start: '2023-01-01'
+    end: '2024-01-01'
+    value: 203000000.0
+    stored_under: essi:ChangeInLiabilitiesRelatingToRestructuringProgramsEtc
+- company: Pernod Ricard
+  report: pernod_ricard_2022-06-30.zip
+  tag: pernod:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapitalInterestAndIncomeTaxPaidReceived
+  concept: cash_flows_from_used_in_operations_before_changes_in_work_etc
+  matched:
+  - start: '2021-07-01'
+    end: '2022-07-01'
+    value: 3392000000.0
+    stored_under: ifrs-full:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapital
+- company: Pernod Ricard
+  report: pernod_ricard_2022-06-30.zip
+  tag: pernod:GrossProfitAfterLogisticCostsAndAdvertisingExpenses
+  concept: contribution_apres_frais_publi_promotionnels_x
+  matched:
+  - start: '2021-07-01'
+    end: '2022-07-01'
+    value: 4775000000.0
+    stored_under: pernod:ContributionApresFraisPubliPromotionnels
+- company: Pernod Ricard
+  report: pernod_ricard_2022-06-30.zip
+  tag: pernod:ProfitLossOfCurrentOperatingActivities
+  concept: resultat_operationnel_courant_x
+  matched:
+  - start: '2021-07-01'
+    end: '2022-07-01'
+    value: 3024000000.0
+    stored_under: pernod:ResultatOperationnelCourant
+- company: Pernod Ricard
+  report: pernod_ricard_2022-06-30.zip
+  tag: pernod:PurchaseOfPropertyPlantAndEquipmentAndIntangibleAssetsOtherThanGoodwill
+  concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+  matched:
+  - start: '2021-07-01'
+    end: '2022-07-01'
+    value: 506000000.0
+    stored_under: pernod:AcquisitionDimmobilisationsCorporellesEtIncorporellesAutresQueLeGoodwill
+- company: Pernod Ricard
+  report: pernod_ricard_2022-06-30.zip
+  tag: pernod:PurchasesOfFinancialAssetsAndActivities
+  concept: achats_dactifs_financiers_et_activites_x
+  matched:
+  - start: '2021-07-01'
+    end: '2022-07-01'
+    value: 735000000.0
+    stored_under: pernod:AchatsDactifsFinanciersEtActivites

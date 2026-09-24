@@ -176,6 +176,22 @@ class TestEbitdaBridge:
         with pytest.raises(m33.FigureError):
             run(m33, report(tmp_path, cash + [self.hdr] + self.bridge, self.facts), self.sp())
 
+    def test_a_dash_is_nil_and_keeps_its_column(self, m33, tmp_path):
+        """Essity FY2025, as printed: the IAC acquisition-related row reads "–" for 2025 and 70 for 2024. Dropping the
+        dash shifted 70 into 2025 and refused a bridge that adds up: 18,531 + 972 + 4,994 + 1,111 + 45 + 35 = 25,688."""
+        hdr = ["MSEK", "2025", "2024", "2023"]
+        bridge = [["Rörelseresultat", "18 531", "18 295", "15 148"], ["Avskrivningar på förvärvsrelaterade", "972", "1 110", "1 109"],
+                  ["Avskrivningar", "4 994", "5 028", "5 000"], ["Avskrivningar nyttjanderätt", "1 111", "1 089", "1 061"],
+                  ["Nedskrivningar", "45", "56", "65"], ["IAC netto", "35", "152", "413"], ["IAC förvärv", "–", "70", "350"],
+                  ["EBITDA", "25 688", "25 800", "23 146"]]
+        cash = [hdr, ["Av- och nedskrivningar av anläggningstillgångar", "7 157", "7 505", "7 998"]]
+        facts = [("ifrs-full:Revenue", f"{y}-01-01", f"{y}-12-31", t, 6) for y, t in ((2025, "138 494"), (2024, "145 546"), (2023, "147 147"))]
+        got = run(m33, report(tmp_path, cash + [hdr] + bridge, facts), self.sp())
+        assert [(r["year"], r["value"]) for r in got] == [(2025, 7_157e6), (2024, 7_505e6), (2023, 7_998e6)]
+        bridge[-1][1] = "25 758"             # the old, shifted arithmetic must NOT pass either
+        with pytest.raises(m33.FigureError, match="bridge"):
+            run(m33, report(tmp_path, cash + [hdr] + bridge, facts, name="rep2.zip"), self.sp())
+
 
 class TestSpecFile:
     specs = None

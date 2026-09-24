@@ -1,0 +1,17 @@
+_instructions: Tags found but judged too small (< 1% of this filing's own revenue/assets
+  scale) to be worth classifying - deliberately left UNKNOWN, per this project's own
+  rule for an explicit 'not available' state. NOT applied anywhere. Spot-check a few
+  if you want to sanity-check the screen itself; nothing here needs action.
+left_unknown:
+- xbrl_tag: ifrs-full:ReductionOfIssuedCapital
+  suggested_key: reduction_of_issued_capital
+  display_label: Reduction of issued capital
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - essity_2025-12-31
+  materiality_ratio: 0.00021
+  materiality_denominator: revenue
+  materiality_note: 0.02% of this filing's largest revenue figure - below the 1% screen,
+    left UNKNOWN

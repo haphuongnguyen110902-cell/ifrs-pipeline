@@ -287,6 +287,12 @@ if __name__ == "__main__":
         sys.exit(1)
     engine = create_engine(db_url)
 
+    financial = tsm.financial_company_names(engine)
+    if args.company in financial:
+        print(f"Not built: {args.company} is treated as a financial company ({financial[args.company]}) - its "
+              f"borrowings and net debt are client money, so a corporate projection would be meaningless.")
+        sys.exit(0)
+
     print(f"Fetching base-year inputs for {args.company}...")
     base = tsm.fetch_base_year(engine, args.company)
     if not base or "error" in base:

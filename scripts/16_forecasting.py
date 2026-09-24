@@ -183,8 +183,15 @@ def ensure_forecast_table(engine):
 
 
 def save_to_db(engine, forecasts: pd.DataFrame, horizon: int) -> int:
+    """Replaces, in one transaction, every stored forecast of each (company, ratio) this run computed. Upserting
+    alone kept the rows of an older base year - after the FY2025 reports were loaded, 119 rows still forecast 2025
+    from 2024 (Kering from 2023) next to the 2025 actuals - and never updated base_year_start/end or n_years, so 87
+    rows said they were forecast from 2024 when their values came from 2025."""
     rows_written = 0
     with engine.begin() as conn:
+        for cid, rn in forecasts[["company_id", "ratio_name"]].drop_duplicates().itertuples(index=False):
+            conn.execute(text("DELETE FROM forecast WHERE company_id = :cid AND ratio_name = :rn"),
+                         {"cid": int(cid), "rn": rn})
         for _, r in forecasts.iterrows():
             if pd.isna(r.get("n_years")) or r["n_years"] < MIN_YEARS:
                 continue

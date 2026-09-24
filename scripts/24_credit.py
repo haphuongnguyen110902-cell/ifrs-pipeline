@@ -168,8 +168,8 @@ def compute_credit_metrics(company: str, engine) -> pd.DataFrame:
     """DB-backed wrapper: fetch facts for `company`, compute ratios, then
     build_credit_profile() does the actual (unit-tested) transformation."""
     facts = r11.fetch_facts(engine, company)
-    wide = r11.pivot_to_wide(facts)
-    ratios = r11.compute_ratios(wide)
+    # net debt (a balance) over EBITDA (a flow): both as originally reported - see r11.AS_REPORTED_COLUMNS
+    ratios = r11.compute_ratios(r11.pivot_to_wide(facts), r11.pivot_to_wide(facts, prefer_own_filing=True))
     return build_credit_profile(ratios, company)
 
 

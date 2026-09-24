@@ -40,3 +40,5 @@ ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS capex_basis_labe
 -- That override entry's optional dashboard_note: the company-specific evidence sentence (the dashboard's own caption
 -- wording is generic, so it stays true whichever company carries an override).
 ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS capex_basis_note TEXT;
+-- Whether the base year is one of that entry's checked_years (NULL when capex comes from a standard tag).
+ALTER TABLE three_statement_projection ADD COLUMN IF NOT EXISTS capex_basis_checked BOOLEAN;

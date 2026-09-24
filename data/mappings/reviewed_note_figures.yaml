@@ -24,6 +24,27 @@ figures:
   # cash-flow line AdjustmentsForDepreciationRightOfUseAssets (3,228 / 3,031 / 3,007), which proves the year mapping.
   # Perimeter note: the impairment of brands and goodwill booked in "Autres produits et charges opérationnels" (422M in 2024)
   # is NOT in this line, so EBITDA computed as operating profit + this line is slightly conservative.
+  - id: lvmh_da_note_fy2025
+    company: "LVMH"
+    report: lvmh_2025-12-31.zip
+    row: '^Charges d.amortissement et de dépréciation$'
+    years: [2025, 2024, 2023]
+    column: last
+    scale: 1000000
+    decimal: ","
+    currency: EUR
+    concept: adjustments_for_depreciation_and_amortisation_expense_and_etc
+    statement: cash_flow
+    label: Depreciation, Amortization and Impairment Adjustments
+    perimeter: "depreciation, amortisation and impairment of intangibles, PP&E and right-of-use assets (segment note total)"
+    checks:
+      - sane_pct_of_revenue: [3, 12]
+      - cross_row_equals_tagged_fact: {row: '^Dont : Droits d.utilisation$', tag: "LVM:AdjustmentsForDepreciationRightOfUseAssets", row_offset: 1, min_verified: 2}
+    evidence: >-
+      FY2025 report (BDIF D.26-0195), segment information: "Charges d'amortissement et de dépréciation" (7,243) 2025,
+      (6,702) 2024, (6,018) 2023 in EUR millions - 2024 and 2023 equal the FY2024 report's figures; of which right-of-use
+      assets (3,143) / (3,228) / (3,031) = the tagged cash-flow line in each year.
+
   - id: lvmh_da_note_fy2024
     company: "LVMH"
     report: lvmh_2024-12-31.zip
@@ -114,6 +135,28 @@ figures:
   # EBITDA reconciliation confirms it: operating profit 18,295 + 7,505 = EBITDA 25,800 (2024). Includes right-of-use
   # depreciation (1,089), amortisation of acquisition-related intangibles (1,110) and impairments (incl. items affecting
   # comparability).
+  - id: essity_da_note_fy2025
+    company: "Essity"
+    report: essity_2025-12-31.zip
+    row: '^Av- och nedskrivningar av anläggningstillgångar$'
+    years: header
+    column: all
+    scale: 1000000
+    decimal: ","
+    currency: SEK
+    concept: adjustments_for_depreciation_and_amortisation_expense_and_etc
+    statement: cash_flow
+    label: Depreciation, Amortization and Impairment Adjustments
+    perimeter: "depreciation, amortisation (incl. acquisition-related intangibles and right-of-use) and impairment of fixed assets"
+    checks:
+      - sane_pct_of_revenue: [3, 9]
+      - ebitda_bridge: {start: '^Rörelseresultat$', end: '^EBITDA$', tolerance: 1}
+    evidence: >-
+      FY2025 report (essity.se ESEF package), cash flow statement: 7,157 (2025), 7,505 (2024), 7,998 (2023) SEK millions -
+      2024 and 2023 equal the FY2024 report's figures. EBITDA reconciliation 2025: operating profit 18,531 + amortisation
+      of acquisition-related intangibles 972 + depreciation 4,994 + right-of-use 1,111 + impairment 45 + IAC impairment 35
+      + IAC acquisition-related "–" (nil) = EBITDA 25,688.
+
   - id: essity_da_note_fy2024
     company: "Essity"
     report: essity_2024-12-31.zip

@@ -110,12 +110,12 @@ COMPANY_MAP = {
     "adyen": ("Adyen", "EUR", "Financials / Payments", "Netherlands"),
     "asm": ("ASM International", "EUR", "Technology / Semiconductor Equipment", "Netherlands"),
     "recordati": ("Recordati", "EUR", "Healthcare / Pharmaceuticals", "Italy"),
-    # Pernod Ricard intentionally excluded: its June 30 fiscal year end
-    # is not comparable to the December filers above without extra work
-    # (see NOTES.md / roadmap "known architectural issue").
+    # June 30 year end: each fiscal year is labelled by the year its period ENDS (fiscal_year_label in
+    # 11_ratio_engine.py), the same rule as for the December filers, so its history loads like theirs.
+    "pernod_ricard": ("Pernod Ricard", "EUR", "Consumer / Beverages", "France"),
 }
 
-FILENAME_RE = re.compile(r"^([a-zA-Z]+)_(\d{4})-(\d{2})-(\d{2})\.zip$")
+FILENAME_RE = re.compile(r"^([a-zA-Z_]+)_(\d{4})-(\d{2})-(\d{2})\.zip$")
 
 
 # ---------------------------------------------------------------- discovery
@@ -196,6 +196,9 @@ if __name__ == "__main__":
     ap.add_argument("--reset-historical", action="store_true",
                      help="Delete previously-loaded historical facts for the companies "
                           "being processed before reloading (does not touch V1 data)")
+    ap.add_argument("--skip-loaded", action="store_true",
+                     help="Skip files already loaded (a filing row for this exact source file that holds facts), so "
+                          "adding one new year does not re-parse and re-upsert every older one")
     args = ap.parse_args()
 
     raw_dir = Path(args.raw_dir)
@@ -204,6 +207,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     tag_lookup = batch09.load_mapping(args.mapping)
+    # Reviewed per-company corrections (company_tag_overrides.yaml), applied exactly as 09_batch_load.py applies them.
+    # Found 2026-09-23: this loader used the global mapping only, so every historical load of LVMH (capex), Kering
+    # (D&A) and Puig (swapped payables/tax tags) filed those facts under the wrong concept until 32_remap_facts.py
+    # was run again.
+    overrides = batch09.load_overrides()
     print(f"Mapping covers {len(tag_lookup)} XBRL tags\n")
 
     matched, unmatched = discover_files(raw_dir)
@@ -221,6 +229,20 @@ if __name__ == "__main__":
         if not matched:
             print(f"No files matched --only {args.only}")
             sys.exit(1)
+
+    if args.skip_loaded:
+        load_dotenv()
+        c = psycopg2.connect(os.environ["DATABASE_URL"])
+        try:
+            with c.cursor() as cur:
+                cur.execute("SELECT f.source_file FROM filing f "
+                            "WHERE EXISTS (SELECT 1 FROM fact_value fv WHERE fv.filing_id = f.filing_id)")
+                done = {Path(r[0]).as_posix() for r in cur.fetchall()}
+        finally:
+            c.close()
+        before = len(matched)
+        matched = [m for m in matched if Path(m["path"]).as_posix() not in done]
+        print(f"--skip-loaded: {before - len(matched)} file(s) already loaded, skipped\n")
 
     matched.sort(key=lambda m: (m["company"], m["fiscal_year_end"]))
     n_companies = len({m["company"] for m in matched})
@@ -292,7 +314,8 @@ if __name__ == "__main__":
         df_clean = df[df["dimensions"].apply(
             lambda d: len(ast.literal_eval(d)) == 0 if isinstance(d, str) else len(d) == 0)]
         clean_tags = set(df_clean["concept_qname"].unique())
-        unmapped = sorted(clean_tags - set(tag_lookup))
+        co_lookup = batch09.tag_lookup_for(company, tag_lookup, overrides)
+        unmapped = sorted(clean_tags - set(co_lookup))
         if unmapped:
             print(f"  *** {len(unmapped)} unmapped concepts (these will NOT load):")
             for t in unmapped[:5]:
@@ -307,7 +330,7 @@ if __name__ == "__main__":
                 sys.exit(1)
 
         if args.dry_run:
-            mappable = sum(1 for _, r in df.iterrows() if r["concept_qname"] in tag_lookup)
+            mappable = sum(1 for _, r in df.iterrows() if r["concept_qname"] in co_lookup)
             print(f"  DRY RUN - would load ~{mappable} facts")
             summary.append((company, zip_path.name, "dry run", len(df), mappable, cur_str))
             continue
@@ -321,7 +344,7 @@ if __name__ == "__main__":
 
                 for _, row in df.iterrows():
                     tag = row["concept_qname"]
-                    if tag not in tag_lookup:
+                    if tag not in co_lookup:
                         skipped_unmapped += 1
                         continue
                     dims = row.get("dimensions", "[]")
@@ -333,9 +356,10 @@ if __name__ == "__main__":
                         skipped_dim += 1
                         continue
 
-                    name, statement, label = tag_lookup[tag]
+                    name, statement, label = co_lookup[tag]
                     concept_id = batch09.get_or_create_concept(cur, name, statement, label)
-                    batch09.get_or_create_mapping_row(cur, concept_id, tag)
+                    if (company, tag) not in overrides:      # concept_mapping is the GLOBAL tag -> concept table
+                        batch09.get_or_create_mapping_row(cur, concept_id, tag)
 
                     p_start = row.get("period_start")
                     if pd.isna(p_start):

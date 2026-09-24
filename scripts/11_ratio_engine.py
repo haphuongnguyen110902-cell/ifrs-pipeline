@@ -179,7 +179,7 @@ def filing_reporting_years(df: pd.DataFrame) -> pd.Series:
     return latest_end.map(lambda d: (d - timedelta(days=1)).year)
 
 
-def resolve_fact_conflicts(df: pd.DataFrame):
+def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
     """One row per (company_id, year, concept), chosen deterministically,
     plus a report of every key where the candidates disagreed.
 
@@ -195,6 +195,10 @@ def resolve_fact_conflicts(df: pd.DataFrame):
          accounting basis;
       4. the highest filing_id, then the value - only so the result is a pure
          function of the data, never of row order.
+
+    prefer_own_filing=True puts, before rule 3, the report closest after the fact's year: the year's own report,
+    else the next one that has the line - every figure as first reported, not as a later report re-presented it.
+    That is the basis for ratios that combine a balance sheet with a flow - see AS_REPORTED_COLUMNS.
 
     Returns (resolved, conflicts). `resolved` has the same columns as `df`.
     `conflicts` has one row per NON-chosen candidate whose value differs from
@@ -220,16 +224,18 @@ def resolve_fact_conflicts(df: pd.DataFrame):
     d["_gap"] = (span_days - 365).abs().fillna(0)
     d["_end"] = end
     d["_has_value"] = d["value"].notna()
+    after = d["_filing_year"] - d["year"]
+    d["_not_own"] = after.where(after >= 0, np.inf) if prefer_own_filing else 0   # an earlier report's stray fact: last
 
     d = d.sort_values(
-        _KEY + ["_has_value", "_gap", "_end", "_filing_year", "filing_id", "value"],
-        ascending=[True, True, True, False, True, False, False, False, True],
+        _KEY + ["_has_value", "_gap", "_end", "_not_own", "_filing_year", "filing_id", "value"],
+        ascending=[True, True, True, False, True, False, True, False, False, True],
         na_position="last")
     chosen_mask = ~d.duplicated(_KEY, keep="first")
     chosen, alts = d[chosen_mask], d[~chosen_mask]
 
     if alts.empty:
-        return chosen.drop(columns=["_filing_year", "_gap", "_end", "_has_value"]), empty
+        return chosen.drop(columns=["_filing_year", "_gap", "_end", "_has_value", "_not_own"]), empty
 
     m = alts.merge(
         chosen[_KEY + ["value", "start_date", "end_date", "filing_id"]],
@@ -247,11 +253,11 @@ def resolve_fact_conflicts(df: pd.DataFrame):
     conflicts = m.rename(columns={"value_chosen": "chosen_value", "value_alt": "alt_value",
                                   "filing_id_chosen": "chosen_filing_id",
                                   "filing_id_alt": "alt_filing_id"})[CONFLICT_COLUMNS]
-    return chosen.drop(columns=["_filing_year", "_gap", "_end", "_has_value"]), \
+    return chosen.drop(columns=["_filing_year", "_gap", "_end", "_has_value", "_not_own"]), \
         conflicts.reset_index(drop=True)
 
 
-def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False):
+def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False, prefer_own_filing: bool = False):
     """
     Convert long-format facts into a wide table:
     one row per (company, year), one column per concept.
@@ -265,7 +271,7 @@ def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False):
     return_conflicts=True also returns the conflicts report, for callers
     (main) that want to print it; every other caller is unchanged.
     """
-    resolved, conflicts = resolve_fact_conflicts(df)
+    resolved, conflicts = resolve_fact_conflicts(df, prefer_own_filing)
     wide = resolved.pivot_table(
         index=["company", "company_id", "year"],
         columns="normalized_name",
@@ -407,9 +413,53 @@ PAYABLES_CONCEPTS = (
 BROADER_PAYABLES = frozenset(PAYABLES_CONCEPTS[1:])
 
 
+DISCONTINUED_TO_OWNERS = ("income_from_discontinued_operations_attributable_to_owner_etc",
+                          "profit_loss_from_discontinued_operations_attributable_to_ord_etc")
+NET_BASIS_CONTINUING = "profit attributable to owners from continuing operations (IFRS 5)"
+NET_UNSPLIT_NOTE = ("the report gives a discontinued operation's result only in total, not the owners' share "
+                    "(IFRS 5.33(d)), so profit from continuing operations cannot be isolated")
+
+
+def continuing_profit_to_owners(wide: pd.DataFrame, net: pd.Series):
+    """(profit attributable to owners from CONTINUING operations, basis label, unsplit) - the net-margin numerator.
+
+    IFRS 5.33 takes a discontinued operation out of revenue and every line above it, and shows its result as one
+    line below; the owners' profit still includes it. Dividing that by continuing revenue mixes two perimeters:
+    Essity 2024 (Vinda sold, a SEK 8,919M gain) came out at a 14.4% net margin against 8.2% on its continuing
+    business; Kering 2025 showed a profit where its continuing operations made a loss.
+
+    The owners' share of the discontinued result is subtracted when it is tagged, or derivable as total minus the
+    non-controlling share. When only the total is tagged, the owners' share is unknown (IFRS 5.33(d) allows it in a
+    note, which ESEF does not tag line by line): not available, never assumed. No discontinued line at all means
+    none: IFRS 5.33(a) requires it on the face of the income statement, and ESEF tags every figure there.
+    `unsplit` marks the rows left blank for that reason, so the stored ratio can say why (net_margin_notes)."""
+    disc_owners = get_best(wide, *DISCONTINUED_TO_OWNERS)
+    disc_total = get_col(wide, "profit_loss_from_discontinued_operations")
+    disc_nci = get_col(wide, "profit_loss_from_discontinued_operations_attributable_to__etc")
+    disc_owners = disc_owners.combine_first(disc_total - disc_nci)
+    unknown_split = disc_owners.isna() & disc_total.notna() & disc_total.ne(0)
+    continuing = (net - disc_owners.fillna(0)).mask(unknown_split)
+    basis = [NET_BASIS_CONTINUING if pd.notna(v) and v != 0 else "" for v in disc_owners]
+    return continuing, basis, unknown_split & net.notna()
+
+
+def net_margin_notes(ratios: pd.DataFrame) -> dict:
+    """{(company_id, year, "net_margin"): why it is blank} for the rows continuing_profit_to_owners left blank -
+    stored in ratio.note, which the dashboard shows as "blank on purpose", like the financial-company gate."""
+    if "_net_unsplit" not in ratios.columns:
+        return {}
+    hit = ratios[ratios["_net_unsplit"].fillna(False).astype(bool)]
+    return {(int(cid), int(y), "net_margin"): f"Net margin {int(y)}: {NET_UNSPLIT_NOTE}"
+            for cid, y in zip(hit["company_id"], hit["year"])}
+
+
 def source_concepts_for(ratio_name: str, row) -> list | None:
     """The stored concepts a ratio was built from where that matters for reading it (ratio.source_concepts): DPO and
-    the cash conversion cycle carry the payables line they were read from; nothing else is recorded."""
+    the cash conversion cycle carry the payables line they were read from, ROIC/ROE the equity basis, net margin the
+    continuing-operations basis when a discontinued operation was taken out; nothing else is recorded."""
+    if ratio_name == "net_margin":
+        basis = row.get("_net_basis")
+        return [basis] if isinstance(basis, str) and basis else None
     if ratio_name in ("dpo", "ccc"):
         basis = row.get("_payables_basis")
         return [basis] if isinstance(basis, str) and basis else None
@@ -419,7 +469,34 @@ def source_concepts_for(ratio_name: str, row) -> list | None:
     return None
 
 
-def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
+# Ratios that divide a balance-sheet figure by a flow, or two flows from different statements, and the audit columns
+# they carry. IFRS 5.34 re-presents prior years' income statement when a business is discontinued, but IFRS 5.40 does
+# not re-present the balance sheet (and most filers leave the cash-flow statement as reported). A later report's
+# restated revenue divided by the original receivables mixes two perimeters: Essity's FY2023 report re-presents 2021
+# revenue without Vinda (101.5bn vs 121.9bn as reported) while its 2021 balance sheet still holds Vinda - DSO, DIO and
+# DPO came out 20% too high. These use every figure as originally reported in that year's own report; margins, tax
+# rate and growth keep the restated, like-for-like figures.
+AS_REPORTED_COLUMNS = ("dso", "dio", "dpo", "ccc", "roic", "roe", "cash_conversion", "net_debt_ebitda_proxy",
+                       "_payables_basis", "_equity_basis", "_net_debt", "_debt_basis", "_ebitda", "_da_total",
+                       "_da_basis")
+
+
+def compute_ratios(wide: pd.DataFrame, wide_as_reported: pd.DataFrame = None) -> pd.DataFrame:
+    """All ratios from `wide` (restated comparatives - pivot_to_wide's default). With `wide_as_reported`
+    (pivot_to_wide(..., prefer_own_filing=True)) the AS_REPORTED_COLUMNS are taken from it instead."""
+    r = _compute_ratios(wide)
+    if wide_as_reported is None:
+        return r
+    own = _compute_ratios(wide_as_reported)
+    cols = [c for c in AS_REPORTED_COLUMNS if c in own.columns]
+    key = ["company_id", "year"]
+    aligned = own.set_index(key)[cols].reindex(pd.MultiIndex.from_frame(r[key]))
+    for c in cols:
+        r[c] = aligned[c].set_axis(r.index)
+    return r
+
+
+def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     """
     Compute all ratios from a wide-format DataFrame.
     Each ratio becomes a column. NaN = inputs were missing.
@@ -481,7 +558,8 @@ def compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
 
     # --- net margin ---
     net = get_col(wide, "profit_loss_attributable_to_owners_of_parent")
-    r["net_margin"] = safe_div(net, rev, scale=100)
+    net_continuing, r["_net_basis"], r["_net_unsplit"] = continuing_profit_to_owners(wide, net)
+    r["net_margin"] = safe_div(net_continuing, rev, scale=100)
 
     # --- cash conversion ---
     cfo = get_col(wide, "cash_flows_from_used_in_operating_activities")
@@ -955,10 +1033,11 @@ if __name__ == "__main__":
 
     wide, conflicts = pivot_to_wide(df, return_conflicts=True)
     print_conflict_summary(conflicts)
-    ratios = compute_ratios(wide)
+    ratios = compute_ratios(wide, pivot_to_wide(df, prefer_own_filing=True))
 
     financial = financial_company_reasons(fetch_company_profiles(engine), load_reporting_model_overrides())
     ratios, notes, n_blanked = gate_financial_ratios(ratios, financial)
+    notes.update(net_margin_notes(ratios))
     gated_names = sorted(ratios.loc[ratios["company_id"].isin(list(financial)), "company"].unique())
     if gated_names:
         print(f"Financial-sector gating: blanked {n_blanked} value(s) that are not meaningful for "

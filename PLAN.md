@@ -1877,3 +1877,129 @@ showed 0 changes to any existing column on all 60 rows; the new column is filled
 the dashboard preview: LVMH's 3-Statement Model tab shows the generic sentence plus its note. Kering, which has an
 override but for D&A rather than capex, shows no capex caption. No console or server errors. Tests: 727 passed /
 39 skipped (no DB), 766 passed (live DB).
+
+### 2026-09-23 (Phase 1 of 5): every company on its latest annual report; IFRS 5 handled in the ratios
+
+**The plan agreed on 2026-09-23.** The app mixed fiscal years (Kering on FY2023 next to peers on FY2025), and only
+16 of the ~40 downloaded companies were loaded. The work now goes phase by phase, one PR per phase:
+(1) every company on its latest published annual report, from official sources; (2) every displayed figure
+reconciled against the company's own report; (3) IFRS-complete models: a by-nature income statement (IAS 1.99)
+for Heineken, Amplifon and Shell, plus banks and insurers with IFRS-appropriate metrics; (4) the ~35 gate40
+companies loaded; (5) tests that fail if a company falls behind or coverage drops.
+
+**What was loaded (checked with queries after the load):**
+- 12 new filings (ids 80-91), 3,504 facts, 6 of them reviewed note facts:
+  - LVMH, EssilorLuxottica, Danone and Puig: FY2025;
+  - Kering: FY2024 and FY2025;
+  - Essity: FY2023 and FY2025;
+  - Pernod Ricard: FY2022, FY2023, FY2024 and FY2026 (June year-end).
+- Every company's latest year is now FY2025, except Pernod Ricard, whose latest is FY2026 (the year to 30 June
+  2026). `fact_value` went from 19,803 to 23,307 rows, across 88 filings.
+- Sources, all official:
+  - French issuers: the AMF's BDIF, via the new `scripts/download_bdif.py`;
+  - Essity: essity.se;
+  - Puig: the CNMV's annual financial reports, via the new `scripts/download_package.py`.
+- Both downloaders take the period and the LEI from the report's own XBRL contexts, and check the archive
+  (byte count and CRC) before keeping it.
+- `reconcile_reports.py` on all 12 packages: 36 statements and 1,434 printed lines, all OK (0 different, 0 missing).
+
+**Real bugs found by running it:**
+1. **BDIF:** the hash in a BDIF download path is not the file's SHA-256, so all 5 first downloads were rejected.
+   Downloads are now checked by size and CRC, and the SHA-256 is printed for provenance.
+2. **Pernod Ricard's period:** its FY2021 and FY2022 packages were labelled 31 December because of one unused
+   calendar-year context. The period is now the latest annual end that carries at least 10% as many facts as the
+   busiest end.
+3. **Overrides ignored:** `load_historical.py` never applied `company_tag_overrides.yaml`, which put 11 facts under
+   the wrong concept (LVMH capex x3, Kering D&A x4, Puig x4). The loader now applies the overrides (a test checks
+   both loaders), and `32_remap_facts.py --all --apply` re-pointed the 11 facts. Only `concept_id` changed.
+4. **Renamed tags:** EssilorLuxottica and Pernod Ricard renamed their capex extension tags, so the new year's capex
+   would have been lost. The new `scripts/34_link_renamed_tags.py` links a new tag to the old concept only when
+   every shared period has the exact same value, above a floor of 0.1% of scale. 17 tags were linked; the evidence
+   is in `data/mappings/LINKED_renames.yaml`.
+5. **Concept keys:** `13_batch_prep.py` created `_x` keys and allowed the same key in two statements. New keys now
+   come from `scripts/concept_keys.py`. 41 new concepts were added to `ifrs_concepts_v0.yaml`, one of them reviewed
+   by hand (`REVIEW_extensions_2026-09-23.yaml`).
+6. **Note figures:** Essity's EBITDA bridge prints a dash for nil. The dash shifted 70 into the 2025 column, and the
+   reviewed-note check refused it. A dash now counts as 0 and keeps its column (`column_values`).
+7. **Financial companies:** running the 3-statement model for all companies built one for Adyen, a bank. The
+   3-statement model and DCF now refuse a financial company (same list as the ratio gate), and Adyen's 5 rows
+   were deleted (none existed before).
+8. **LVMH capex:** LVMH's company-defined line is within 1% of its gross purchases of fixed assets in 2022-2025,
+   but 13.3% below them in 2021 (the Belmond Charleston acquisition). The override now lists its `checked_years`.
+   The dashboard says a base year has not been checked when it is not in that list.
+9. **IFRS 5 perimeter mix (the main finding).** Essity's FY2023 report re-presents 2021 and 2022 without Vinda,
+   which was discontinued:
+
+   | Essity revenue, SEK M | Restated in FY2023 report | As first reported |
+   |---|---|---|
+   | 2021 | 101,466 | 121,867 |
+   | 2022 | 131,320 | 156,173 |
+
+   The balance sheets keep Vinda (IFRS 5.40), including the third balance sheet inside the FY2023 report. The
+   "latest report wins" rule therefore divided restated revenue by unrestated receivables. Essity 2022 came out
+   as follows (the fix is described below):
+
+   | Essity 2022 | Mixed (latest report) | Fixed (each year's own report) |
+   |---|---|---|
+   | DSO | 72.2 days | 60.7 days |
+   | DIO | 106.2 days | 88.6 days |
+   | Net debt / EBITDA | 3.84x | 3.35x |
+
+   Kering's FY2025 report does the same for 2024: revenue 17,194 becomes 16,874 after a discontinued operation.
+   - **Fix:** ratios that combine a balance sheet with a flow (`AS_REPORTED_COLUMNS`: days, ROIC, ROE, cash
+     conversion, net debt/EBITDA) come from each year's own report. If a line is missing there, they use the next
+     report after it, not the latest. Margins, the tax rate and growth keep the restated, like-for-like figures.
+   - **Where it also applies:** the rule reaches restatements that are not IFRS 5. EssilorLuxottica 2021 is an
+     IFRS 3 measurement-period restatement, and Kering 2021 changed only by rounding. There both bases are
+     internally consistent, and the differences are under 1%.
+   - **Dropped first attempt:** preferring a report that also carries that year's balance sheet changed nothing,
+     because the FY2023 report carries one for 2021. It was reverted.
+10. **Net margin:** the owners' profit, which includes discontinued operations, was divided by continuing revenue.
+    Essity 2024 (Vinda sold, a SEK 8,919M gain) showed 14.4% against 8.2% on the continuing business. Kering 2025
+    showed +0.5% while its continuing operations made a loss (-0.2%).
+    - **Fix:** the numerator is now the owners' profit from continuing operations (IFRS 5.33). It was checked
+      against every company-year where the filer tags that line itself: 13 of 13 equal.
+    - **Now blank:** Amplifon 2021 and Schneider 2019 tag only the total discontinued result, and both have
+      non-controlling interests, so the owners' share is unknown and net margin is left blank. The reason is
+      stored in `ratio.note`, so the dashboard marks the cell "blank on purpose".
+    - **Dashboard:** it names the years that are on the continuing basis, and states the restated vs
+      as-first-reported rule under the ratio table.
+11. **Stale forecasts:** the forecast upsert kept 119 rows that forecast 2025 from 2024 (Kering: from 2023), next to
+    the 2025 actuals. It also never updated `base_year_start`/`base_year_end`/`n_years`, so 87 rows said they were
+    forecast from 2024 when their values came from 2025. Each (company, ratio) is now replaced in one transaction.
+    After the rerun there are 538 rows, 0 of them forecasting a year that already has actuals.
+12. **3-statement tab:** it listed every stored base year. It now shows only the latest.
+
+**Live DB:** snapshots were taken before and after each write and diffed row by row.
+- The as-reported basis changed:
+  - 42 ratio cells (Essity 2021/2022, Kering 2021/2024, EssilorLuxottica 2021, ASM 2024, Adyen 2022);
+  - 9 credit rows;
+  - 6 forensics flags;
+  - forecasts and backtests downstream.
+- The net-margin fix changed 11 net-margin cells, and nothing else.
+- Valuation, DCF and 3-statement rows were unchanged by either rule.
+- Every golden-baseline difference was reviewed before `tests/baseline/` was regenerated. The golden files now also
+  cover the new years.
+
+**Tests:** 766 passed / 39 skipped without a database, and 800 passed against the live DB, with the forensics
+persistence class deselected because it writes to the DB. New or updated test files:
+- `test_download_bdif.py`
+- `test_link_renamed_tags.py`
+- `test_concept_keys.py`
+- `test_net_basis.py`
+- `TestAsReportedBasis` in `test_ratio_engine.py`
+- the forecast replacement test in `test_forecasting.py`
+- the loader-override and capex `checked_years` tests in `test_company_overrides.py`
+
+Every new rule was mutation-checked: removing it makes its test fail.
+
+**Deliberately not done:**
+- **Pernod Ricard FY2021 was not loaded.** Its package's `taxonomyPackage.xml` uses `tp:publisherUrl` where the spec
+  has `publisherURL`, so Arelle rejects the package and reads 0 facts. FY2021 is in the DB anyway, as the FY2022
+  report's comparative.
+- **Recordati's cash-flow contexts (Phase 2).** Every Recordati report tags its cash-flow lines with one-day contexts
+  (106-120 facts per filing). For FY2023-FY2025 there is no full-year context for those lines, so the engine uses
+  the one-day fact. This session did not check those figures against the printed statement.
+- **Downloaded packages were not deleted.** The 12 new packages and the held Pernod FY2021 package (about 372 MB)
+  are reconciled, but I did not delete them: I do not permanently delete files myself. The older packages stay
+  until Phase 2 has reconciled them.

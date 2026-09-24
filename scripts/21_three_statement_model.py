@@ -124,6 +124,17 @@ def capex_override(company: str, basis: str):
     return None
 
 
+def financial_company_names(engine) -> dict:
+    """{name: reason} of companies treated as financial - the classification 11_ratio_engine.py, 19_valuation.py and
+    24_credit.py already share. A projection of borrowings, working-capital days and net debt describes client money
+    for a lender, insurer or payment processor, not the company's own financing (Adyen's first projection, built
+    2026-09-23 when this model was run for every company, showed net debt of -16.8bn: merchants' funds)."""
+    profiles = r11.fetch_company_profiles(engine)
+    reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
+    return {row["name"]: reasons[int(row["company_id"])] for _, row in profiles.iterrows()
+            if int(row["company_id"]) in reasons}
+
+
 def select_base_year_row(ratios: pd.DataFrame):
     """Pick the latest year that actually HAS data, not just the
     numerically latest year - found via a real case: Pernod Ricard's
@@ -182,6 +193,9 @@ def fetch_base_year(engine, company: str) -> dict:
     capex_value = capex_rows["capex"].iloc[0] if not capex_rows.empty and pd.notna(capex_rows["capex"].iloc[0]) else None
     capex_basis = capex_rows["basis"].iloc[0] if capex_value is not None else ""
     capex_entry = capex_override(company, capex_basis) or {}
+    # a company-defined line only stands in for IFRS capex in the years it was checked (LVMH 2021: its net line was
+    # 13.3% below the gross IAS 7.16(a) purchases) - None when capex comes from a standard tag
+    capex_basis_checked = latest_year in (capex_entry.get("checked_years") or []) if capex_entry else None
 
     dividends = r11.get_best(wide, *DIVIDEND_CONCEPTS)
     dividends_latest = dividends.loc[wide["year"] == latest_year]
@@ -239,6 +253,7 @@ def fetch_base_year(engine, company: str) -> dict:
         "capex_basis": capex_basis,
         "capex_basis_label": capex_entry.get("printed_label"),
         "capex_basis_note": capex_entry.get("dashboard_note"),
+        "capex_basis_checked": capex_basis_checked,
         "payout_ratio": payout_ratio, "payout_ratio_is_fallback": payout_ratio_is_fallback,
         "receivables": latest["_revenue"] * latest["dso"] / 365,
         "inventory": cogs_latest * latest["dio"] / 365,
@@ -364,10 +379,10 @@ def save_to_db(engine, company: str, base: dict, growth: float, interest_rate: f
                 INSERT INTO three_statement_projection
                     (company, company_id, base_year, forecast_year, growth_assumption, interest_rate_assumption,
                      revenue, ebit, interest_expense, net_income, dividends, payout_ratio_assumption,
-                     fcf, net_debt_end, capex_basis, capex_basis_label, capex_basis_note, computed_at)
+                     fcf, net_debt_end, capex_basis, capex_basis_label, capex_basis_note, capex_basis_checked, computed_at)
                 VALUES
                     (:company, :company_id, :base_year, :year, :growth, :ir, :rev, :ebit, :ie, :ni, :div, :payout,
-                     :fcf, :nd, :cbasis, :cbasis_label, :cbasis_note, now())
+                     :fcf, :nd, :cbasis, :cbasis_label, :cbasis_note, :cbasis_checked, now())
                 ON CONFLICT (company_id, base_year, forecast_year)
                 DO UPDATE SET company = EXCLUDED.company, growth_assumption = EXCLUDED.growth_assumption,
                               interest_rate_assumption = EXCLUDED.interest_rate_assumption,
@@ -378,7 +393,8 @@ def save_to_db(engine, company: str, base: dict, growth: float, interest_rate: f
                               fcf = EXCLUDED.fcf,
                               net_debt_end = EXCLUDED.net_debt_end, capex_basis = EXCLUDED.capex_basis,
                               capex_basis_label = EXCLUDED.capex_basis_label,
-                              capex_basis_note = EXCLUDED.capex_basis_note, computed_at = now()
+                              capex_basis_note = EXCLUDED.capex_basis_note,
+                              capex_basis_checked = EXCLUDED.capex_basis_checked, computed_at = now()
             """), {
                 "company": company, "company_id": company_id, "base_year": base["base_year"], "year": int(r["year"]),
                 "growth": float(growth), "ir": float(interest_rate), "rev": float(r["revenue"]),
@@ -387,7 +403,7 @@ def save_to_db(engine, company: str, base: dict, growth: float, interest_rate: f
                 "payout": float(base.get("payout_ratio", 0.0)),
                 "fcf": float(r["fcf"]), "nd": float(r["net_debt_end"]),
                 "cbasis": base.get("capex_basis") or None, "cbasis_label": base.get("capex_basis_label"),
-                "cbasis_note": base.get("capex_basis_note"),
+                "cbasis_note": base.get("capex_basis_note"), "cbasis_checked": base.get("capex_basis_checked"),
             })
             rows_written += 1
     return rows_written
@@ -425,6 +441,12 @@ if __name__ == "__main__":
         sys.exit(1)
     engine = create_engine(db_url)
 
+    financial = financial_company_names(engine)
+    if args.company in financial:
+        print(f"Not built: {args.company} is treated as a financial company ({financial[args.company]}) - its "
+              f"borrowings and net debt are client money, so a corporate projection would be meaningless.")
+        sys.exit(0)
+
     print(f"Fetching base-year inputs for {args.company}...")
     base = fetch_base_year(engine, args.company)
     if not base or "error" in base:
@@ -440,6 +462,9 @@ if __name__ == "__main__":
           f"Interest rate: {args.interest_rate:.1%} | Payout ratio: {base['payout_ratio']:.1%}")
     if not base["capex_is_fallback"]:
         print(f"Capex {base['capex']:,.0f} read from: {base['capex_basis']}")
+        if base.get("capex_basis_checked") is False:
+            print(f"*** Capex is the company's own line \"{base['capex_basis_label']}\", not verified against IFRS gross "
+                  f"purchases for {base['base_year']} (see checked_years in company_tag_overrides.yaml).")
     if base["capex_is_fallback"]:
         print("*** No capex figure found in filings - using generic 3% of revenue fallback. "
               "Treat FCF/DCF outputs as illustrative only for this company.")

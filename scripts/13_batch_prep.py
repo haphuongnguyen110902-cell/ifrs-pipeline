@@ -14,6 +14,7 @@ Usage:
     python scripts/13_batch_prep.py --only danone.zip essity.zip  # specific zips
 """
 import argparse
+import importlib.util
 import re
 import sys
 import zipfile
@@ -21,6 +22,10 @@ from pathlib import Path
 
 import yaml
 from arelle import Cntlr, PackageManager, XbrlConst
+
+_ck_spec = importlib.util.spec_from_file_location("concept_keys", Path(__file__).parent / "concept_keys.py")
+_ck = importlib.util.module_from_spec(_ck_spec)
+_ck_spec.loader.exec_module(_ck)   # one naming rule for new concepts, shared - see concept_keys.py
 
 # reuse classification logic from 12_prep_company.py
 ROLE_NUMBER_TO_STATEMENT = {
@@ -439,9 +444,7 @@ if __name__ == "__main__":
         added = 0
         for qn, entry in all_auto.items():
             stmt = entry["statement"]
-            key = entry["suggested_key"]
-            while key in existing.get(stmt, {}):
-                key += "_x"
+            key = _ck.unique_concept_key(existing, entry["suggested_key"], qn)
             existing.setdefault(stmt, {})[key] = {
                 "display_label": entry["display_label"],
                 "xbrl_tags": [qn],

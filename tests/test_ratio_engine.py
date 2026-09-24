@@ -480,3 +480,54 @@ class TestDeterministicFactResolution:
         assert "SIGN FLIP" in out and "TestCo 2021 da" in out
         r11.print_conflict_summary(conflicts.iloc[0:0])      # empty report prints nothing
         assert capsys.readouterr().out == ""
+
+
+class TestAsReportedBasis:
+    """Essity 2021: the FY2023 report re-presents 2021 revenue without Vinda, discontinued (IFRS 5.34) - 101,466M
+    instead of the 121,867M first reported - but IFRS 5.40 leaves the 2021 balance sheet as it was, Vinda included.
+    Restated revenue over the original receivables put 2021 DSO/DIO/DPO 20% too high. A ratio that combines a
+    balance with a flow uses every figure as first reported; margins keep the restated, like-for-like figures."""
+
+    def _facts(self):
+        return _frame(
+            _anchors(1, date(2022, 1, 1)), _anchors(2, date(2024, 1, 1)),
+            _fact("revenue", 121867.0, 1), _fact("revenue", 101466.0, 2),          # FY2021 report / FY2023 re-presented
+            _fact("revenue", 118000.0, 1, year=2020),                                # 2020 only as a comparative
+        )
+
+    def test_default_takes_the_latest_restated_comparative(self, r11):
+        assert _value(r11, self._facts(), "revenue") == 101466.0
+
+    def test_prefer_own_filing_takes_the_figure_as_first_reported(self, r11):
+        wide = r11.pivot_to_wide(self._facts(), prefer_own_filing=True)
+        assert wide.loc[wide["year"] == 2021, "revenue"].iloc[0] == 121867.0
+        # no report of its own for 2020: the comparative that exists is still used, never a blank
+        assert wide.loc[wide["year"] == 2020, "revenue"].iloc[0] == 118000.0
+
+    def test_a_line_missing_from_the_own_report_comes_from_the_next_report_not_the_latest(self, r11):
+        """Essity's combined D&A for 2022: 10,598M in the FY2022 report, re-presented without Vinda as 9,012M in the
+        FY2023 and FY2024 reports. Whichever report is used after the year's own, the nearest is the one closest to
+        the figure as first reported."""
+        df = _frame(_anchors(1, date(2022, 1, 1)), _anchors(2, date(2023, 1, 1)), _anchors(3, date(2024, 1, 1)),
+                    _fact("revenue", 121867.0, 1),                                   # own report lacks "da"
+                    _fact("da", 7391.0, 2), _fact("da", 6122.0, 3))
+        own = r11.pivot_to_wide(df, prefer_own_filing=True)
+        assert own.loc[own["year"] == 2021, "da"].iloc[0] == 7391.0
+        assert _value(r11, df, "da") == 6122.0                                      # default: the latest
+
+    def test_combination_ratios_are_as_reported_and_margins_restated(self, r11):
+        restated = make_wide_row(revenue=800.0, cost_of_sales=-400.0, gross_profit=400.0)
+        as_reported = make_wide_row()                                               # revenue 1000, gross profit 400
+        r = r11.compute_ratios(restated, as_reported)
+        assert r["dso"].iloc[0] == pytest.approx(150.0 / 1000.0 * 365, abs=0.01)   # not 150/800
+        assert r["dio"].iloc[0] == pytest.approx(90.0 / 600.0 * 365, abs=0.01)
+        assert r["gross_margin"].iloc[0] == pytest.approx(50.0)                    # restated 400/800, in %
+        base = r11.compute_ratios(restated)
+        assert base["dso"].iloc[0] == pytest.approx(150.0 / 800.0 * 365, abs=0.01)
+        for col in r11.AS_REPORTED_COLUMNS:
+            assert col in r.columns, col
+
+    def test_same_figures_either_way_change_nothing(self, r11):
+        row = make_wide_row()
+        pd.testing.assert_frame_equal(r11.compute_ratios(row, row.copy()), r11.compute_ratios(row))
+

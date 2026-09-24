@@ -1,0 +1,15 @@
+_instructions: 'Fill in ''statement'' for each entry: income_statement / balance_sheet
+  / cash_flow / other. When done: python scripts/12_apply_review.py'
+needs_review:
+- xbrl_tag: essi:OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTaxContinuingOperations
+  suggested_key: other_comprehensive_income_that_will_not_be_reclassified_to__etc
+  display_label: Totalt övrigt totalresultat som inte ska omklassiciferas till resultatet,
+    efter avdrag för skatt, kvarvarande verksamhet
+  statement: other
+  balance: credit
+  reason: role keyword 'totalresultat'
+  used_by:
+  - essity_2023-12-31
+  review_note: Total OCI that will not be reclassified, continuing operations - an
+    OCI subtotal, i.e. the statement of comprehensive income (IAS 1.82A), which this
+    mapping files under 'other'.

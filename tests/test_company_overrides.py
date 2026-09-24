@@ -72,6 +72,17 @@ class TestOverrideFile:
     def test_no_file_means_no_overrides(self, m09, tmp_path):
         assert m09.load_overrides(tmp_path / "missing.yaml") == {}
 
+    def test_both_loaders_apply_the_overrides(self):
+        """Found 2026-09-23: load_historical.py read the global mapping only, so loading LVMH FY2025, Kering FY2024-25
+        and Puig FY2025 filed 11 facts under the wrong concept (LVMH capex, Kering D&A, Puig's swapped payables) -
+        each new historical load silently undid the overrides until 32_remap_facts.py was run again."""
+        scripts = Path(__file__).parent.parent / "scripts"
+        for name in ("09_batch_load.py", "load_historical.py"):
+            src = (scripts / name).read_text(encoding="utf-8")
+            assert "tag_lookup_for(company, tag_lookup, overrides)" in src, name
+            assert "name, statement, label = tag_lookup[tag]" not in src, name
+            assert "if (company, tag) not in overrides:" in src, name
+
 
 class TestEngineReadsTheCorrectedPayables:
     def test_puig_dpo_is_about_64_days_not_14(self, r11):
@@ -276,7 +287,35 @@ class TestCapexBasisLabelOnDashboard:
         base = m21.fetch_base_year(None, "LVMH")
         assert base["capex_basis"] == self.CANON
         assert base["capex_basis_label"] == "Investissements d'exploitation"
-        assert "5,531M vs 5,519M" in base["capex_basis_note"]
+        assert "4,567M vs 4,595M" in base["capex_basis_note"]
+        assert base["capex_basis_checked"] is True                 # 2024 is a checked year
+
+    def test_a_base_year_that_failed_the_check_is_flagged(self, load_script, monkeypatch):
+        """LVMH 2021: the net line (2,664) is 13.3% below the gross IAS 7.16(a) purchases (3,071) - the Belmond
+        Charleston sale is netted in. That year must not be presented as reviewed."""
+        m21 = load_script("21_three_statement_model.py")
+        row = {"company": "LVMH", "company_id": 1, "year": 2021, "revenue": 1_000.0, "cost_of_sales": -600.0,
+               "gross_profit": 400.0, "profit_loss_from_operating_activities": 100.0, "profit_loss_before_tax": 90.0,
+               "income_tax_expense_continuing_operations": -20.0, "profit_loss_attributable_to_owners_of_parent": 60.0,
+               "current_trade_receivables": 150.0, "inventories": 90.0,
+               "trade_and_other_current_payables_to_trade_suppliers": 60.0, "longterm_borrowings": 200.0,
+               "shortterm_borrowings": 30.0, "cash_and_cash_equivalents": 50.0,
+               "equity_attributable_to_owners_of_parent": 500.0,
+               "adjustments_for_depreciation_and_amortisation_expense_and_etc": 40.0, self.CANON: 2_664.0}
+        monkeypatch.setattr(m21.r11, "fetch_facts", lambda *a, **k: pd.DataFrame({"x": [1]}))
+        monkeypatch.setattr(m21.r11, "pivot_to_wide", lambda df, *a, **k: pd.DataFrame([row]))
+        assert m21.fetch_base_year(None, "LVMH")["capex_basis_checked"] is False
+
+    def test_every_capex_override_declares_checked_years_backed_by_its_evidence(self, load_script):
+        import yaml
+        m21 = load_script("21_three_statement_model.py")
+        capex = set(m21.CAPEX_COMBINED) | set(m21.CAPEX_COMPONENTS)
+        entries = [e for e in yaml.safe_load(OVERRIDES.read_text(encoding="utf-8"))["overrides"] if e["concept"] in capex]
+        assert entries
+        for e in entries:
+            assert e.get("checked_years"), e["company"]
+            for y in e["checked_years"]:
+                assert str(y) in e["evidence"], (e["company"], y)
 
 
 class TestCapexCaption:
@@ -295,8 +334,13 @@ class TestCapexCaption:
         return ns["capex_basis_caption"]
 
     @staticmethod
-    def frame(label, note):
-        return pd.DataFrame({"capex_basis_label": [label], "capex_basis_note": [note]})
+    def frame(label, note, checked=True):
+        return pd.DataFrame({"capex_basis_label": [label], "capex_basis_note": [note], "capex_basis_checked": [checked]})
+
+    def test_an_unchecked_base_year_is_never_called_reviewed(self, caption):
+        import re
+        text_ = caption(self.frame("Any Company Line", None, checked=False))
+        assert "not yet been checked" in text_ and "reviewed check" not in text_ and not re.search(r"\d", text_)
 
     def test_the_generic_wording_carries_no_figure_whatever_the_company(self, caption):
         """Also re-applies the plain-language rule: tests/test_webapp_plain_language.py only scans literals written

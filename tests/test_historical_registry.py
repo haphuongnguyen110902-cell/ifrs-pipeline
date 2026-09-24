@@ -40,11 +40,19 @@ def yaml_companies():
 
 
 class TestRegistriesAgree:
-    def test_downloader_and_loader_know_the_same_companies_except_the_documented_one(self, dl, ld):
-        """Pernod Ricard is downloadable but deliberately not loadable (June year end, see the
-        loader's comment); anything else in only one registry is a bug."""
-        assert set(dl.COMPANIES) - set(ld.COMPANY_MAP) == {"pernod_ricard"}
-        assert set(ld.COMPANY_MAP) - set(dl.COMPANIES) == set()
+    def test_downloader_and_loader_know_the_same_companies(self, dl, ld):
+        """Pernod Ricard used to be downloadable but not loadable (June year end). fiscal_year_label labels every
+        fiscal year by the year it ENDS, so its history now loads like everyone's (it showed 2 years while 5 more
+        reports were published)."""
+        assert set(dl.COMPANIES) == set(ld.COMPANY_MAP)
+
+    def test_a_key_with_an_underscore_still_parses(self, ld, tmp_path):
+        for n in ("pernod_ricard_2024-06-30.zip", "loreal_2025-12-31.zip"):
+            (tmp_path / n).write_bytes(b"")
+        matched, unmatched = ld.discover_files(tmp_path)
+        assert not unmatched
+        assert {(m["company"], m["fiscal_year_end"]) for m in matched} == {("Pernod Ricard", "2024-06-30"),
+                                                                          ("L'Oreal", "2025-12-31")}
 
     def test_the_names_match_so_rows_land_on_the_same_company(self, dl, ld):
         for key, (_, name) in dl.COMPANIES.items():
@@ -62,14 +70,6 @@ class TestRegistriesAgree:
         """The loader's regex is letters only - a slug like asm_international would never match."""
         for key in ld.COMPANY_MAP:
             assert ld.FILENAME_RE.match(f"{key}_2024-12-31.zip"), key
-
-    def test_KNOWN_LIMIT_pernod_could_not_be_loaded_even_if_enabled(self, dl, ld):
-        """Pernod is excluded from the loader on purpose (June year end). Separately, its
-        downloader slug has an underscore, which the loader's filename pattern rejects - so
-        enabling it later needs a letters-only slug (e.g. 'pernod') in BOTH registries. This
-        test records that so the second obstacle is not discovered as a silent skip."""
-        assert "pernod_ricard" in dl.COMPANIES and "pernod_ricard" not in ld.COMPANY_MAP
-        assert not ld.FILENAME_RE.match("pernod_ricard_2025-06-30.zip")
 
     def test_leis_are_well_formed_and_unique(self, dl):
         leis = [lei for lei, _ in dl.COMPANIES.values()]

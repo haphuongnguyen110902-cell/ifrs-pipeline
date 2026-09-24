@@ -31,6 +31,7 @@ A company with many extensions (like L'Oreal or LVMH) needs ~15 minutes
 of review for just the extension tags, not the full 200+ concepts.
 """
 import argparse
+import importlib.util
 import re
 import sys
 import zipfile
@@ -38,6 +39,10 @@ from pathlib import Path
 
 import yaml
 from arelle import Cntlr, PackageManager, XbrlConst
+
+_ck_spec = importlib.util.spec_from_file_location("concept_keys", Path(__file__).parent / "concept_keys.py")
+_ck = importlib.util.module_from_spec(_ck_spec)
+_ck_spec.loader.exec_module(_ck)   # one naming rule for new concepts, shared - see concept_keys.py
 
 
 # ---------------------------------------------------------------- taxonomy classification
@@ -245,9 +250,7 @@ if __name__ == "__main__":
         added = 0
         for qn, entry in {**auto_standard, **auto_extension}.items():
             stmt = entry["statement"]
-            key = entry["suggested_key"]
-            while key in existing[stmt]:
-                key += "_x"
+            key = _ck.unique_concept_key(existing, entry["suggested_key"], qn)
             existing[stmt][key] = {
                 "display_label": entry["display_label"],
                 "xbrl_tags": [qn],
