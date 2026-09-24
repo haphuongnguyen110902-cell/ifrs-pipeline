@@ -179,6 +179,32 @@ def filing_reporting_years(df: pd.DataFrame) -> pd.Series:
     return latest_end.map(lambda d: (d - timedelta(days=1)).year)
 
 
+REVENUE_ANCHORS = ("revenue", "revenue_from_contracts_with_customers")
+
+
+def representing_filings(d: pd.DataFrame) -> set:
+    """{(company_id, year, filing_id)}: later reports that present year Y on ANOTHER basis than Y's own report - their
+    revenue for Y differs from the own report's by more than rounding (IFRS 5 re-presentation, a restatement). The
+    as-reported basis never borrows a flow from them: Essity's FY2021 report has no discontinued operation, its FY2023
+    report re-presents 2021 without Vinda (revenue 101,466 against 121,867), and borrowing that report's 2021
+    discontinued result took Vinda out of a 2021 profit that still contains it. Needs `_filing_year`."""
+    rev = d[d["normalized_name"].isin(REVENUE_ANCHORS) & d["period_type"].eq("duration") & d["value"].notna()]
+    if rev.empty:
+        return set()
+    rank = {n: i for i, n in enumerate(REVENUE_ANCHORS)}
+    rev = rev.assign(_rank=rev["normalized_name"].map(rank), _abs=rev["value"].abs()) \
+        .sort_values(["_rank", "_gap"]).drop_duplicates(["company_id", "year", "filing_id"])
+    own = rev[rev["_filing_year"] == rev["year"]].set_index(["company_id", "year"])["_abs"]
+    own = own[~own.index.duplicated()]
+    later = rev[rev["_filing_year"] > rev["year"]]
+    out = set()
+    for cid, year, fid, value in zip(later["company_id"], later["year"], later["filing_id"], later["_abs"]):
+        base = own.get((cid, year))
+        if base is not None and base > 0 and abs(value - base) / base > ROUNDING_TOLERANCE:
+            out.add((cid, year, fid))
+    return out
+
+
 def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
     """One row per (company_id, year, concept), chosen deterministically,
     plus a report of every key where the candidates disagreed.
@@ -198,6 +224,7 @@ def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
 
     prefer_own_filing=True puts, before rule 3, the report closest after the fact's year: the year's own report,
     else the next one that has the line - every figure as first reported, not as a later report re-presented it.
+    A later report that presents the year on another basis (representing_filings) never supplies one of its flows.
     That is the basis for ratios that combine a balance sheet with a flow - see AS_REPORTED_COLUMNS.
 
     Returns (resolved, conflicts). `resolved` has the same columns as `df`.
@@ -226,6 +253,11 @@ def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
     d["_has_value"] = d["value"].notna()
     after = d["_filing_year"] - d["year"]
     d["_not_own"] = after.where(after >= 0, np.inf) if prefer_own_filing else 0   # an earlier report's stray fact: last
+    if prefer_own_filing:
+        other_basis = representing_filings(d)
+        if other_basis:
+            keys = list(zip(d["company_id"], d["year"], d["filing_id"]))
+            d = d[~(is_duration & pd.Series([k in other_basis for k in keys], index=d.index))]
 
     d = d.sort_values(
         _KEY + ["_has_value", "_gap", "_end", "_not_own", "_filing_year", "filing_id", "value"],
@@ -416,6 +448,7 @@ BROADER_PAYABLES = frozenset(PAYABLES_CONCEPTS[1:])
 DISCONTINUED_TO_OWNERS = ("income_from_discontinued_operations_attributable_to_owner_etc",
                           "profit_loss_from_discontinued_operations_attributable_to_ord_etc")
 NET_BASIS_CONTINUING = "profit attributable to owners from continuing operations (IFRS 5)"
+EBIT_BASIS_DERIVED = "profit before tax + finance costs (no operating profit printed)"
 NET_UNSPLIT_NOTE = ("the report gives a discontinued operation's result only in total, not the owners' share "
                     "(IFRS 5.33(d)), so profit from continuing operations cannot be isolated")
 
@@ -456,9 +489,13 @@ def net_margin_notes(ratios: pd.DataFrame) -> dict:
 def source_concepts_for(ratio_name: str, row) -> list | None:
     """The stored concepts a ratio was built from where that matters for reading it (ratio.source_concepts): DPO and
     the cash conversion cycle carry the payables line they were read from, ROIC/ROE the equity basis, net margin the
-    continuing-operations basis when a discontinued operation was taken out; nothing else is recorded."""
+    continuing-operations basis when a discontinued operation was taken out, operating margin the derived EBIT when
+    no operating profit is printed; nothing else is recorded."""
     if ratio_name == "net_margin":
         basis = row.get("_net_basis")
+        return [basis] if isinstance(basis, str) and basis else None
+    if ratio_name == "operating_margin":
+        basis = row.get("_ebit_basis")
         return [basis] if isinstance(basis, str) and basis else None
     if ratio_name in ("dpo", "ccc"):
         basis = row.get("_payables_basis")
@@ -521,20 +558,41 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # as a fallback rather than leave flagged.
     rev = get_best(wide, "revenue", "revenue_from_contracts_with_customers").abs()
 
-    # --- operating profit (EBIT) ---
-    # Priority: standard IFRS tag > L'Oreal extension > Essity > LVMH > Shell
-    # Shell doesn't tag operating profit directly - they tag revenue_and_other_income
-    # and operating_expense separately, so we compute: revenue - opex
-    shell_rev = get_col(wide, "revenue_and_other_income")
-    shell_opex = get_col(wide, "operating_expense").abs()
-    shell_ebit = shell_rev - shell_opex  # NaN if either input is missing
+    # --- accounting profit (IAS 12.5) ---
+    # "Accounting profit is profit or loss for a period before deducting tax expense" (IAS 12.5), and the average
+    # effective tax rate is tax expense over accounting profit (IAS 12.86). Built from the two printed lines, the same
+    # way for every company - never from whichever subtotal a company prints (Danone and L'Oreal print a profit before
+    # tax that EXCLUDES associates; Kering and Schneider show associates after tax) and never by counting a missing line
+    # as zero: the old approximation (operating profit + financial result + associates, a missing financial result
+    # taken as 0) put Danone's 2025 tax rate at 24.4% - its financial result is not one tagged line - against 741 on an
+    # accounting profit of 2,628, 28.2%. A discontinued operation's result is net of its own tax, so the profit from
+    # continuing operations is used (no discontinued line printed means none: IFRS 5.33(a)).
+    tax = get_col(wide, "income_tax_expense_continuing_operations")
+    continuing_profit = get_col(wide, "profit_loss_from_continuing_operations").combine_first(
+        get_col(wide, "profit_loss") - get_col(wide, "profit_loss_from_discontinued_operations").fillna(0))
+    pbt_printed = get_best(wide,
+        "profit_loss_before_tax",
+        "resultat_avant_impot_et_societes_mises_en_equivalence",             # L'Oreal: before associates
+        "profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc",  # Danone: before associates
+    )
+    accounting_profit = (continuing_profit + tax).combine_first(pbt_printed)
 
-    ebit = get_best(wide,
-        "profit_loss_from_operating_activities",   # standard IFRS - 9 companies
-        "resultat_dexploitation",                   # L'Oreal
-        "operating_profit_excl_i_a_c",              # Essity
+    # --- operating profit (EBIT) ---
+    # The company's own operating-profit line. A company that prints none (Shell: its income statement goes from
+    # "total revenue and other income" less "total expenditure" straight to income before taxation) gets EBIT as
+    # profit before tax plus finance costs (IAS 1.82(b)) - both printed lines, the textbook "earnings before interest
+    # and tax". The old Shell formula, revenue and other income less operating expense, WAS profit before tax (equal
+    # to the unit in every year): interest expense was deducted from an "operating" profit. _ebit_basis says which.
+    ebit_printed = get_best(wide,
+        "profit_loss_from_operating_activities",                          # standard IFRS
+        "resultat_dexploitation",                                          # L'Oreal
         "profit_loss_from_operating_activities_after_share_of_prof_etc",  # LVMH
-    ).combine_first(shell_ebit)  # Shell: computed from revenue - opex
+    )
+    finance_costs = get_best(wide, "finance_costs", "interest_expense").abs()
+    ebit_derived = pbt_printed.combine_first(accounting_profit) + finance_costs
+    ebit = ebit_printed.combine_first(ebit_derived)
+    r["_ebit_basis"] = [EBIT_BASIS_DERIVED if pd.isna(p) and pd.notna(d) else ""
+                        for p, d in zip(ebit_printed, ebit_derived)]
     r["operating_margin"] = safe_div(ebit, rev, scale=100)
     r["_ebit"] = ebit
 
@@ -590,29 +648,9 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["dpo"] = safe_div(payables, cogs, scale=365)
     r["ccc"] = r["dso"] + r["dio"] - r["dpo"]  # NaN if any component is NaN - never fake a CCC
 
-    # --- effective tax rate ---
-    tax = get_col(wide, "income_tax_expense_continuing_operations")
-
-    # PBT fallback chain:
-    # 1. Standard IFRS tag (7 companies have this)
-    # 2. L'Oreal French extension
-    # 3. Essity extension
-    # 4. APPROXIMATE: EBIT + finance items (for Danone, LVMH, Pernod Ricard
-    #    which don't tag PBT directly but we can reconstruct it)
-    #    PBT = Operating Profit + Finance Income/Cost + Share of Associates
-    finance = get_col(wide, "finance_income_cost")
-    associates = get_col(wide, "share_of_profit_loss_of_associates_and_joint_ventures_acc_etc")
-    pbt_approx = ebit + finance.fillna(0) + associates.fillna(0)
-
-    pbt = get_best(wide,
-        "profit_loss_before_tax",
-        "resultat_avant_impot_et_societes_mises_en_equivalence",
-        "profit_before_tax_excl_i_a_c",
-    ).combine_first(pbt_approx)  # use approximation where direct tag is missing
-
-    # abs() handles sign convention differences across filers
-    # Multiply by 100 to match the percentage scale used by all other ratios
-    r["tax_rate"] = safe_div(tax.abs(), pbt.abs(), scale=100).clip(0, 60)
+    # --- effective tax rate (IAS 12.86): tax expense / accounting profit, see above ---
+    # abs() handles sign convention differences across filers; x100 matches the % scale of the other ratios
+    r["tax_rate"] = safe_div(tax.abs(), accounting_profit.abs(), scale=100).clip(0, 60)
 
     # --- net debt ---
     # Financial debt = the financial-liability lines the company PRINTS on its balance sheet (IAS 1.54(m):
@@ -624,7 +662,7 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     debt = compute_financial_debt(wide)
     cash = get_col(wide, "cash_and_cash_equivalents").abs()
     # blank unless debt lines are stored on both sides; NaN stays NaN: debt unknown -> net debt unknown
-    net_debt = debt["financial_debt"].where(debt["complete"]) - cash.fillna(0)
+    net_debt = debt["financial_debt"].where(debt["complete"]) - cash     # no cash line stored: blank, never gross debt
     r["_net_debt"] = net_debt
     r["_debt_basis"] = debt["basis"].where(debt["complete"], "incomplete: " + debt["basis"])   # audit trail
 

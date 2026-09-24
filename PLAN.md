@@ -2003,3 +2003,107 @@ Every new rule was mutation-checked: removing it makes its test fail.
 - **Downloaded packages were not deleted.** The 12 new packages and the held Pernod FY2021 package (about 372 MB)
   are reconciled, but I did not delete them: I do not permanently delete files myself. The older packages stay
   until Phase 2 has reconciled them.
+
+### 2026-09-24 (Phase 2 of 5): every displayed figure traced to the company's printed report
+
+**Why a new tool.** `reconcile_reports.py` checks each report's own year, line by line. The dashboard, however, shows
+a year through whichever stored fact the ratio engine picked:
+- a later report's comparative column (restated figures);
+- the year's own report (figures as first reported);
+- a reviewed note figure.
+
+The new `scripts/35_trace_figures.py` (read-only) takes every input the engine actually reads. It covers both bases,
+every company and year, plus the 3-statement model's capex and dividend lines. It follows each input back to the
+stored fact that supplied it (filing, raw tag, period), and looks that fact up in that filing's own package, in the
+column it was printed in.
+
+Packages no longer on disk are fetched from filings.xbrl.org **into memory**: the same package choice as
+`download_historical.py`, checked against the archive's sha256, never written to disk. That covered 23 packages:
+- ASM, Adyen and Schneider: 2020-2024;
+- Heineken: 2021-2024;
+- Recordati: 2021 and 2023-2025.
+
+**Result, all 16 companies (final run, after the fixes below):** 3,636 inputs.
+- 3,607 are equal to a line printed on a primary statement (balance sheet, income statement, cash flow, changes in
+  equity).
+- 29 are reviewed note figures.
+- 0 differ, 0 are missing from their report, and 0 packages are missing.
+
+**The trace tool's own bug, found on its first live run.** It assumed the engine reads inputs only through
+`get_col`/`get_best`. Financial debt is read row by row (`compute_financial_debt`), so every borrowing line would have
+gone unchecked; Essity's trace listed cash but no debt line. The debt lines now come from the engine's own `basis`.
+- A completeness test removes one input at a time. Any input whose removal changes a figure must be in the trace.
+- Run live over both bases: 792 columns, 0 dependencies untraced.
+
+**Real bugs found by reading which line feeds each figure** (the semantic half of the review):
+1. **Shell's operating profit was its profit before tax.** Shell prints no operating-profit subtotal. EBIT was
+   "revenue and other income - operating expense", and "operating expense" is Shell's total expenditure, interest
+   expense included. The result equalled profit before tax to the unit in every year (2025: 29,756). EBIT is now
+   profit before tax + finance costs (IAS 1.82(b)), both printed lines; `_ebit_basis` records it and the dashboard
+   says so. Effect for 2025:
+
+   | Shell 2025 | Before | After |
+   |---|---|---|
+   | Operating margin | 11.1% | 12.9% |
+   | ROIC | 8.2% | 9.5% |
+   | Net debt / EBITDA | 0.83x | 0.76x |
+
+2. **The tax rate counted a missing line as zero.** Where no profit before tax was tagged, the engine used operating
+   profit + financial result + associates, with `.fillna(0)` on the financial result.
+   - **Danone:** its financial result is not one tagged line, and its printed profit before tax (before associates)
+     sat under a concept the engine never read. Its 2025 rate came out at 24.4%.
+   - **LVMH:** already includes associates in operating profit, so they were added twice.
+   - **Fix:** the rate is now IAS 12.86's own definition, the same for every company: tax expense / accounting
+     profit. IAS 12.5 defines accounting profit as profit or loss before deducting tax expense, built here from the
+     printed profit from continuing operations and the printed tax. A printed profit before tax is used only when
+     those lines are missing, and nothing is approximated.
+
+   | Danone tax rate | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 |
+   |---|---|---|---|---|---|---|
+   | Before | 24.6% | 20.7% | 36.9% | 37.0% | 27.3% | 24.4% |
+   | After | 27.3% | 22.8% | 43.2% | 44.6% | 30.7% | 28.2% |
+
+   Other companies moved by the share of associates their own subtotal leaves out (Kering, L'Oreal, Schneider) or by
+   rounding. The dashboard states the definition.
+3. **A bug introduced by fix 2 and caught before it reached the DB.** Under the as-first-reported basis, a line
+   missing from a year's own report was borrowed from the next report that has it. For Essity 2021 that report was
+   FY2023, which re-presents 2021 without Vinda. Its 2021 discontinued result (1,797) was taken out of a 2021 profit
+   that still contains Vinda, and ROIC moved by 0.4 points. A later report whose revenue for the year differs from
+   the own report's (`representing_filings`) now never lends a flow.
+4. **Net debt with no cash line** subtracted a cash figure of zero, so gross debt passed for net debt. It is now
+   blank. No live row changed; every company tags cash.
+5. **Two alternative performance measures dropped.** Essity's "operating profit / profit before tax excluding items
+   affecting comparability" were fallbacks in the operating-profit and profit-before-tax chains. They were never
+   used, because Essity tags the IFRS lines, but an adjusted measure must never stand in for an IFRS one.
+
+**Checked and correct, no change needed:**
+- **Pernod Ricard:** receivables and payables change tag in FY2024/FY2025, but overlapping years carry the same value
+  (payables 2024: 2,930 under both tags).
+- **LVMH:** its operating profit moves to an extension tag from 2023, with the same 2022 value under both (21,001).
+- **Recordati:** prints no separate lease line; its 2020-2021 loan tags name borrowings *and* lease liabilities.
+- **Kering:** its D&A line includes provisions on non-current operating assets, and Kering adds exactly this line to
+  reach its own EBITDA (reviewed override).
+- **Schneider 2019-2020:** capex lines are two separate printed lines (485 + 332). The shared label seen in the review
+  is an artefact of reading labels.
+- **Recordati's one-day cash-flow contexts** (the Phase 1 open item): every such figure equals the printed statement.
+
+**Live DB:** snapshot before and after, row-level diff.
+- 96 ratio cells changed: tax rate and ROIC for 8 companies; Shell's operating margin, ROIC, cash conversion and
+  leverage.
+- 17 credit cells changed (Shell).
+- 9 forensics flags changed (Shell).
+- 3-statement net income and FCF changed for Danone, L'Oreal, LVMH, Pernod Ricard and Schneider (their base-year tax
+  rate).
+- Valuation and DCF changed with the tax rates and the day's market data.
+- Every golden-baseline difference was reviewed before `tests/baseline/` was regenerated.
+
+**Tests:**
+- 796 passed / 39 skipped without a database; 830 passed against the live DB (forensics persistence class deselected).
+- New: `test_trace_figures.py` (including the completeness test) and `test_ebit_and_tax.py`, plus the same-basis tests
+  in `test_ratio_engine.py`.
+- Each rule was mutation-checked: removing it makes its test fail.
+
+**Deliberately not done:**
+- The trace does not run in CI: it needs the database and the report packages. Phase 5 decides where it runs.
+- The Shell and Danone decisions are about definitions. IFRS decides where it defines the measure (IAS 12.86), and
+  where IFRS defines none (operating profit before IFRS 18), the formula is stated on the dashboard.
