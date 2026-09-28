@@ -561,9 +561,24 @@ def capex_basis_caption(df: pd.DataFrame):
     return f"{text_} {note}" if pd.notna(note) and note else text_
 
 
-def dcf_absence_reason(market_risk: pd.DataFrame) -> str:
+def dcf_absence_reason(market_risk: pd.DataFrame, projection: pd.DataFrame = None) -> str:
     """Why there is no DCF. 22_dcf.py refuses one when the regression beta the cost of equity rests on is not
-    positive - say so, rather than the generic 'not computed yet'."""
+    positive, or when the projected free cash flow of the final year is not positive (its terminal value would be a
+    perpetual cash outflow) - say so, rather than the generic 'not computed yet'."""
+    if projection is not None and not projection.empty and pd.notna(projection.iloc[-1].get("ebit")) \
+            and projection.iloc[-1]["ebit"] <= 0:
+        p = projection.iloc[-1]
+        return (f"Not built on purpose: the 3-statement model projects an operating loss for {int(p['forecast_year'])} "
+                f"(base year {int(p['base_year'])}, a loss year carried forward), so the final year's free cash flow "
+                f"is negative and a terminal value built on it - a perpetual cash outflow - would be a negative "
+                f"enterprise value with no economic meaning.")
+    if projection is not None and not projection.empty and pd.notna(projection.iloc[-1].get("fcf")) \
+            and projection.iloc[-1]["fcf"] <= 0:
+        p = projection.iloc[-1]
+        return (f"Not built on purpose: the 3-statement model projects negative free cash flow for "
+                f"{int(p['forecast_year'])} (investment above the cash the operations generate), so a terminal value "
+                f"built on it - a perpetual cash outflow - would be a negative enterprise value with no economic "
+                f"meaning.")
     if not market_risk.empty and pd.notna(market_risk.iloc[0].get("beta")) and market_risk.iloc[0]["beta"] <= 0:
         r = market_risk.iloc[0]
         return (f"Not built on purpose: this company's regression beta against STOXX Europe 600 is {r['beta']:.2f} "
@@ -573,9 +588,9 @@ def dcf_absence_reason(market_risk: pd.DataFrame) -> str:
             "projected 3-statement model and a stock ticker for market data.")
 
 
-def render_dcf(df: pd.DataFrame, market_risk: pd.DataFrame = None):
+def render_dcf(df: pd.DataFrame, market_risk: pd.DataFrame = None, projection: pd.DataFrame = None):
     if df.empty:
-        st.info(dcf_absence_reason(market_risk if market_risk is not None else pd.DataFrame()))
+        st.info(dcf_absence_reason(market_risk if market_risk is not None else pd.DataFrame(), projection))
         return
     r = df.iloc[0]
     st.caption(f"Base year {int(r['base_year'])} · WACC built up via CAPM, unlevered FCFF "
@@ -813,7 +828,8 @@ with tab_3stmt:
 
 with tab_dcf:
     render_dcf(load_dcf(engine, int(selected_row["company_id"])),
-               load_market_risk(engine, int(selected_row["company_id"])))
+               load_market_risk(engine, int(selected_row["company_id"])),
+               load_three_statement(engine, int(selected_row["company_id"])))
 
 with tab_market_risk:
     render_market_risk(load_market_risk(engine, int(selected_row["company_id"])))
