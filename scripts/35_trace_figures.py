@@ -117,7 +117,7 @@ def fetch_traceable_facts(engine, company=None) -> pd.DataFrame:
     from sqlalchemy import text
     where = "WHERE c.name = :company" if company else ""
     df = pd.read_sql(text(f"""
-        SELECT c.name AS company, c.company_id, fv.filing_id, fv.value_id, fv.raw_xbrl_tag, fi.source_file,
+        SELECT c.name AS company, c.company_id, fv.filing_id, fv.value_id, fv.raw_xbrl_tag, fi.source_file, fi.source_url,
                ic.normalized_name, p.period_type, p.start_date, p.end_date, fv.value, fv.currency
         FROM fact_value fv JOIN ifrs_concept ic ON fv.concept_id = ic.concept_id
         JOIN period p ON fv.period_id = p.period_id JOIN filing fi ON fv.filing_id = fi.filing_id
@@ -199,6 +199,22 @@ def archive_package(source_file: str, fetch_filings):
     return data
 
 
+def source_url_package(url: str):
+    """Bytes of the package a filing records it was loaded from (an official URL - a company's own site, or the archive),
+    fetched into memory. A download holding one XBRL Report Packages 1.0 `.xbri` (Solvay FY2025) is unwrapped the way
+    load_from_archive.py does. The archive's own labels are not needed: Unilever's are publication dates."""
+    import requests
+    import zipfile
+    resp = requests.get(url, timeout=120)
+    resp.raise_for_status()
+    data = resp.content
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        names = [n for n in z.namelist() if not n.endswith("/")]
+        if len(names) == 1 and names[0].lower().endswith(".xbri"):
+            return z.read(names[0])
+    return data
+
+
 def xbrl_org_lookup():
     """fetch_filings for archive_package: the same package choice as download_historical.py."""
     dh = _load("download_historical", "download_historical.py")
@@ -228,7 +244,8 @@ def trace(engine, company=None, fetch=True, extra_concepts=()) -> pd.DataFrame:
         return pd.DataFrame()
     rows = []
     for basis, own in (("restated", False), ("as reported", True)):
-        wide = r11.pivot_to_wide(facts.drop(columns=["value_id", "raw_xbrl_tag", "source_file"]), prefer_own_filing=own)
+        wide = r11.pivot_to_wide(facts.drop(columns=["value_id", "raw_xbrl_tag", "source_file", "source_url"]),
+                                 prefer_own_filing=own)
         chosen = chosen_facts(facts, used_inputs(wide, extra_concepts), own)
         rows.append(chosen.assign(basis=basis))
     chosen = pd.concat(rows, ignore_index=True)
@@ -244,8 +261,11 @@ def trace(engine, company=None, fetch=True, extra_concepts=()) -> pd.DataFrame:
         if path.exists():
             pkg, where = rr.read_package(str(path)), "disk"
         elif lookup is not None:
+            url = next((u for u in group.get("source_url", pd.Series(dtype=object)) if isinstance(u, str) and u), None)
             try:
-                data = archive_package(str(source), lookup)
+                data = archive_package(str(source), lookup)          # sha256-checked against the archive
+                if data is None and url:                                # a company's own site, or an archive label
+                    data = source_url_package(url)                      # that is not the period (Unilever)
             except Exception as e:                       # a network failure is NO_PACKAGE, never a crash
                 print(f"  could not fetch {os.path.basename(str(source))}: {type(e).__name__}: {e}")
                 data = None

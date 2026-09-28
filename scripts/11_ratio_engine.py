@@ -1206,6 +1206,12 @@ def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict, notes: dict = No
                        "neutral": neutral, "note": notes.get((int(cid), int(year), ratio_name)),
                        "src": None if pd.isna(val) else source_concepts_for(ratio_name, row)})
                 rows_written += 1
+        # a year the engine no longer produces for a company must not stay in the table: Unilever's "2026" of a
+        # dividend date (removed by reportable_facts) and a stray SKF "1981" were still shown after the fix. Scoped to the
+        # companies in this run, so a --company run leaves the others alone.
+        for cid, years in ratios.groupby("company_id")["year"]:
+            conn.execute(text("DELETE FROM ratio WHERE company_id = :cid AND NOT (year = ANY(:yrs))"),
+                         {"cid": int(cid), "yrs": sorted({int(y) for y in years})})
         conn.commit()
     return rows_written
 

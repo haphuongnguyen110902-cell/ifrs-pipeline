@@ -145,3 +145,16 @@ class TestDashboardCaption:
     def test_only_the_dpo_rows_decide(self, caption):
         df = pd.DataFrame({"ratio_name": ["dpo", "ccc"], "source_concepts": [[TRADE], [BROADER]]})
         assert caption(df) is None
+
+
+class TestStaleYears:
+    """A company-year the engine no longer produces used to stay in the ratio table (Unilever's "2026" of a dividend
+    date, removed by reportable_facts, was still on the dashboard). The save deletes each company's other years."""
+
+    def test_each_company_keeps_only_the_years_computed(self, r11):
+        engine = _Engine()
+        w = pd.DataFrame([{**wide().iloc[0].to_dict(), "year": 2024}, {**wide().iloc[0].to_dict(), "year": 2025},
+                          {**wide().iloc[0].to_dict(), "company_id": 7, "year": 2025}])
+        r11.save_to_db(engine, r11.compute_ratios(w), {})
+        deletes = [p for s, p in engine.conn.calls if s.strip().startswith("DELETE FROM ratio")]
+        assert {(d["cid"], tuple(d["yrs"])) for d in deletes} == {(1, (2024, 2025)), (7, (2025,))}

@@ -150,3 +150,30 @@ class TestArchivePackage:
         monkeypatch.setattr("requests.get", lambda url, timeout: Resp())
         assert t35.archive_package("data/raw/historical/asm_2020-12-31.zip",
                                    lambda s, d: ("/x.zip", hashlib.sha256(b"original").hexdigest())) is None
+
+
+class TestSourceUrlPackage:
+    """Packages loaded from a company's own site (Assa Abloy, SKF, Umicore, Solvay, Peab, Arjo FY2025) or under an archive
+    label that is not the period (Unilever) could not be traced: the trace only looked up filings.xbrl.org by period. It
+    now falls back to the URL the filing records."""
+
+    def test_a_report_package_in_a_zip_is_unwrapped(self, load_script, monkeypatch, tmp_path):
+        import io
+        import zipfile
+        t35 = load_script("35_trace_figures.py")
+        inner = io.BytesIO()
+        with zipfile.ZipFile(inner, "w") as z:
+            z.writestr("x/reports/r.xhtml", "<html/>")
+        outer = io.BytesIO()
+        with zipfile.ZipFile(outer, "w") as z:
+            z.writestr("solvay.xbri", inner.getvalue())
+
+        class Resp:
+            content = outer.getvalue()
+
+            def raise_for_status(self):
+                pass
+
+        import requests
+        monkeypatch.setattr(requests, "get", lambda url, timeout: Resp())
+        assert t35.source_url_package("https://www.solvay.com/x.zip") == inner.getvalue()
