@@ -22,8 +22,11 @@
 # a public demo with no one watching a rebuild). streamlit >= 1.63.0 because
 # that is the version the app was tested on (it uses st.dataframe(width="stretch",
 # on_select=...), and I could not verify which older release added them).
+# SQLAlchemy < 2.1: 2.1 changed the default driver of a plain postgresql:// URL from psycopg2 to psycopg 3 - a
+# Cloud rebuild (about 2026-09-26) installed it and the public app failed with "ModuleNotFoundError: psycopg".
+# app.py now names the driver in the URL as well (sqlalchemy_url); lift this bound only after testing 2.1.
 pandas>=2.2.0,<4
-SQLAlchemy>=2.0.0,<3
+SQLAlchemy>=2.0.0,<2.1
 psycopg2-binary>=2.9.9,<3
 python-dotenv>=1.0.0,<2
 streamlit>=1.63.0,<2
