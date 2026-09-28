@@ -593,3 +593,58 @@ overrides:
       Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande kortfristiga skulder, projektfinansiering" (notes 27, 32, 33) 2 360 / 2 859, tagged
       peab:InterestBearingShortTermLiabilitiesProjectFinancing; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingShortTermLiabilitiesProjectFinancing). Read 2026-09-28 from the
       report's own row.
+
+  # JM and Peab FY2021 reports: the same interest-bearing lines under the element names used that year.
+  - company: "JM"
+    tag: "jm:LangfristigaRaentebaerandeSkulder"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Långfristiga räntebärande skulder"
+    evidence: >-
+      FY2021 report (jm-2021-12-31-sv), koncernens balansräkning: "Långfristiga räntebärande skulder" (notes 23, 24, 25) 818 (2021) / 1 180 (2020); JM's FY2021 element name for what it tags jm:LongtermInterestbearingLiabilities from FY2024. Read 2026-09-28 from the report's own row.
+
+  - company: "JM"
+    tag: "jm:KortfristigaRaentebaerandeSkulder"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Kortfristiga räntebärande skulder"
+    evidence: >-
+      FY2021 report (jm-2021-12-31-sv), koncernens balansräkning: "Kortfristiga räntebärande skulder" (notes 23, 24, 25) 7 566 (2021) / 6 480 (2020). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "PEA:LongTermBorrowingsNotRelatedToProjects"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Räntebärande långfristiga skulder"
+    evidence: >-
+      FY2021 report (549300FQS4VD3153I854-2021-12-31-sv, prefix PEA:), koncernens balansräkning: "Räntebärande långfristiga skulder" (notes 29, 34, 35) 5281 (2021) / 4289 (2020). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "PEA:LongTermBorrowingsRelatedToProjects"
+    concept: noncurrent_portion_of_other_noncurrent_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande långfristiga skulder, projektfinansiering"
+    evidence: >-
+      FY2021 report, koncernens balansräkning: the row after "Räntebärande långfristiga skulder", same notes 29, 34, 35, 346 (2021) / 75 (2020); the filer's own label "Long-term borrowings, related to projects" (the FY2024 report prints this line as "Räntebärande långfristiga skulder, projektfinansiering"). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "PEA:ShortTermBorrowingsNotRelatedToProjects"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Räntebärande kortfristiga skulder"
+    evidence: >-
+      FY2021 report, koncernens balansräkning: "Räntebärande kortfristiga skulder" (notes 29, 34, 35) 2386 (2021) / 2647 (2020). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "PEA:ShortTermBorrowingsRelatedToProjects"
+    concept: other_current_borrowings_and_current_portion_of_other_noncur_etc
+    statement: balance_sheet
+    label: Current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande kortfristiga skulder, projektfinansiering"
+    evidence: >-
+      FY2021 report, koncernens balansräkning: the row after "Räntebärande kortfristiga skulder", same notes 29, 34, 35, 7003 (2021) / 4981 (2020); the filer's own label "Short-term borrowings, related to projects". Read 2026-09-28 from the report's own row.
