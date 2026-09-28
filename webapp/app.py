@@ -300,8 +300,9 @@ def payables_basis_caption(ratios: pd.DataFrame):
         return None
     return ("Days payables outstanding and the cash conversion cycle are built on the balance-sheet line tagged \"trade "
             "and other payables\". Depending on the company that line holds trade payables only or also other operating "
-            "payables (accruals, taxes, social charges), so these two figures may not be comparable with companies that "
-            "report trade payables on their own line.")
+            "payables (accruals, taxes, social charges) and even deferred income received from customers in advance "
+            "(an IFRS 15 contract liability), so these two figures may not be comparable with companies that report trade "
+            "payables on their own line.")
 
 
 def equity_basis_caption(ratios: pd.DataFrame):
