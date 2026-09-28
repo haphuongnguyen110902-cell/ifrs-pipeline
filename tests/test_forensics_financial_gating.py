@@ -61,7 +61,10 @@ class TestFinancialSuppression:
     def test_the_main_block_suppresses_before_printing_and_saving(self, f15):
         src = open(f15.__file__, encoding="utf-8").read()
         main = src[src.index('if __name__ == "__main__":'):]
-        assert main.index("drop_flags_for_financial_companies") < main.index("print_summary(") < main.index("save_to_db(")
+        assert main.index("pipeline_flags(") < main.index("print_summary(") < main.index("save_to_db(")
+        # and pipeline_flags is where the suppression happens (shared with the live tests)
+        fn = src[src.index("def pipeline_flags("):src.index("def ensure_printable_output(")]
+        assert "drop_flags_for_financial_companies(" in fn
 
 
 class TestUnencodableOutput:

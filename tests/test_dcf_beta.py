@@ -104,3 +104,42 @@ class TestDashboardReason:
         assert "hasn't been computed" in reason(pd.DataFrame([{"beta": 0.48, "ticker": "X",
                                                               "period_start": "a", "period_end": "b"}]))
         assert "hasn't been computed" in reason(pd.DataFrame())
+
+    def test_a_projected_operating_loss_says_why(self, reason):
+        """Stellantis 2025: an operating loss of EUR 26bn carried forward gave a DCF of EUR -372bn."""
+        proj = pd.DataFrame([{"base_year": 2025, "forecast_year": 2030, "ebit": -21e9}])
+        text_ = reason(pd.DataFrame([{"beta": 1.56, "ticker": "STLAM.MI", "period_start": "a", "period_end": "b"}]), proj)
+        assert "Not built on purpose" in text_ and "operating loss for 2030" in text_
+
+    def test_a_profitable_projection_keeps_the_other_messages(self, reason):
+        proj = pd.DataFrame([{"base_year": 2025, "forecast_year": 2030, "ebit": 5e9}])
+        assert "hasn't been computed" in reason(pd.DataFrame(), proj)
+
+
+class TestTerminalCashFlow:
+    @pytest.fixture(scope="class")
+    def dcf(self, load_script):
+        return load_script("22_dcf.py")
+
+    def test_a_negative_terminal_flow_is_refused(self, dcf):
+        why = dcf.terminal_fcff_reason([2026, 2027], [-5e9, -4e9])
+        assert why and "2027" in why and "no economic meaning" in why
+
+    def test_a_positive_terminal_flow_is_not(self, dcf):
+        assert dcf.terminal_fcff_reason([2026, 2027], [-1e9, 2e9]) is None
+
+
+class TestDashboardReasonCashFlow:
+    @pytest.fixture
+    def reason(self):
+        tree = ast.parse((REPO / "webapp" / "app.py").read_text(encoding="utf-8"))
+        parts = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "dcf_absence_reason"]
+        ns = {"pd": pd}
+        exec(compile(ast.Module(body=parts, type_ignores=[]), "app.py", "exec"), ns)
+        return ns["dcf_absence_reason"]
+
+    def test_negative_projected_cash_flow_on_a_profit_says_why(self, reason):
+        """STMicroelectronics / Piaggio: profitable, but capex above the cash from operations in the final year."""
+        proj = pd.DataFrame([{"base_year": 2025, "forecast_year": 2030, "ebit": 900e6, "fcf": -280e6}])
+        text_ = reason(pd.DataFrame(), proj)
+        assert "Not built on purpose" in text_ and "negative free cash flow for 2030" in text_

@@ -178,3 +178,66 @@ links:
     end: '2022-07-01'
     value: 735000000.0
     stored_under: pernod:AchatsDactifsFinanciersEtActivites
+- company: Peab
+  report: peab_2025-12-31.zip
+  tag: peab:CashFlowBeforeFinancing
+  concept: cash_flow_before_financing
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 6744000000.0
+    stored_under: peabab:CashFlowBeforeFinancing
+- company: Peab
+  report: peab_2025-12-31.zip
+  tag: peab:ChangeInIssuedCommercialPapers
+  concept: changeinissuedcommercialpapers
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: -109000000.0
+    stored_under: peabab:Changeinissuedcommercialpapers
+- company: Peab
+  report: peab_2025-12-31.zip
+  tag: peab:IncreaseDecreaseProjectAndDevelopmentProperties
+  concept: increase_decrease_project_and_development_properties
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 1184000000.0
+    stored_under: peabab:IncreaseDecreaseProjectAndDevelopmentProperties
+- company: Peab
+  report: peab_2025-12-31.zip
+  tag: peab:LoanAmortization
+  concept: loan_amortization
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 5728000000.0
+    stored_under: peabab:LoanAmortization
+- company: Peab
+  report: peab_2025-12-31.zip
+  tag: peab:LoanAmortizationSwedishTenantOwnerAssociations
+  concept: loan_amortization_swedish_tenant_owner_associations
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 5558000000.0
+    stored_under: peabab:LoanAmortizationSwedishTenantOwnerAssociations
+- company: Peab
+  report: peab_2025-12-31.zip
+  tag: peab:RaisedLoans
+  concept: raised_loans
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 3393000000.0
+    stored_under: peabab:RaisedLoans
+- company: Peab
+  report: peab_2025-12-31.zip
+  tag: peab:RaisedLoansSwedishTenantOwnerAssociations
+  concept: raised_loans_swedish_tenant_owner_associations
+  matched:
+  - start: '2024-01-01'
+    end: '2025-01-01'
+    value: 1766000000.0
+    stored_under: peabab:RaisedLoansSwedishTenantOwnerAssociations

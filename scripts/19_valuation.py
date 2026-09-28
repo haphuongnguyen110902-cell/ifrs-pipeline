@@ -172,8 +172,10 @@ def fetch_latest_fundamentals(engine, company_filter=None) -> pd.DataFrame:
     facts = r11.fetch_facts(engine, company_filter)
     wide = r11.pivot_to_wide(facts)
     ratios = r11.compute_ratios(wide)
+    currencies = r11.reporting_currencies(facts)
+    ratios["report_ccy"] = [currencies.get((int(c), int(y))) for c, y in zip(ratios["company_id"], ratios["year"])]
 
-    keep = ["company", "company_id", "year", "_revenue", "_ebitda", "_net_debt", "_net_income",
+    keep = ["company", "company_id", "year", "report_ccy", "_revenue", "_ebitda", "_net_debt", "_net_income",
             "_ebit", "_da_total"]
     df = ratios[keep].copy()
     # need at least revenue, ebitda, net_debt for EV/EBITDA and EV/Sales;
@@ -352,10 +354,9 @@ def build_comps(fundamentals: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
             continue
 
         year = int(f["year"])
-        # NOTE: fx_lookup is keyed by the FILING's reporting currency, not
-        # the stock's quote currency - for every company here today they're
-        # the same, but that won't always be true (see TICKER_MAP comment).
-        filing_ccy = quote_ccy  # true for the current 11-company universe
+        # The figures are converted from the FILING's currency (r11.reporting_currencies), the market cap from the
+        # quote currency: they differ for Anheuser-Busch InBev and STMicroelectronics (USD / EUR) and RELX (GBP / EUR).
+        filing_ccy = f.get("report_ccy") if isinstance(f.get("report_ccy"), str) else quote_ccy
         revenue_eur = fx18.to_eur(f["_revenue"], filing_ccy, year, fx_lookup, "avg")
         ebitda_eur = fx18.to_eur(f["_ebitda"], filing_ccy, year, fx_lookup, "avg")
         ebit_eur = fx18.to_eur(f["_ebit"], filing_ccy, year, fx_lookup, "avg")
@@ -375,7 +376,7 @@ def build_comps(fundamentals: pd.DataFrame, fx_lookup: dict) -> pd.DataFrame:
             # sector_detail is carried alongside for anyone who wants the
             # original, more precise per-company text.
             "company": company, "sector": f.get("sector_std"), "sector_detail": f.get("sector_detail"),
-            "year": year, "ticker": ticker, "quote_ccy": quote_ccy,
+            "year": year, "ticker": ticker, "quote_ccy": quote_ccy, "report_ccy": filing_ccy,
             "market_cap_eur": market_cap_eur, "net_debt_eur": net_debt_eur,
             "ev_eur": ev_eur, "revenue_eur": revenue_eur,
             # EBITDA that is really EBIT is not stored as EBITDA
@@ -509,7 +510,8 @@ def compute_forward_multiples(comps: pd.DataFrame, history: pd.DataFrame, fx_loo
         # quote_ccy was already resolved once in build_comps() (PLAN.md
         # WP4: TICKER_MAP-or-DB-fallback via resolve_ticker_currency) -
         # read it back from this row rather than re-deriving it here.
-        quote_ccy = row.get("quote_ccy", "EUR")
+        # the projected figures are in the filing's currency (build_comps' report_ccy), not the quote currency
+        quote_ccy = row.get("report_ccy") or row.get("quote_ccy", "EUR")
         if quote_ccy == "EUR":
             rev_eur, ebitda_eur = rev_fc[next_year], ebitda_fc[next_year]
         else:
@@ -548,6 +550,12 @@ def _company_id_map(conn) -> dict:
     """
     rows = conn.execute(text("SELECT company_id, name FROM company")).fetchall()
     return {name: cid for cid, name in rows}
+
+
+def sql_params(params: dict) -> dict:
+    """A missing number goes to the database as NULL: a pandas NaN written into a NUMERIC column is stored as the
+    value 'NaN', which every reader that tests for NULL (the landing view, the screener) takes for a number."""
+    return {k: (None if isinstance(v, float) and v != v else v) for k, v in params.items()}
 
 
 def save_to_db(engine, comps: pd.DataFrame) -> int:
@@ -598,7 +606,7 @@ def save_to_db(engine, comps: pd.DataFrame) -> int:
                               premium_vs_peers_ebit_pct = EXCLUDED.premium_vs_peers_ebit_pct,
                               fwd_ev_ebitda = EXCLUDED.fwd_ev_ebitda, fwd_ev_sales = EXCLUDED.fwd_ev_sales,
                               computed_at = now()
-            """), {
+            """), sql_params({
                 "company": r["company"], "company_id": company_id, "sector": r.get("sector"), "year": int(r["year"]),
                 "ticker": r["ticker"], "mc": r["market_cap_eur"], "nd": r["net_debt_eur"],
                 "ev": r["ev_eur"], "rev": r["revenue_eur"], "ebitda": r["ebitda_eur"],
@@ -614,7 +622,11 @@ def save_to_db(engine, comps: pd.DataFrame) -> int:
                 "impliedev_ebit": r.get("implied_ev_from_peers_ebit"),
                 "premium_ebit": r.get("premium_vs_peers_ebit_pct"),
                 "fwdevebitda": r.get("fwd_ev_ebitda"), "fwdevsales": r.get("fwd_ev_sales"),
-            })
+            }))
+            # a valuation is today's market value over the latest financial year: when that year moves on, the row of
+            # the previous year is a stale snapshot. 20_precedents.py reads every row, so it counted those twice.
+            conn.execute(text("DELETE FROM valuation WHERE company_id = :cid AND year <> :year"),
+                         {"cid": company_id, "year": int(r["year"])})
             rows_written += 1
     return rows_written
 

@@ -240,11 +240,12 @@ if __name__ == "__main__":
         sys.exit(1)
     ticker, quote_ccy = dcf22.val19.TICKER_MAP[args.company]
 
-    if quote_ccy != "EUR":
-        print(f"{args.company} reports in {quote_ccy} - converting to EUR before scenario analysis "
+    report_ccy = base.get("currency") or quote_ccy          # financials: reporting currency; market cap: quote
+    if report_ccy != "EUR":
+        print(f"{args.company} reports in {report_ccy} - converting to EUR before scenario analysis "
               f"(see 22_dcf.py's convert_base_to_eur).")
         fx_lookup = dcf22.fx18.load_fx_lookup(engine)
-        base = dcf22.convert_base_to_eur(base, quote_ccy, fx_lookup)
+        base = dcf22.convert_base_to_eur(base, report_ccy, fx_lookup)
 
     print(f"Fetching live market data for {ticker} (WACC held constant across both scenarios)...")
     market = dcf22.val19.fetch_market_data(ticker)

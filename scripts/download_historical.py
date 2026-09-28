@@ -41,31 +41,10 @@ def _load(name, filename):
 # which filing / which period is trustworthy lives in one place
 ff = _load("find_filing_00", "00_find_filing.py")
 
-# Companies with their entity identifiers (LEIs). Keys are the filename prefix
-# load_historical.py reads back (letters only) - keep the two registries in sync;
-# tests/test_historical_registry.py fails if they drift apart.
-COMPANIES = {
-    "loreal":           ("529900JI1GG6F7RKVI53",  "L'Oreal"),
-    "lvmh":             ("IOG4E947OATN0KJYSD45",  "LVMH"),
-    "kering":           ("549300VGEJKB7SVUZR78",  "Kering"),
-    "essilorluxottica": ("549300M3VH1A3ER1TB49",  "EssilorLuxottica"),
-    "danone":           ("969500KMUQ2B6CBAF162",  "Danone"),
-    "essity":           ("549300G8E6YUVJ1DA153",  "Essity"),
-    "moncler":          ("815600EBD7FB00525B20",  "Moncler"),
-    "shell":            ("21380068P1DRHMJ8KU70",  "Shell"),
-    "amplifon":         ("ZYXJDNVM2JI3VBM8G556",  "Amplifon"),
-    "pernod_ricard":    ("52990097YFPX9J0H5D87",  "Pernod Ricard"),
-    "puig":             ("549300OVHNSX30L1AQ94",  "Puig Brands"),
-    # Loaded from the universe after the first eleven (depth pass). Each LEI was
-    # cross-checked: ASM/Adyen/Heineken/Recordati = universe entity id AND the
-    # GLEIF/OpenFIGI resolver's answer; Schneider = its own package filename AND the
-    # archive's entity record ("SCHNEIDER ELECTRIC SE").
-    "heineken":         ("724500K5PTPSST86UQ23",  "Heineken"),
-    "schneider":        ("969500A1YF1XUYYXS284",  "Schneider Electric"),
-    "adyen":            ("724500973ODKK3IFQ447",  "Adyen"),
-    "asm":              ("7245001I22ND6ZFHX623",  "ASM International"),
-    "recordati":        ("815600FBF92FD3531704",  "Recordati"),
-}
+# Companies with their entity identifiers (LEIs): data/companies.yaml, through company_registry.py - the one
+# registry the loader reads too. key -> (LEI, name); keys are the filename prefix load_historical.py reads back.
+_reg = _load("company_registry", "company_registry.py")
+COMPANIES = {key: (e["lei"], e["name"]) for key, e in _reg.historical_companies().items()}
 
 # Minimum period_end to download (don't go further back than this)
 MIN_YEAR = "2018-01-01"

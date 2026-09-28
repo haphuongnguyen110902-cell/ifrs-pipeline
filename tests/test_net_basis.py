@@ -113,3 +113,48 @@ class TestDashboardCaption:
     def test_other_ratios_never_decide(self, caption):
         df = pd.DataFrame({"ratio_name": ["roe"], "year": [2025], "source_concepts": [[CONTINUING]]})
         assert caption(df) is None
+
+
+class TestOwnersSharesPrintedSeparately:
+    """Solvay tags the owners' result only split by continuing and discontinued operations (FY2024 report: continuing
+    223, discontinued 0 for 2024; -37 and 2,130 for 2023, the year Syensqo was demerged), never the total: net margin
+    and ROE were blank. The printed continuing line IS the net-margin numerator; the total is the sum (IFRS 5.33(d))."""
+
+    @staticmethod
+    def row(**cols):
+        return pd.DataFrame([{"company": "S", "company_id": 1, "year": 2023, "revenue": 6_000.0, **cols}])
+
+    def test_the_printed_continuing_line_is_the_numerator(self, r11):
+        out = r11.compute_ratios(self.row(income_from_continuing_operations_attributable_to_owners__etc=-37.0,
+                                          income_from_discontinued_operations_attributable_to_owner_etc=2_130.0,
+                                          profit_loss_from_discontinued_operations=2_132.0))
+        assert out["net_margin"].iloc[0] == pytest.approx(-37.0 / 6_000.0 * 100)
+        assert not out["_net_unsplit"].iloc[0]
+
+    def test_the_owners_total_is_the_two_shares(self, r11):
+        w = self.row(income_from_continuing_operations_attributable_to_owners__etc=-37.0,
+                     income_from_discontinued_operations_attributable_to_owner_etc=2_130.0,
+                     profit_loss_from_discontinued_operations=2_132.0)
+        assert r11.owners_profit(w, pd.Series([float("nan")]))[0] == pytest.approx(2_093.0)
+
+    def test_no_discontinued_line_means_none(self, r11):
+        w = self.row(income_from_continuing_operations_attributable_to_owners__etc=223.0)
+        assert r11.owners_profit(w, pd.Series([float("nan")]))[0] == pytest.approx(223.0)
+
+    def test_an_unsplit_discontinued_total_leaves_the_total_blank(self, r11):
+        w = self.row(income_from_continuing_operations_attributable_to_owners__etc=223.0,
+                     profit_loss_from_discontinued_operations=50.0)
+        assert pd.isna(r11.owners_profit(w, pd.Series([float("nan")]))[0])
+
+    def test_a_printed_total_wins(self, r11):
+        w = self.row(income_from_continuing_operations_attributable_to_owners__etc=223.0)
+        assert r11.owners_profit(w, pd.Series([230.0]))[0] == 230.0
+
+    def test_profit_less_the_non_controlling_share(self, r11):
+        """Melexis prints its profit without a split; its non-controlling share is a reviewed nil (IAS 1.81B(a))."""
+        w = self.row(profit_loss=171_446_322.0, profit_loss_attributable_to_noncontrolling_interests=0.0)
+        assert r11.owners_profit(w, pd.Series([float("nan")]))[0] == 171_446_322.0
+
+    def test_an_unknown_non_controlling_share_is_never_taken_as_nil(self, r11):
+        w = self.row(profit_loss=171_446_322.0)
+        assert pd.isna(r11.owners_profit(w, pd.Series([float("nan")]))[0])

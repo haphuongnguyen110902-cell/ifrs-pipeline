@@ -205,7 +205,7 @@ def representing_filings(d: pd.DataFrame) -> set:
     return out
 
 
-def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
+def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False, filing_years=None):
     """One row per (company_id, year, concept), chosen deterministically,
     plus a report of every key where the candidates disagreed.
 
@@ -243,7 +243,8 @@ def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
     d = df.copy()
     if "filing_id" not in d.columns:
         d["filing_id"] = 0
-    d["_filing_year"] = d["filing_id"].map(filing_reporting_years(d))
+    # `filing_years` (filing_reporting_years of the unfiltered facts) when the caller set some facts aside first
+    d["_filing_year"] = d["filing_id"].map(filing_years if filing_years is not None else filing_reporting_years(d))
     start = pd.to_datetime(d["start_date"])
     end = pd.to_datetime(d["end_date"])
     is_duration = d["period_type"].eq("duration")
@@ -289,6 +290,60 @@ def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
         conflicts.reset_index(drop=True)
 
 
+def reporting_currencies(facts: pd.DataFrame) -> dict:
+    """{(company_id, year): the currency most of that year's monetary facts are stored in} - the presentation
+    currency (IAS 21) the figures are in. Figures are converted to EUR from THIS currency, never from the currency the
+    shares are quoted in: Anheuser-Busch InBev and STMicroelectronics report in USD and trade in EUR, RELX reports in
+    GBP. (19_valuation.py used the quote currency as a stand-in, true only for the first eleven companies.)"""
+    if facts.empty or "currency" not in facts.columns:
+        return {}
+    m = facts[facts["currency"].astype(str).str.fullmatch(r"[A-Z]{3}")]
+    return m.groupby(["company_id", "year"])["currency"].agg(lambda s: s.value_counts().idxmax()).to_dict()
+
+
+def reporting_years(df: pd.DataFrame) -> pd.Series:
+    """True for the facts whose (company, year) is a reporting year: one with an annual duration (300-400 days) or a
+    balance. A fiscal year is named by the year its period ends, so a short period after the year end would otherwise
+    open a year of its own: Unilever's FY2025 report tags the dividend declared on 12 February 2026 (IAS 10) on a
+    one-day period, and a "2026" of two facts became Unilever's latest year - on the landing table and as the
+    3-statement model's base year."""
+    if df.empty:
+        return pd.Series([], dtype=bool)
+    start, end = pd.to_datetime(df["start_date"]), pd.to_datetime(df["end_date"])
+    days = (end - start).dt.days
+    anchors = df["period_type"].eq("instant") | days.between(300, 400)
+    good = set(zip(df.loc[anchors, "company_id"], df.loc[anchors, "year"]))
+    return pd.Series([k in good for k in zip(df["company_id"], df["year"])], index=df.index)
+
+
+def fiscal_year_end_balances(df: pd.DataFrame) -> pd.Series:
+    """False for a balance (instant) dated other than the end of its year's annual period; True for everything else.
+    Mediobanca moved its year end from 30 June to 31 December and reported the six months to 31 December 2025 as a
+    transition period (IAS 1.36): that report's 31 December 2025 balance sheet is labelled 2025 like the 30 June 2025
+    one, and the later one won - fiscal year 2025 (to June) paired its income statement with a balance sheet six months
+    later. In a year with an annual period the balance sheet is the one at that period's end; a year without one (an
+    opening balance sheet) keeps its balances."""
+    if df.empty:
+        return pd.Series([], dtype=bool)
+    start, end = pd.to_datetime(df["start_date"]), pd.to_datetime(df["end_date"])
+    instant = df["period_type"].eq("instant")
+    annual = ~instant & (end - start).dt.days.between(*ANNUAL_SPAN_DAYS)
+    ends = {}
+    for key, e in zip(zip(df.loc[annual, "company_id"], df.loc[annual, "year"]), end[annual]):
+        ends.setdefault(key, set()).add(e)
+    keep = [not is_instant or (cid, yr) not in ends or e in ends[(cid, yr)]
+            for is_instant, cid, yr, e in zip(instant, df["company_id"], df["year"], end)]
+    return pd.Series(keep, index=df.index)
+
+
+def reportable_facts(df: pd.DataFrame) -> pd.DataFrame:
+    """The facts that can feed a company-year (reporting_years and fiscal_year_end_balances). The ratio engine, the
+    figure trace and the validator all resolve conflicts on THESE, so the trace names the fact the engine used."""
+    if df.empty:
+        return df
+    return df[reporting_years(df) & fiscal_year_end_balances(df)]
+
+
 def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False, prefer_own_filing: bool = False):
     """
     Convert long-format facts into a wide table:
@@ -303,7 +358,9 @@ def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False, prefer_own_f
     return_conflicts=True also returns the conflicts report, for callers
     (main) that want to print it; every other caller is unchanged.
     """
-    resolved, conflicts = resolve_fact_conflicts(df, prefer_own_filing)
+    # a report's own year is read from ALL its facts, before any is set aside for the pivot
+    filing_years = filing_reporting_years(df) if not df.empty and "filing_id" in df.columns else None
+    resolved, conflicts = resolve_fact_conflicts(reportable_facts(df), prefer_own_filing, filing_years)
     wide = resolved.pivot_table(
         index=["company", "company_id", "year"],
         columns="normalized_name",
@@ -344,15 +401,26 @@ def safe_div(numerator, denominator, scale=1):
 # prints (verified with scripts/reconcile_reports.py); the set follows the IFRS taxonomy's own elements.
 NONCURRENT_DEBT_LINES = (
     "longterm_borrowings", "noncurrent_portion_of_noncurrent_bonds_issued",
-    "noncurrent_portion_of_other_noncurrent_borrowings", "other_noncurrent_financial_liabilities",
+    "noncurrent_portion_of_other_noncurrent_borrowings",
+    "noncurrent_portion_of_noncurrent_loans_received",   # Webuild "Finanziamenti bancari e altri finanziamenti"
+    "other_noncurrent_financial_liabilities",
     "noncurrent_lease_liabilities",
 )
 CURRENT_DEBT_LINES = (
     "shortterm_borrowings", "current_borrowings_and_current_portion_of_noncurrent_borr_etc",
+    # the current portion of non-current borrowings, printed as its own line: beside short-term borrowings (Eni "Quote a
+    # breve di passivita finanziarie a lungo termine" 3,434 next to 4,929 of short-term debt) or as the only current
+    # borrowing line (AB InBev "Interest-bearing loans and borrowings" 885, Dometic "Kortfristig upplaning" 2,388)
+    "current_portion_of_longterm_borrowings",
+    "current_bank_overdrafts",   # AB InBev prints "Bank overdrafts" (14M) as a line of its own
     "current_bonds_issued_and_current_portion_of_noncurrent_bonds_etc",
     "other_current_borrowings_and_current_portion_of_other_noncur_etc", "other_current_financial_liabilities",
     "current_lease_liabilities",
 )
+# IAS 1.60: a company may present its balance sheet by liquidity, without a current / non-current split - Ferrari
+# prints one "Debt" line (2,884M). Such a total is the whole of the borrowings, so it counts as complete on its own;
+# it is used ONLY when no split borrowing line is stored (it would contain them).
+UNCLASSIFIED_DEBT_TOTALS = ("borrowings",)
 # IFRS "financial liabilities" SUBTOTALS (IAS 1.54(m)). Whether a printed subtotal CONTAINS the detail lines
 # or sits BESIDE them (Amplifon prints 984M of non-current financial liabilities beside 364M of lease
 # liabilities; Kering 13M beside 10,026M of borrowings) cannot be told from the numbers - only from the
@@ -366,8 +434,12 @@ FINANCIAL_LIABILITY_TOTALS = {
                                       "other_current_borrowings_and_current_portion_of_other_noncur_etc"),
 }
 # parent -> child: the taxonomy's "current borrowings and current portion of non-current borrowings" contains
-# short-term borrowings, so counting both would double count (no company stores both today)
-CONTAINS = {"current_borrowings_and_current_portion_of_noncurrent_borr_etc": ("shortterm_borrowings",)}
+# short-term borrowings, the current portion and overdrafts, and short-term borrowings may contain overdrafts, so a child
+# stored beside its parent is dropped (no company stores both today): it can understate, never double count
+CONTAINS = {"current_borrowings_and_current_portion_of_noncurrent_borr_etc": ("shortterm_borrowings",
+                                                                              "current_portion_of_longterm_borrowings",
+                                                                              "current_bank_overdrafts"),
+            "shortterm_borrowings": ("current_bank_overdrafts",)}
 
 
 def _financial_debt_row(row: pd.Series):
@@ -387,6 +459,10 @@ def _financial_debt_row(row: pd.Series):
                 if child in used and used[parent] >= used[child]:
                     del used[child]
     if not used:
+        for total in UNCLASSIFIED_DEBT_TOTALS:
+            t = row.get(total)
+            if pd.notna(t):
+                return abs(float(t)), total, True
         return float("nan"), "", False
     non_current = set(NONCURRENT_DEBT_LINES) | {t for t in FINANCIAL_LIABILITY_TOTALS if t.startswith("noncurrent")}
     current = set(CURRENT_DEBT_LINES) | {t for t in FINANCIAL_LIABILITY_TOTALS if t.startswith("current")}
@@ -439,10 +515,12 @@ def get_best(wide: pd.DataFrame, *names: str) -> pd.Series:
 
 PAYABLES_CONCEPTS = (
     "trade_and_other_current_payables_to_trade_suppliers",   # trade payables only - preferred
+    "trade_and_other_payables_to_trade_suppliers",           # the same, tagged without "current" (SKF, Ferrari)
     "trade_and_other_current_payables",                      # broader: trade AND other payables
+    "trade_and_other_payables",                              # the same, tagged without "current" (Carrefour)
     "other_current_payables",                                # weakest fallback
 )
-BROADER_PAYABLES = frozenset(PAYABLES_CONCEPTS[1:])
+BROADER_PAYABLES = frozenset({"trade_and_other_current_payables", "trade_and_other_payables", "other_current_payables"})
 
 
 DISCONTINUED_TO_OWNERS = ("income_from_discontinued_operations_attributable_to_owner_etc",
@@ -466,14 +544,38 @@ def continuing_profit_to_owners(wide: pd.DataFrame, net: pd.Series):
     note, which ESEF does not tag line by line): not available, never assumed. No discontinued line at all means
     none: IFRS 5.33(a) requires it on the face of the income statement, and ESEF tags every figure there.
     `unsplit` marks the rows left blank for that reason, so the stored ratio can say why (net_margin_notes)."""
+    disc_owners, disc_total = _discontinued_to_owners(wide)
+    unknown_split = disc_owners.isna() & disc_total.notna() & disc_total.ne(0)
+    derived = (net - disc_owners.fillna(0)).mask(unknown_split)
+    # the owners' continuing result as the company prints it (Solvay), when it does - a printed line before a derived one
+    continuing = get_col(wide, CONTINUING_TO_OWNERS).combine_first(derived)
+    basis = [NET_BASIS_CONTINUING if pd.notna(v) and v != 0 else "" for v in disc_owners]
+    return continuing, basis, unknown_split & continuing.isna() & net.notna()
+
+
+CONTINUING_TO_OWNERS = "income_from_continuing_operations_attributable_to_owners__etc"
+EQUITY_BASIS_ZERO_NCI = "equity (no non-controlling interests)"
+EQUITY_BASIS_LESS_NCI = "equity less non-controlling interests"
+
+
+def _discontinued_to_owners(wide: pd.DataFrame):
+    """(owners' share of the discontinued result - printed, or total less the non-controlling share -, total)."""
     disc_owners = get_best(wide, *DISCONTINUED_TO_OWNERS)
     disc_total = get_col(wide, "profit_loss_from_discontinued_operations")
     disc_nci = get_col(wide, "profit_loss_from_discontinued_operations_attributable_to__etc")
-    disc_owners = disc_owners.combine_first(disc_total - disc_nci)
-    unknown_split = disc_owners.isna() & disc_total.notna() & disc_total.ne(0)
-    continuing = (net - disc_owners.fillna(0)).mask(unknown_split)
-    basis = [NET_BASIS_CONTINUING if pd.notna(v) and v != 0 else "" for v in disc_owners]
-    return continuing, basis, unknown_split & net.notna()
+    return disc_owners.combine_first(disc_total - disc_nci), disc_total
+
+
+def owners_profit(wide: pd.DataFrame, net: pd.Series) -> pd.Series:
+    """Profit attributable to owners of the parent: the printed line, else the printed continuing and discontinued
+    owners' shares added up (IFRS 5.33(d); IAS 1.81B). Solvay tags only the two shares. No discontinued line at all
+    means none (IFRS 5.33(a)); a discontinued total whose owners' share is unknown leaves it blank."""
+    disc_owners, disc_total = _discontinued_to_owners(wide)
+    no_discontinued = disc_owners.isna() & (disc_total.isna() | disc_total.eq(0))
+    # or profit less the non-controlling share (IAS 1.81B(a): the two shares make the profit) - Melexis prints no split
+    # of its profit; its nil non-controlling share is a reviewed figure (reviewed_note_figures.yaml)
+    by_share = get_col(wide, "profit_loss") - get_col(wide, "profit_loss_attributable_to_noncontrolling_interests")
+    return net.combine_first(get_col(wide, CONTINUING_TO_OWNERS) + disc_owners.mask(no_discontinued, 0)).combine_first(by_share)
 
 
 def net_margin_notes(ratios: pd.DataFrame) -> dict:
@@ -502,6 +604,24 @@ def by_nature_notes(ratios: pd.DataFrame) -> dict:
         for name in BY_NATURE_RATIOS:
             if name in row.index and pd.isna(row[name]):
                 notes[(int(row["company_id"]), int(row["year"]), name)] = BY_NATURE_NOTE
+    return notes
+
+
+EBIT_NOT_POSITIVE_NOTE = "operating profit is zero or negative in this year, so a figure divided by it has no meaning"
+EBIT_DIVIDED_RATIOS = ("cash_conversion", "net_debt_ebitda_proxy")
+
+
+def ebit_not_positive_notes(ratios: pd.DataFrame) -> dict:
+    """{(company_id, year, ratio): why it is blank} for the ratios divided by operating profit in a year where it is
+    zero or negative - only where the ratio is actually blank."""
+    if "_ebit_not_positive" not in ratios.columns:
+        return {}
+    notes = {}
+    hit = ratios[ratios["_ebit_not_positive"].fillna(False).astype(bool)]
+    for _, row in hit.iterrows():
+        for name in EBIT_DIVIDED_RATIOS:
+            if name in row.index and pd.isna(row[name]):
+                notes[(int(row["company_id"]), int(row["year"]), name)] = EBIT_NOT_POSITIVE_NOTE
     return notes
 
 
@@ -534,7 +654,7 @@ def source_concepts_for(ratio_name: str, row) -> list | None:
 # rate and growth keep the restated, like-for-like figures.
 AS_REPORTED_COLUMNS = ("dso", "dio", "dpo", "ccc", "roic", "roe", "cash_conversion", "net_debt_ebitda_proxy",
                        "_payables_basis", "_equity_basis", "_net_debt", "_debt_basis", "_ebitda", "_da_total",
-                       "_da_basis", "_receivables", "_inventories", "_payables")
+                       "_da_basis", "_receivables", "_inventories", "_payables", "_ebit_not_positive")
 
 
 def compute_ratios(wide: pd.DataFrame, wide_as_reported: pd.DataFrame = None) -> pd.DataFrame:
@@ -575,7 +695,8 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # Unlike the D&A tag situation, this isn't ambiguous - it's the
     # identical concept under IFRS 15's own naming - so it's safe to add
     # as a fallback rather than leave flagged.
-    rev = get_best(wide, "revenue", "revenue_from_contracts_with_customers").abs()
+    # an investment-property company's revenue is its rental income (IAS 40.75(f)(i): Cofinimmo tags no other line)
+    rev = get_best(wide, "revenue", "revenue_from_contracts_with_customers", "rental_income_from_investment_property").abs()
 
     # --- accounting profit (IAS 12.5) ---
     # "Accounting profit is profit or loss for a period before deducting tax expense" (IAS 12.5), and the average
@@ -592,7 +713,8 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     pbt_printed = get_best(wide,
         "profit_loss_before_tax",
         "resultat_avant_impot_et_societes_mises_en_equivalence",             # L'Oreal: before associates
-        "profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc",  # Danone: before associates
+        "profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc_x",  # Danone (dan:): before associates
+        "dan_profit_loss_before_tax_before_share_associates",                  # Danone (DAN:, older reports)
     )
     accounting_profit = (continuing_profit + tax).combine_first(pbt_printed)
 
@@ -606,6 +728,9 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
         "profit_loss_from_operating_activities",                          # standard IFRS
         "resultat_dexploitation",                                          # L'Oreal
         "profit_loss_from_operating_activities_after_share_of_prof_etc",  # LVMH
+        # operating profit after the share of associates "in operating activity" (Carrefour "Resultat operationnel",
+        # Safran): after non-recurring items, like every other company's operating profit
+        "profit_loss_from_operating_activities_after_share_of_prof_etc_v2",
     )
     finance_costs = get_best(wide, "finance_costs", "interest_expense").abs()
     ebit_derived = pbt_printed.combine_first(accounting_profit) + finance_costs
@@ -640,13 +765,18 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["_by_nature"] = rev.notna() & gp_tag.isna() & cogs_tag.isna()
 
     # --- net margin ---
-    net = get_col(wide, "profit_loss_attributable_to_owners_of_parent")
+    net = owners_profit(wide, get_col(wide, "profit_loss_attributable_to_owners_of_parent"))
     net_continuing, r["_net_basis"], r["_net_unsplit"] = continuing_profit_to_owners(wide, net)
     r["net_margin"] = safe_div(net_continuing, rev, scale=100)
 
     # --- cash conversion ---
+    # CFO / operating profit, and net debt / operating profit below, mean nothing when operating profit is zero or
+    # negative (an impairment year: Dometic and Umicore 2024) - the sign flips and a plausible-looking figure comes out
+    # (Dometic: -11.9x "leverage" on SEK 13.4bn of net debt). Blank, with the reason stored (ebit_not_positive_notes).
     cfo = get_col(wide, "cash_flows_from_used_in_operating_activities")
-    r["cash_conversion"] = safe_div(cfo, ebit, scale=100)
+    ebit_positive = ebit > 0
+    r["_ebit_not_positive"] = ebit.notna() & ~ebit_positive
+    r["cash_conversion"] = safe_div(cfo, ebit, scale=100).where(ebit_positive)
 
     # --- working capital: DSO / DIO / DPO / CCC ---
     # Controller's daily tool, not a bank's - this is exactly the kind of
@@ -654,6 +784,7 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     receivables = get_best(wide,
         "current_trade_receivables",              # specific tag - preferred
         "trade_and_other_current_receivables",    # broader fallback (includes non-trade)
+        "trade_and_other_receivables",            # the same, tagged without "current" (Carrefour)
     )
     inventory = get_best(wide, "inventories", "inventories_total")
     payables = get_best(wide, *PAYABLES_CONCEPTS)
@@ -707,9 +838,16 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # owners of the parent - a plain accounting identity, not a per-company guess (see reviewed_note_figures.yaml's
     # asm_no_noncontrolling_interests_* entries for what "proven" means here). _equity_basis is the audit trail
     # (ratio.source_concepts, like _payables_basis below), so the dashboard can caption it.
+    # IAS 1.54(q)-(r): non-controlling interests are presented within equity, so where both are printed and the owners'
+    # subtotal is not, the owners' share is total equity less them - an identity of two printed lines (Syensqo and
+    # Solvay print "Total equity" and "Non-controlling interests" only). The proven-zero case above is the same
+    # identity with a zero.
+    total_equity = get_col(wide, "equity")
     via_proven_zero_nci = equity_parent.isna() & (nci_raw == 0)
-    r["_equity_basis"] = ["equity (no non-controlling interests)" if v else "" for v in via_proven_zero_nci]
-    equity_parent = equity_parent.fillna(get_col(wide, "equity").where(nci_raw == 0))
+    via_printed_nci = equity_parent.isna() & total_equity.notna() & nci_raw.notna() & (nci_raw != 0)
+    r["_equity_basis"] = [EQUITY_BASIS_ZERO_NCI if z else EQUITY_BASIS_LESS_NCI if d else ""
+                          for z, d in zip(via_proven_zero_nci, via_printed_nci)]
+    equity_parent = equity_parent.fillna(total_equity - nci_raw)
     nci = nci_raw.fillna(0)
     invested_capital = equity_parent + nci + r["_net_debt"]
     nopat = ebit * (1 - r["tax_rate"].clip(0, 40) / 100)  # tax_rate is in %, divide back
@@ -719,7 +857,7 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["roe"] = safe_div(net, equity_parent, scale=100)
 
     # --- Net Debt / Operating Profit ---
-    r["net_debt_ebitda_proxy"] = safe_div(r["_net_debt"], ebit)
+    r["net_debt_ebitda_proxy"] = safe_div(r["_net_debt"], ebit).where(ebit_positive)
 
     # --- absolute values kept for downstream use (valuation, EV multiples) ---
     # Prefixed with _ so RATIO_META (which drives print/DB/Excel) never picks
@@ -1068,6 +1206,12 @@ def save_to_db(engine, ratios: pd.DataFrame, company_ids: dict, notes: dict = No
                        "neutral": neutral, "note": notes.get((int(cid), int(year), ratio_name)),
                        "src": None if pd.isna(val) else source_concepts_for(ratio_name, row)})
                 rows_written += 1
+        # a year the engine no longer produces for a company must not stay in the table: Unilever's "2026" of a
+        # dividend date (removed by reportable_facts) and a stray SKF "1981" were still shown after the fix. Scoped to the
+        # companies in this run, so a --company run leaves the others alone.
+        for cid, years in ratios.groupby("company_id")["year"]:
+            conn.execute(text("DELETE FROM ratio WHERE company_id = :cid AND NOT (year = ANY(:yrs))"),
+                         {"cid": int(cid), "yrs": sorted({int(y) for y in years})})
         conn.commit()
     return rows_written
 
@@ -1155,7 +1299,7 @@ if __name__ == "__main__":
     financial = financial_company_reasons(fetch_company_profiles(engine), load_reporting_model_overrides())
     ratios, notes, n_blanked = gate_financial_ratios(ratios, financial)
     notes.update(net_margin_notes(ratios))
-    for key, text_note in by_nature_notes(ratios).items():
+    for key, text_note in {**ebit_not_positive_notes(ratios), **by_nature_notes(ratios)}.items():
         notes.setdefault(key, text_note)              # a financial-company reason, if any, stays the stated one
     gated_names = sorted(ratios.loc[ratios["company_id"].isin(list(financial)), "company"].unique())
     if gated_names:

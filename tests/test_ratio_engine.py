@@ -552,3 +552,47 @@ class TestAsReportedBasis:
         row = make_wide_row()
         pd.testing.assert_frame_equal(r11.compute_ratios(row, row.copy()), r11.compute_ratios(row))
 
+
+class TestReportingYears:
+    """Unilever's FY2025 report tags the dividend declared on 12 February 2026 (IAS 10) on a one-day period: that
+    year of two facts became Unilever's "latest year". A year needs an annual period or a balance to exist."""
+
+    def test_a_short_period_after_the_year_end_opens_no_year(self, r11):
+        df = _frame(_anchors(1, date(2026, 1, 1)), _fact("revenue", 60_000.0, 1, year=2025),
+                    _fact("dividends_proposed", 1_100.0, 1, year=2026, start=date(2026, 2, 12), end=date(2026, 2, 13)))
+        years = set(r11.pivot_to_wide(df)["year"])
+        assert 2025 in years and 2026 not in years
+
+    def test_a_year_with_only_balances_is_kept(self, r11):
+        """An opening balance sheet (the comparative of the earliest year) is a reporting year."""
+        df = _frame(_anchors(1, date(2026, 1, 1)), _fact("cash", 5.0, 1, ptype="instant", year=2024, end=date(2025, 1, 1)))
+        assert 2024 in set(r11.pivot_to_wide(df)["year"])
+
+    def test_a_transition_period_balance_sheet_does_not_replace_the_fiscal_year_end_one(self, r11):
+        """Mediobanca moved its year end from 30 June to 31 December (IAS 1.36): its report for the six months to
+        31 December 2025 carries a 31 December balance sheet, labelled 2025 like the 30 June 2025 one. Fiscal year 2025
+        (July 2024 - June 2025, gross income 3,039.5M) must keep its own 30 June balance sheet."""
+        june, dec = date(2025, 7, 1), date(2026, 1, 1)
+        df = _frame(_fact("margine_di_intermediazione", 3_039.5, 1, year=2025, start=date(2024, 7, 1), end=june),
+                    _fact("margine_di_intermediazione", 1_175.9, 1, year=2025, start=date(2025, 7, 1), end=dec),
+                    _fact("assets", 99_000.0, 1, ptype="instant", year=2025, end=june),
+                    _fact("assets", 101_000.0, 1, ptype="instant", year=2025, end=dec))
+        row = r11.pivot_to_wide(df).set_index("year").loc[2025]
+        assert row["assets"] == 99_000.0 and row["margine_di_intermediazione"] == 3_039.5
+
+    def test_the_trace_resolves_the_same_facts_as_the_engine(self, r11):
+        june, dec = date(2025, 7, 1), date(2026, 1, 1)
+        df = _frame(_fact("margine_di_intermediazione", 3_039.5, 1, year=2025, start=date(2024, 7, 1), end=june),
+                    _fact("assets", 99_000.0, 1, ptype="instant", year=2025, end=june),
+                    _fact("assets", 101_000.0, 1, ptype="instant", year=2025, end=dec))
+        resolved, _ = r11.resolve_fact_conflicts(r11.reportable_facts(df), False, r11.filing_reporting_years(df))
+        assert resolved.loc[resolved["normalized_name"] == "assets", "value"].tolist() == [99_000.0]
+
+    def test_one_day_cash_flow_contexts_at_the_year_end_stay_in_their_year(self, r11):
+        """Recordati tags its cash-flow lines with start == end == 31 December - the year has its balances."""
+        df = _frame(_anchors(1, date(2026, 1, 1)), _fact("cash", 429.0, 1, ptype="instant", year=2025),
+                    _fact("adjustments_for_amortisation_expense", 170.0, 1, year=2025, start=date(2025, 12, 31),
+                          end=date(2026, 1, 1)))
+        wide = r11.pivot_to_wide(df)
+        assert wide.loc[wide["year"] == 2025, "adjustments_for_amortisation_expense"].iloc[0] == 170.0
+

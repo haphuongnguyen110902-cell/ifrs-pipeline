@@ -65,7 +65,7 @@ def fetch_all(engine) -> pd.DataFrame:
     facts = r11.fetch_facts(engine)
     if facts.empty:
         return facts
-    resolved, _ = r11.resolve_fact_conflicts(facts)
+    resolved, _ = r11.resolve_fact_conflicts(r11.reportable_facts(facts), filing_years=r11.filing_reporting_years(facts))
     return resolved
 
 

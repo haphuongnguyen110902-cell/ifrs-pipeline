@@ -88,32 +88,15 @@ _spec.loader.exec_module(batch09)
 
 
 # ---------------------------------------------------------------- company map
-# filename prefix (lowercased) -> (company name exactly as stored in the
-# `company` table, expected reporting currency). Keep the name in sync with
-# data/companies.yaml's `name` values so V1 rows and historical rows land
-# on the SAME company_id - get_or_create_company matches on exact name.
-COMPANY_MAP = {
-    "loreal": ("L'Oreal", "EUR", "Consumer / Beauty", "France"),
-    "lvmh": ("LVMH", "EUR", "Luxury Goods", "France"),
-    "kering": ("Kering", "EUR", "Luxury Goods", "France"),
-    "essilorluxottica": ("EssilorLuxottica", "EUR", "Consumer / Eyewear", "France"),
-    "danone": ("Danone", "EUR", "Consumer Staples", "France"),
-    "essity": ("Essity", "SEK", "Consumer / Hygiene", "Sweden"),
-    "moncler": ("Moncler", "EUR", "Luxury Apparel", "Italy"),
-    "shell": ("Shell", "USD", "Energy", "United Kingdom"),
-    "amplifon": ("Amplifon", "EUR", "Consumer Health Retail", "Italy"),
-    "puig": ("Puig Brands", "EUR", "Consumer / Beauty", "Spain"),
-    # Loaded from the universe after the first eleven (depth pass). Values are
-    # data/companies.yaml's own; download_historical.py's COMPANIES uses the same keys.
-    "heineken": ("Heineken", "EUR", "Consumer / Beverages", "Netherlands"),
-    "schneider": ("Schneider Electric", "EUR", "Industrials / Electrical Equipment", "France"),
-    "adyen": ("Adyen", "EUR", "Financials / Payments", "Netherlands"),
-    "asm": ("ASM International", "EUR", "Technology / Semiconductor Equipment", "Netherlands"),
-    "recordati": ("Recordati", "EUR", "Healthcare / Pharmaceuticals", "Italy"),
-    # June 30 year end: each fiscal year is labelled by the year its period ENDS (fiscal_year_label in
-    # 11_ratio_engine.py), the same rule as for the December filers, so its history loads like theirs.
-    "pernod_ricard": ("Pernod Ricard", "EUR", "Consumer / Beverages", "France"),
-}
+# filename prefix -> (company name exactly as stored in the `company` table, expected reporting currency, sector,
+# country): data/companies.yaml, through company_registry.py - the same registry download_historical.py reads, so a
+# company is added in one place and V1 rows and historical rows land on the same company_id (get_or_create_company
+# matches on exact name).
+_reg_spec = importlib.util.spec_from_file_location("company_registry", _THIS_DIR / "company_registry.py")
+_reg = importlib.util.module_from_spec(_reg_spec)
+_reg_spec.loader.exec_module(_reg)
+COMPANY_MAP = {key: (e["name"], e["expected_currency"], e["sector"], e["country"])
+               for key, e in _reg.historical_companies().items()}
 
 FILENAME_RE = re.compile(r"^([a-zA-Z_]+)_(\d{4})-(\d{2})-(\d{2})\.zip$")
 
@@ -150,22 +133,34 @@ def discover_files(raw_dir: Path):
 
 # ---------------------------------------------------------------- DB helpers specific to historical loads
 
-def get_or_create_historical_filing(cur, company_id, source_file, fiscal_year_end):
+def get_or_create_historical_filing(cur, company_id, source_file, fiscal_year_end, source_url=None):
     """Like batch09.get_or_create_filing, but ALSO records fiscal_year_end.
     batch09's version leaves it NULL because V1 only ever had one filing
     per company and didn't need to tell years apart; here telling years
-    apart is the entire point."""
+    apart is the entire point. `source_url` - where the package was fetched
+    from - is recorded when given (a package streamed through a temporary
+    folder is not kept on disk; its URL and sha256-checked download are its
+    provenance)."""
     cur.execute(
         "SELECT filing_id FROM filing WHERE company_id = %s AND source_file = %s",
         (company_id, source_file))
     row = cur.fetchone()
     if row:
+        if source_url:
+            cur.execute("UPDATE filing SET source_url = %s WHERE filing_id = %s AND source_url IS NULL",
+                        (source_url, row[0]))
         return row[0]
     cur.execute(
-        "INSERT INTO filing (company_id, source_file, fiscal_year_end, parsed_at) "
-        "VALUES (%s, %s, %s, now()) RETURNING filing_id",
-        (company_id, source_file, fiscal_year_end))
+        "INSERT INTO filing (company_id, source_file, fiscal_year_end, source_url, parsed_at) "
+        "VALUES (%s, %s, %s, %s, now()) RETURNING filing_id",
+        (company_id, source_file, fiscal_year_end, source_url))
     return cur.fetchone()[0]
+
+
+def recorded_source(zip_path: Path, record_as) -> str:
+    """The source_file stored for a package: its own path, or - for a package parsed from a temporary folder - the
+    canonical data/raw/historical/<name> it would have had, so reconcile_reports.py and --skip-loaded find it."""
+    return str(Path(record_as) / zip_path.name) if record_as else str(zip_path)
 
 
 def clear_historical_facts(cur, company_name, raw_dir_prefix):
@@ -196,6 +191,9 @@ if __name__ == "__main__":
     ap.add_argument("--reset-historical", action="store_true",
                      help="Delete previously-loaded historical facts for the companies "
                           "being processed before reloading (does not touch V1 data)")
+    ap.add_argument("--record-as", help="Record each file's source_file under this folder instead of --raw-dir "
+                                        "(load_from_archive.py parses from a temporary folder)")
+    ap.add_argument("--source-url", help="Record this URL as the filing's source_url (one file per run)")
     ap.add_argument("--skip-loaded", action="store_true",
                      help="Skip files already loaded (a filing row for this exact source file that holds facts), so "
                           "adding one new year does not re-parse and re-upsert every older one")
@@ -241,7 +239,7 @@ if __name__ == "__main__":
         finally:
             c.close()
         before = len(matched)
-        matched = [m for m in matched if Path(m["path"]).as_posix() not in done]
+        matched = [m for m in matched if Path(recorded_source(m["path"], args.record_as)).as_posix() not in done]
         print(f"--skip-loaded: {before - len(matched)} file(s) already loaded, skipped\n")
 
     matched.sort(key=lambda m: (m["company"], m["fiscal_year_end"]))
@@ -340,7 +338,8 @@ if __name__ == "__main__":
         with conn:
             with conn.cursor() as cur:
                 company_id = batch09.get_or_create_company(cur, company, sector=sector, country=country)
-                filing_id = get_or_create_historical_filing(cur, company_id, str(zip_path), fye)
+                filing_id = get_or_create_historical_filing(cur, company_id, recorded_source(zip_path, args.record_as),
+                                                            fye, args.source_url)
 
                 for _, row in df.iterrows():
                     tag = row["concept_qname"]

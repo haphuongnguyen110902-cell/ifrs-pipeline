@@ -204,6 +204,17 @@ def compute_wacc(market_cap: float, net_debt: float, beta: float, tax_rate_pct: 
 
 # ---------------------------------------------------------------- DCF math
 
+def terminal_fcff_reason(fcff_years: list, fcff_values: list):
+    """Why no DCF can be built from this projection, or None. The Gordon terminal value capitalises the last projected
+    free cash flow into a perpetuity: when that flow is not positive (Stellantis 2025: an operating loss of EUR 26bn
+    projected forward), the 'value' of a perpetual cash outflow is a negative enterprise value (EUR -372bn) with no
+    economic meaning - refused, like a beta that is not positive, never shown."""
+    if fcff_values and not fcff_values[-1] > 0:
+        return (f"the projected free cash flow to the firm in {fcff_years[-1]} is {fcff_values[-1] / 1e6:,.0f}M EUR - a "
+                f"terminal value built on a cash outflow has no economic meaning")
+    return None
+
+
 def discount_cash_flows(fcff_years: list, fcff_values: list, wacc: float,
                          terminal_growth: float, base_year: int) -> dict:
     """Standard mid-nothing (end-of-year) discounting. Terminal value via
@@ -301,6 +312,10 @@ def save_to_db(engine, company, base_year, wacc_info, dcf_result, equity_value, 
             "beta_src": wacc_info.get("beta_source"),
             "pct": float(dcf_result["pct_of_ev_from_terminal"]),
         })
+        # one current valuation per company: a DCF from an older base year was built on today's market data over
+        # superseded financials (Danone 2024 EUR 162bn beside 2025 EUR 86bn), not a history worth keeping
+        conn.execute(text("DELETE FROM dcf_valuation WHERE company_id = :cid AND base_year <> :by"),
+                     {"cid": company_id, "by": base_year})
 
 
 # ---------------------------------------------------------------- main
@@ -366,11 +381,13 @@ if __name__ == "__main__":
               f"or add it to TICKER_MAP first.")
         sys.exit(1)
 
-    if quote_ccy != "EUR":
-        print(f"\n{args.company} reports in {quote_ccy} - converting base-year financials to EUR "
+    # the financials are converted from the currency they are reported in, the market cap from the quote currency
+    report_ccy = base.get("currency") or quote_ccy
+    if report_ccy != "EUR":
+        print(f"\n{args.company} reports in {report_ccy} - converting base-year financials to EUR "
               f"using 18_fx_convert.py's stored historical rates before projecting.")
         fx_lookup = fx18.load_fx_lookup(engine)
-        base = convert_base_to_eur(base, quote_ccy, fx_lookup)
+        base = convert_base_to_eur(base, report_ccy, fx_lookup)
 
     growth = args.growth if args.growth is not None else tsm.default_growth_rate(base)
     projection = tsm.project(base, args.years, growth, args.interest_rate)
@@ -378,6 +395,12 @@ if __name__ == "__main__":
 
     print(f"\nUnlevered FCF (FCFF), in EUR - NOT the same as Phase 5's levered FCF:")
     print(fcff_df[["year", "ebit", "da", "delta_wc", "capex", "fcff"]].to_string(index=False))
+    why = terminal_fcff_reason(fcff_df["year"].tolist(), fcff_df["fcff"].tolist())
+    if why:
+        print(f"\nNot built for {args.company}: {why}.")
+        if not args.no_db:
+            print(f"Removed {delete_dcf(engine, args.company)} stored DCF row(s) for {args.company}.")
+        sys.exit(0)
 
     print(f"\nFetching live market data for {ticker}...")
     market = val19.fetch_market_data(ticker)

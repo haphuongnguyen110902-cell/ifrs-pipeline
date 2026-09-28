@@ -138,7 +138,30 @@ contexts (never its filename) and check the archive before keeping it. When a
 filer renames an extension tag between years, `scripts/34_link_renamed_tags.py`
 links the new tag to the old concept only on an exact value match in every
 shared period (evidence in `data/mappings/LINKED_renames.yaml`); new concept keys
-come from `scripts/concept_keys.py`, never an `_x` suffix.
+come from `scripts/concept_keys.py`, never an `_x` suffix. The IFRS "other (non-)current
+financial liabilities" element is a residual: some filers print their borrowings under it
+(Schneider, Recordati's short-term bank debt), others payables or derivatives (Safran,
+Cofinimmo) - the engine counts it as debt, and a filer whose printed line is not borrowing
+is re-pointed by an override to `other_*_financial_liabilities_not_borrowings`. The
+prefix `ext:` is shared by several filers, so an `ext:` tag is only ever an override.
+
+`data/companies.yaml` is the one company registry (`key` and `lei` validated by
+`scripts/company_registry.py`); the downloaders and loaders read it.
+`scripts/load_from_archive.py` loads a company's packages from filings.xbrl.org, or one
+from an official URL (`--url KEY URL`): each is streamed into a temporary directory,
+its period and LEI checked from its own contexts, loaded, reconciled, and removed.
+
+**Which facts make a company-year** (`reportable_facts` in `11_ratio_engine.py`, used by
+the engine, the figure trace and the validator alike): a year needs an annual period
+(300-400 days) or a balance, so a dividend declared after the year end (IAS 10) opens no
+year; and in a year with an annual period the balance sheet is the one at that period's
+end, so a transition period after a change of year end (IAS 1.36, Mediobanca) cannot
+replace it. A report's own year is read from all its facts. Figures are converted to EUR
+from the reporting currency (`reporting_currencies`: the currency most of a year's
+monetary facts are in, IAS 21), never from the currency the shares trade in (AB InBev
+and STMicroelectronics report in USD, RELX in GBP). A ratio divided by operating profit
+(cash conversion, net debt / operating profit) is blank, with its reason in `ratio.note`,
+when operating profit is zero or negative.
 
 **Restated comparatives vs figures as first reported.** When two reports give
 different numbers for one year, `pivot_to_wide` takes the latest report's
@@ -163,7 +186,9 @@ balances with revenue, so it needs no cost of sales, and projects on the median 
 of five years (`normalised_tax_rate`). Banks and insurers get `FINANCIAL_RATIO_META`
 (cost/income, cost of risk, loans/deposits, equity/assets, IFRS 17 service ratio) instead
 of the corporate ratios; a bank's own extension lines are mapped to those concepts with
-evidence when it is loaded. The DCF's beta is 23_market_risk.py's regression against STOXX
+evidence when it is loaded (the Italian banks' Circular 262 "Margine di intermediazione"
+and "Costi operativi"; their "crediti verso clientela" include debt securities, so their
+loans/deposits and cost of risk stay blank). The DCF's beta is 23_market_risk.py's regression against STOXX
 Europe 600 (Blume-adjusted), never a vendor beta; a beta that is not positive refuses the
 DCF. `scripts/35_trace_figures.py` checks that
 every input the dashboard's figures are built from equals a printed figure; after

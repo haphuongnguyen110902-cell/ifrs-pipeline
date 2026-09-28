@@ -188,6 +188,8 @@ def fetch_base_year(engine, company: str) -> dict:
 
     latest = select_base_year_row(ratios)
     latest_year = int(latest["year"])
+    # the currency the base year's figures are in (IAS 21 presentation currency) - 22_dcf.py converts from it
+    base_currency = r11.reporting_currencies(facts).get((int(latest["company_id"]), latest_year))
 
     capex_rows = resolve_capex(wide).loc[wide["year"] == latest_year]
     capex_value = capex_rows["capex"].iloc[0] if not capex_rows.empty and pd.notna(capex_rows["capex"].iloc[0]) else None
@@ -252,6 +254,7 @@ def fetch_base_year(engine, company: str) -> dict:
         "net_debt": latest["_net_debt"], "da_total": da_final,
         "da_total_is_fallback": da_is_fallback,
         "gross_margin": latest["gross_margin"], "operating_margin": latest["operating_margin"],
+        "currency": base_currency,
         "tax_rate": tax_rate, "tax_rate_base_year": latest["tax_rate"], "tax_rate_years": tax_years,
         "dso": latest["dso"], "dio": latest["dio"],
         "dpo": latest["dpo"],

@@ -107,3 +107,608 @@ overrides:
       amortisation and provisions on non-current operating assets 1,823 (of which right-of-use amortisation 985) = EBITDA
       6,569; 2022: 5,589 + 1,666 (935) = 7,255. The line therefore is the D&A the company itself adds back to reach EBITDA.
       Read 2026-09-21 from the report's own rows.
+
+  # ---- Phase 4 (2026-09-28): balance-sheet lines of the companies added in Phase 4 that the tag alone reads wrongly.
+  # Each printed row was read from the company's own ESEF report (the row that holds the tagged value), not from the tag.
+
+  # Thales - FY2025 consolidated balance sheet (French ESEF report tha-2025-12-31-1-fr.xhtml, EUR millions, 2025 then
+  # 2024). Two working-capital lines are Thales extensions.
+  - company: "Thales"
+    tag: "tha:ClientsEtAutresCreancesCourantes"
+    concept: trade_and_other_current_receivables
+    statement: balance_sheet
+    label: Trade and other current receivables
+    printed_label: "Clients et autres créances courantes"
+    evidence: >-
+      Balance sheet 31/12/25 and 31/12/24: "Clients et autres créances courantes" 6 845,8 / 7 146,2, a current-asset row
+      tagged tha:ClientsEtAutresCreancesCourantes. Read 2026-09-28 from the report's own balance-sheet row.
+
+  - company: "Thales"
+    tag: "tha:FournisseursEtAutresDettesCourantes"
+    concept: trade_and_other_current_payables
+    statement: balance_sheet
+    label: Trade and other current payables
+    printed_label: "Fournisseurs et autres dettes courantes"
+    evidence: >-
+      Balance sheet 31/12/25 and 31/12/24: "Fournisseurs et autres dettes courantes" (note 10.4) 8 652,3 / 8 332,7 among
+      current liabilities, tagged tha:FournisseursEtAutresDettesCourantes. Trade AND other payables, so the dashboard's
+      broader-payables caption applies. Read 2026-09-28 from the report's own balance-sheet row.
+
+  # RELX - FY2025 annual report (English ESEF report 549300WSX3VBUFFJOO66-2025-12-31-1-en.xhtml, GBP millions, 2024 then
+  # 2025). The report is laid out without HTML tables; each row was read from the text around its tagged value.
+  - company: "RELX"
+    tag: "rel:TradeAndOtherReceivablesCurrent"
+    concept: trade_and_other_current_receivables
+    statement: balance_sheet
+    label: Trade and other current receivables
+    printed_label: "Trade and other receivables"
+    evidence: >-
+      Consolidated statement of financial position, current assets: "Trade and other receivables" (note 19) 2,511 (2024)
+      / 2,468 (2025), tagged rel:TradeAndOtherReceivablesCurrent. Read 2026-09-28 from the report's own row.
+
+  - company: "RELX"
+    tag: "rel:NonCurrentBorrowings"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current borrowings
+    printed_label: "Debt"
+    evidence: >-
+      Consolidated statement of financial position, non-current liabilities: "Debt" (note 21) 5,132 (2024) / 5,696
+      (2025), tagged rel:NonCurrentBorrowings. RELX prints no separate lease-liability row. Read 2026-09-28 from the
+      report's own row.
+
+  - company: "RELX"
+    tag: "rel:CurrentBorrowing"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current borrowings
+    printed_label: "Debt"
+    evidence: >-
+      Consolidated statement of financial position, current liabilities: "Debt" (note 21) 1,412 (2024) / 1,571 (2025),
+      tagged rel:CurrentBorrowing. Read 2026-09-28 from the report's own row.
+
+  # Umicore - FY2024 annual report (ESEF package UMIC-2024-12-31-en.html, EUR thousands, 31/12/2023 then 31/12/2024). Both
+  # "Financial debt" rows are Umicore extensions whose names say they include lease liabilities; no lease row is printed.
+  - company: "Umicore"
+    tag: "UMI:LongTermBorrowingsAndNonCurrentLeaseLiabilities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current borrowings (including lease liabilities)
+    printed_label: "Financial debt"
+    evidence: >-
+      Consolidated balance sheet, non-current liabilities: "Financial debt" (note F25) 2,019,445 (2023) / 2,316,994
+      (2024), tagged UMI:LongTermBorrowingsAndNonCurrentLeaseLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "Umicore"
+    tag: "UMI:ShortTermBorrowingsAndCurrentLeaseLiabilities"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current borrowings (including lease liabilities)
+    printed_label: "Financial debt"
+    evidence: >-
+      Consolidated balance sheet, current liabilities: "Financial debt" (note F25) 728,698 (2023) / 1,119,745 (2024),
+      tagged UMI:ShortTermBorrowingsAndCurrentLeaseLiabilities. Read 2026-09-28 from the report's own row.
+
+  # JM - FY2024 annual report (Swedish ESEF report 529900X0UEM9DOM6FK12-2024-12-31-0-sv.xhtml, SEK millions, 2024 then
+  # 2023). JM prints its borrowings as "interest-bearing liabilities" under its own elements.
+  - company: "JM"
+    tag: "jm:LongtermInterestbearingLiabilities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Långfristiga räntebärande skulder"
+    evidence: >-
+      Koncernens balansräkning, långfristiga skulder: "Långfristiga räntebärande skulder" (notes 24, 25) 574 (2024) / 951
+      (2023), tagged jm:LongtermInterestbearingLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "JM"
+    tag: "jm:ShorttermInterestbearingLiabilities"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Kortfristiga räntebärande skulder"
+    evidence: >-
+      Koncernens balansräkning, kortfristiga skulder: "Kortfristiga räntebärande skulder" (notes 24, 25) 11 164 (2024) /
+      15 089 (2023), tagged jm:ShorttermInterestbearingLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "JM"
+    tag: "ifrs-full:OtherCurrentFinancialLiabilities"
+    concept: other_current_liabilities
+    statement: balance_sheet
+    label: Other current liabilities
+    printed_label: "Övriga kortfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning, kortfristiga skulder: "Övriga kortfristiga skulder" (other current liabilities) 1 052
+      (2024) / 1 241 (2023), printed after trade payables and apart from JM's interest-bearing liabilities, but tagged with
+      the IFRS element for other current FINANCIAL liabilities, which the ratio engine counts as borrowing. Read
+      2026-09-28 from the report's own row.
+
+  # Peab - FY2024 annual report (Swedish ESEF report peabab-2024-12-31-0-sv.xhtml, SEK millions, 2024 then 2023). Peab
+  # prints its borrowings as interest-bearing liabilities, with the project financing on rows of its own.
+  - company: "Peab"
+    tag: "peabab:InterestBearingLongTermLiabilities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Räntebärande långfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning: "Räntebärande långfristiga skulder" (notes 27, 32, 33) 6 094 (2024) / 7 046 (2023), tagged
+      peabab:InterestBearingLongTermLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "peabab:InterestBearingLongTermLiabilitiesProjectFinancing"
+    concept: noncurrent_portion_of_other_noncurrent_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande långfristiga skulder, projektfinansiering"
+    evidence: >-
+      Koncernens balansräkning: "Räntebärande långfristiga skulder, projektfinansiering" (notes 27, 32, 33) 53 (2024) /
+      193 (2023), tagged peabab:InterestBearingLongTermLiabilitiesProjectFinancing. Read 2026-09-28 from the report's own
+      row.
+
+  - company: "Peab"
+    tag: "peabab:InterestBearingCurrentLiabilties"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Räntebärande kortfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning: "Räntebärande kortfristiga skulder" (notes 27, 32, 33) 5 368 (2024) / 4 246 (2023), tagged
+      peabab:InterestBearingCurrentLiabilties (the filer's own spelling). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "peabab:InterestBearingShortTermLiabilitiesProjectFinancing"
+    concept: other_current_borrowings_and_current_portion_of_other_noncur_etc
+    statement: balance_sheet
+    label: Current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande kortfristiga skulder, projektfinansiering"
+    evidence: >-
+      Koncernens balansräkning: "Räntebärande kortfristiga skulder, projektfinansiering" (notes 27, 32, 33) 2 859 (2024) /
+      6 933 (2023), tagged peabab:InterestBearingShortTermLiabilitiesProjectFinancing. Read 2026-09-28 from the report's
+      own row.
+
+  # Dometic Group - FY2024 annual report (Swedish ESEF report dome-2024-12-31-0-sv.xhtml, SEK millions, 2024 then 2023).
+  # Its borrowings are "Långfristig upplåning" and "Kortfristig upplåning"; two "other liabilities" rows carry the IFRS
+  # elements for other FINANCIAL liabilities, which the ratio engine counts as borrowing.
+  - company: "Dometic Group"
+    tag: "ifrs-full:OtherNoncurrentFinancialLiabilities"
+    concept: other_noncurrent_liabilities
+    statement: balance_sheet
+    label: Other non-current liabilities
+    printed_label: "Övriga långfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning, långfristiga skulder: "Övriga långfristiga skulder" (other non-current liabilities, note
+      3) 5 (2024) / – (2023), printed apart from "Långfristig upplåning" 13 077 / 16 335 and the lease rows. Read
+      2026-09-28 from the report's own row.
+
+  - company: "Dometic Group"
+    tag: "ifrs-full:OtherCurrentFinancialLiabilities"
+    concept: other_current_liabilities
+    statement: balance_sheet
+    label: Other current liabilities
+    printed_label: "Övriga kortfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning, kortfristiga skulder: "Övriga kortfristiga skulder" (other current liabilities, notes 3,
+      29) 950 (2024) / 1 266 (2023), printed apart from "Kortfristig upplåning" 2 388 / – and the lease rows. Read
+      2026-09-28 from the report's own row.
+
+  # Safran - FY2025 URD (French ESEF report Safran-2025-12-31-1-FR.xhtml, EUR millions, 31.12.2024 then 31.12.2025).
+  # Safran prints its borrowings as "interest-bearing financial liabilities" under its own elements, and its note 6.5
+  # defines its net financial position as cash (A) less exactly those two rows (B): 4 776 = 3 788 + 988 (2024) and
+  # 5 051 = 2 446 + 2 605 (2025). The "other financial liabilities" rows are therefore not borrowing.
+  - company: "Safran"
+    tag: "safran:NonCurrentInterestBearingFinancialLiablities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing financial liabilities
+    printed_label: "Passifs financiers non courants portant intérêts"
+    evidence: >-
+      Bilan consolidé, passifs non courants: "Passifs financiers non courants portant intérêts" (note 6.5.2) 3 788 (2024)
+      / 2 446 (2025), tagged safran:NonCurrentInterestBearingFinancialLiablities (the filer's own spelling). Note 6.5:
+      "Passifs financiers portant intérêts (B)" 4 776 / 5 051 = this row + the current one. Read 2026-09-28.
+
+  - company: "Safran"
+    tag: "safran:CurrentInterestBearingFinancialLiabilities"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing financial liabilities
+    printed_label: "Passifs financiers courants portant intérêts"
+    evidence: >-
+      Bilan consolidé, passifs courants: "Passifs financiers courants portant intérêts" (note 6.5.2) 988 (2024) / 2 605
+      (2025), tagged safran:CurrentInterestBearingFinancialLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "Safran"
+    tag: "ifrs-full:OtherNoncurrentFinancialLiabilities"
+    concept: other_noncurrent_financial_liabilities_not_borrowings
+    statement: balance_sheet
+    label: Other non-current financial liabilities (not borrowings)
+    printed_label: "Autres passifs financiers non courants"
+    evidence: >-
+      Bilan consolidé: "Autres passifs financiers non courants" (note 6.1.6) 11 (2024) / 23 (2025), printed apart from
+      the interest-bearing rows; Safran's net financial position (note 6.5) leaves it out. Read 2026-09-28.
+
+  - company: "Safran"
+    tag: "ifrs-full:OtherCurrentFinancialLiabilities"
+    concept: other_current_financial_liabilities_not_borrowings
+    statement: balance_sheet
+    label: Other current financial liabilities (not borrowings)
+    printed_label: "Autres passifs financiers courants"
+    evidence: >-
+      Bilan consolidé: "Autres passifs financiers courants" (note 6.2.4) 148 (2024) / 174 (2025). Note 6.2.4: payables on
+      acquisitions of property, plant, equipment and intangibles 144 / 168 and on acquisitions of securities 4 / 6 - not
+      borrowing; Safran's net financial position (note 6.5) leaves it out. Read 2026-09-28.
+
+  # Cofinimmo - FY2025 universal registration document (Dutch ESEF report 549300TM914CSF6KI389-2025-12-31-1-nl.xhtml, EUR
+  # thousands, 2025 then 2024), balance sheet in the Belgian REIT format: "B. Financiële schulden" = "a.
+  # Kredietinstellingen" + "b. Financiële leasing" + "c. Overige". The bank lines are Cofinimmo extensions.
+  - company: "Cofinimmo"
+    tag: "cofb:LongTermBankBorrowings"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current bank borrowings
+    printed_label: "a. Kredietinstellingen"
+    evidence: >-
+      Geconsolideerde balans, "B. Langlopende financiële schulden" 1.588.536 / 1.753.269 = "a. Kredietinstellingen"
+      511.296 / 590.186 (tagged cofb:LongTermBankBorrowings) + "b. Financiële leasing" 0 + "c. Overige" 1.077.239 /
+      1.163.082. Read 2026-09-28 from the report's own rows.
+
+  - company: "Cofinimmo"
+    tag: "cofb:CurrentBankBorrowingsAndCurrentPortionOfNonCurrentBankBorrowings"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current bank borrowings
+    printed_label: "a. Kredietinstellingen"
+    evidence: >-
+      Geconsolideerde balans, "B. Kortlopende financiële schulden" 999.696 / 834.068 = "a. Kredietinstellingen" 159.712 /
+      119.068 (tagged cofb:CurrentBankBorrowingsAndCurrentPortionOfNonCurrentBankBorrowings) + "b. Financiële leasing" 0
+      + "c. Overige" 839.984 / 715.000. Read 2026-09-28 from the report's own rows.
+
+  - company: "Cofinimmo"
+    tag: "ifrs-full:OtherNoncurrentFinancialLiabilities"
+    concept: other_noncurrent_financial_liabilities_not_borrowings
+    statement: balance_sheet
+    label: Other non-current financial liabilities (not borrowings)
+    printed_label: "C. Andere langlopende financiële verplichtingen"
+    evidence: >-
+      Geconsolideerde balans: "C. Andere langlopende financiële verplichtingen" 18.003 / 19.749, printed apart from "B.
+      Langlopende financiële schulden". The fair-value note splits the 18.003 into "Afgeleide instrumenten" (derivatives)
+      3.709 and "Overige" 14.294 (level 3) - not borrowing. Read 2026-09-28.
+
+  # SKF - FY2024 annual report (Swedish ESEF report skf-2024-12-31-0-sv.xhtml, SEK millions, 2024 then 2023).
+  - company: "SKF"
+    tag: "ifrs-full:BondsIssued"
+    concept: noncurrent_financial_liabilities
+    statement: balance_sheet
+    label: Non-current financial liabilities
+    printed_label: "Långfristiga finansiella skulder"
+    evidence: >-
+      Koncernens balansräkningar, långfristiga skulder: "Långfristiga finansiella skulder" (note 20) 12 685 (2024) /
+      15 687 (2023), tagged ifrs-full:BondsIssued (total bonds, an element the ratio engine does not read as a
+      non-current line). Note 20: bonds 1 101 + 4 557 + 3 429 + 3 307, other long-term loans 200 and hedging derivatives
+      91 = 12 685. Read 2026-09-28 from the report's own rows.
+
+  # ---- Banks (Phase 4, 2026-09-28). The inputs of FINANCIAL_RATIO_META (cost/income, cost of risk, loans/deposits,
+  # equity/assets) as each bank prints them. Italian banks use the Bank of Italy Circular 262 layout: "120. Margine di
+  # intermediazione" is the total operating income and "240. Costi operativi" the operating costs (administrative expenses,
+  # net provisions for risks, depreciation and amortisation, other operating income and charges). Their "crediti verso
+  # clientela" include debt securities held at amortised cost, so they are NOT read as customer loans (loans/deposits and
+  # cost of risk stay blank for them rather than mixing securities into loans).
+
+  # BNP Paribas - FY2025 URD (French ESEF report bnp-2025-12-31-1-fr.html, EUR millions, 2025 then 2024).
+  - company: "BNP Paribas"
+    tag: "bnpp:RevenuesFromContinuingActivities"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "PRODUIT NET BANCAIRE"
+    evidence: >-
+      Compte de résultat consolidé: "PRODUIT NET BANCAIRE" 51 223 (2025) / 48 831 (2024), tagged
+      bnpp:RevenuesFromContinuingActivities. Read 2026-09-28 from the report's own row.
+
+  - company: "BNP Paribas"
+    tag: "bnpp:GrossOperatingIncomeFromContinuingActivities"
+    concept: operating_profit_before_impairment
+    statement: income_statement
+    label: Gross operating income, before impairment (banks)
+    printed_label: "RÉSULTAT BRUT D'EXPLOITATION"
+    evidence: >-
+      Compte de résultat consolidé: "RÉSULTAT BRUT D'EXPLOITATION" 19 849 (2025) / 18 638 (2024) = produit net bancaire
+      51 223 less general operating expenses and depreciation (2 371 in 2025) - the operating expenses are 51 223 - 19 849
+      = 31 374. Tagged bnpp:GrossOperatingIncomeFromContinuingActivities. Read 2026-09-28.
+
+  - company: "BNP Paribas"
+    tag: "bnpp:FinancialAssetsAtAmortisedCostLoansAndAdvancesToCustomersNoninsuranceActivities"
+    concept: loans_and_advances_to_customers
+    statement: balance_sheet
+    label: Loans and advances to customers
+    printed_label: "Prêts et créances sur la clientèle"
+    evidence: >-
+      Bilan consolidé, actifs financiers au coût amorti: "Prêts et créances sur la clientèle" (note 4.e) 897 358 (2025) /
+      900 141 (2024), tagged bnpp:FinancialAssetsAtAmortisedCostLoansAndAdvancesToCustomersNoninsuranceActivities.
+      Read 2026-09-28 from the report's own row.
+
+  - company: "BNP Paribas"
+    tag: "bnpp:FinancialLiabilitiesAtAmortisedCostDepositsFromCustomersNoninsuranceActivities"
+    concept: deposits_from_customers
+    statement: balance_sheet
+    label: Deposits from customers
+    printed_label: "Dettes envers la clientèle"
+    evidence: >-
+      Bilan consolidé, passifs financiers au coût amorti: "Dettes envers la clientèle" (note 4.g) 1 075 564 (2025) /
+      1 034 857 (2024), tagged bnpp:FinancialLiabilitiesAtAmortisedCostDepositsFromCustomersNoninsuranceActivities.
+      Read 2026-09-28 from the report's own row.
+
+  # KBC Groep - FY2025 annual report (Dutch ESEF report 213800X3Q9LSAKRUWY91-2025-12-31-1-nl.xhtml, EUR millions).
+  - company: "KBC Groep"
+    tag: "ifrs-full:Revenue"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "TOTALE OPBRENGSTEN"
+    evidence: >-
+      Geconsolideerde resultatenrekening: "TOTALE OPBRENGSTEN" (total income) 12 200 (2025) / 11 167 (2024), tagged
+      ifrs-full:Revenue. Read 2026-09-28 from the report's own row.
+
+  - company: "KBC Groep"
+    tag: "ifrs-full:OperatingExpense"
+    concept: bank_operating_expenses
+    statement: income_statement
+    label: Operating expenses (banks)
+    printed_label: "Exploitatiekosten (exclusief rechtstreeks toerekenbaar aan verzekeringscontracten)"
+    evidence: >-
+      Geconsolideerde resultatenrekening: "Exploitatiekosten (exclusief rechtstreeks toerekenbaar aan
+      verzekeringscontracten)" (note 3.7) -4 706 (2025) / -4 565 (2024), tagged ifrs-full:OperatingExpense. As its label
+      says, the costs directly attributable to insurance contracts are not in it (IFRS 17 presents them within insurance
+      service expenses). Read 2026-09-28 from the report's own row.
+
+  # Banco BPM - FY2025 report (Italian ESEF report 815600E4E6DCD2D25E30-2025-12-31-1-it.htm, EUR thousands, 2025 then 2024).
+  # "ext:" is a prefix several filers use, so these entries are for Banco BPM only.
+  - company: "Banco BPM"
+    tag: "ext:GrossIncome"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "120. Margine di intermediazione"
+    evidence: >-
+      Conto economico consolidato: "120. Margine di intermediazione" 6.157.937 (2025) / 5.840.135 (2024), tagged
+      ext:GrossIncome. Read 2026-09-28 from the report's own row.
+
+  - company: "Banco BPM"
+    tag: "ext:OperatingCosts"
+    concept: bank_operating_expenses
+    statement: income_statement
+    label: Operating expenses (banks)
+    printed_label: "240. Costi operativi"
+    evidence: >-
+      Conto economico consolidato: "240. Costi operativi" (2.838.864) (2025) / (2.919.418) (2024), tagged
+      ext:OperatingCosts. Read 2026-09-28 from the report's own row.
+
+  - company: "Banco BPM"
+    tag: "ext:TotalEquity"
+    concept: equity
+    statement: balance_sheet
+    label: Total equity
+    printed_label: "Patrimonio netto"
+    evidence: >-
+      The Circular 262 balance sheet prints no total-equity line; the statement of changes in equity closes on total
+      equity 15.585.163 at 31 December 2025 (ext:TotalEquity) = group 15.504.676 (ext:TotalEquityAttributableToOwnersOfParent)
+      + non-controlling interests 80.487 (ext:TotalNonControllingInterests). Read 2026-09-28.
+
+  # Mediobanca - report for the transition period to 31 December 2025 (Italian ESEF report
+  # PSNL19R2RXX5U3QWHI44-2025-12-31-1-it.htm, EUR thousands): the six months to 31 December 2025 and, as comparative, the
+  # fiscal year to 30 June 2025 (the year end moved from 30 June to 31 December).
+  - company: "Mediobanca"
+    tag: "ext:MargineDiIntermediazione"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "120. Margine di intermediazione"
+    evidence: >-
+      Conto economico consolidato: "120. Margine di intermediazione" 1.175.927 (six months to 31.12.2025) / 3.039.466
+      (year to 30.6.2025), tagged ext:MargineDiIntermediazione. Read 2026-09-28 from the report's own row.
+
+  - company: "Mediobanca"
+    tag: "ext:CostiOperativi"
+    concept: bank_operating_expenses
+    statement: income_statement
+    label: Operating expenses (banks)
+    printed_label: "240. Costi operativi"
+    evidence: >-
+      Conto economico consolidato: "240. Costi operativi" (578.680) (six months to 31.12.2025) / (1.544.893) (year to
+      30.6.2025), tagged ext:CostiOperativi. Read 2026-09-28 from the report's own row.
+
+  - company: "Mediobanca"
+    tag: "ext:TotalEquity"
+    concept: equity
+    statement: balance_sheet
+    label: Total equity
+    printed_label: "Patrimonio netto"
+    evidence: >-
+      The Circular 262 balance sheet prints no total-equity line; the statement of changes in equity closes on total
+      equity 11.447.879 at 31 December 2025 (ext:TotalEquity). Read 2026-09-28.
+
+  # FinecoBank - FY2025 report (Italian ESEF report, EUR thousands, 2025 then 2024).
+  - company: "FinecoBank"
+    tag: "finecobank:MargineDiIntermediazione"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "120. Margine di intermediazione"
+    evidence: >-
+      Conto economico consolidato: "120. Margine di intermediazione" 1.315.205 (2025) / 1.313.797 (2024), tagged
+      finecobank:MargineDiIntermediazione. Read 2026-09-28 from the report's own row.
+
+  - company: "FinecoBank"
+    tag: "finecobank:CostiOperativi"
+    concept: bank_operating_expenses
+    statement: income_statement
+    label: Operating expenses (banks)
+    printed_label: "240. Costi operativi"
+    evidence: >-
+      Conto economico consolidato: "240. Costi operativi" (374.365) (2025) / (373.962) (2024), tagged
+      finecobank:CostiOperativi. Read 2026-09-28 from the report's own row.
+
+  # Peab - FY2025 annual report (Swedish ESEF report peab-2025-12-31-1-sv, SEK millions, 2025 then 2024). From FY2025 Peab's
+  # extension prefix is "peab:" instead of "peabab:", same element names; the 2024 comparatives equal the FY2024 report.
+  - company: "Peab"
+    tag: "peab:InterestBearingLongTermLiabilities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Räntebärande långfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande långfristiga skulder" (notes 27, 32, 33) 5 853 / 6 094, tagged
+      peab:InterestBearingLongTermLiabilities; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingLongTermLiabilities). Read 2026-09-28 from the
+      report's own row.
+
+  - company: "Peab"
+    tag: "peab:InterestBearingLongTermLiabilitiesProjectFinancing"
+    concept: noncurrent_portion_of_other_noncurrent_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande långfristiga skulder, projektfinansiering"
+    evidence: >-
+      Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande långfristiga skulder, projektfinansiering" (notes 27, 32, 33) 5 / 53, tagged
+      peab:InterestBearingLongTermLiabilitiesProjectFinancing; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingLongTermLiabilitiesProjectFinancing). Read 2026-09-28 from the
+      report's own row.
+
+  - company: "Peab"
+    tag: "peab:InterestBearingCurrentLiabilties"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Räntebärande kortfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande kortfristiga skulder" (notes 27, 32, 33) 3 419 / 5 368, tagged
+      peab:InterestBearingCurrentLiabilties; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingCurrentLiabilties). Read 2026-09-28 from the
+      report's own row.
+
+  - company: "Peab"
+    tag: "peab:InterestBearingShortTermLiabilitiesProjectFinancing"
+    concept: other_current_borrowings_and_current_portion_of_other_noncur_etc
+    statement: balance_sheet
+    label: Current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande kortfristiga skulder, projektfinansiering"
+    evidence: >-
+      Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande kortfristiga skulder, projektfinansiering" (notes 27, 32, 33) 2 360 / 2 859, tagged
+      peab:InterestBearingShortTermLiabilitiesProjectFinancing; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingShortTermLiabilitiesProjectFinancing). Read 2026-09-28 from the
+      report's own row.
+
+  # JM and Peab FY2021 reports: the same interest-bearing lines under the element names used that year.
+  - company: "JM"
+    tag: "jm:LangfristigaRaentebaerandeSkulder"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Långfristiga räntebärande skulder"
+    evidence: >-
+      FY2021 report (jm-2021-12-31-sv), koncernens balansräkning: "Långfristiga räntebärande skulder" (notes 23, 24, 25) 818 (2021) / 1 180 (2020); JM's FY2021 element name for what it tags jm:LongtermInterestbearingLiabilities from FY2024. Read 2026-09-28 from the report's own row.
+
+  - company: "JM"
+    tag: "jm:KortfristigaRaentebaerandeSkulder"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Kortfristiga räntebärande skulder"
+    evidence: >-
+      FY2021 report (jm-2021-12-31-sv), koncernens balansräkning: "Kortfristiga räntebärande skulder" (notes 23, 24, 25) 7 566 (2021) / 6 480 (2020). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "PEA:LongTermBorrowingsNotRelatedToProjects"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Räntebärande långfristiga skulder"
+    evidence: >-
+      FY2021 report (549300FQS4VD3153I854-2021-12-31-sv, prefix PEA:), koncernens balansräkning: "Räntebärande långfristiga skulder" (notes 29, 34, 35) 5281 (2021) / 4289 (2020). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "PEA:LongTermBorrowingsRelatedToProjects"
+    concept: noncurrent_portion_of_other_noncurrent_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande långfristiga skulder, projektfinansiering"
+    evidence: >-
+      FY2021 report, koncernens balansräkning: the row after "Räntebärande långfristiga skulder", same notes 29, 34, 35, 346 (2021) / 75 (2020); the filer's own label "Long-term borrowings, related to projects" (the FY2024 report prints this line as "Räntebärande långfristiga skulder, projektfinansiering"). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "PEA:ShortTermBorrowingsNotRelatedToProjects"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Räntebärande kortfristiga skulder"
+    evidence: >-
+      FY2021 report, koncernens balansräkning: "Räntebärande kortfristiga skulder" (notes 29, 34, 35) 2386 (2021) / 2647 (2020). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "PEA:ShortTermBorrowingsRelatedToProjects"
+    concept: other_current_borrowings_and_current_portion_of_other_noncur_etc
+    statement: balance_sheet
+    label: Current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande kortfristiga skulder, projektfinansiering"
+    evidence: >-
+      FY2021 report, koncernens balansräkning: the row after "Räntebärande kortfristiga skulder", same notes 29, 34, 35, 7003 (2021) / 4981 (2020); the filer's own label "Short-term borrowings, related to projects". Read 2026-09-28 from the report's own row.
+  # Hermes International - FY2025 URD (French ESEF report hermes-2025-12-31-1-fr.html, EUR millions, 2025 then 2024).
+  - company: "Hermes International"
+    tag: "hermes:DepreciationOfFixedAssetsRightOfUseAssetsAndImpairmentLosses"
+    concept: adjustments_for_depreciation_and_amortisation_expense_and_etc
+    statement: cash_flow
+    label: Depreciation, Amortization and Impairment Adjustments
+    printed_label: "Amortissements des immobilisations, droits d’utilisation et pertes de valeur"
+    evidence: >-
+      Tableau des flux de trésorerie consolidés, first add-back after "Résultat net – part du groupe": "Amortissements des
+      immobilisations, droits d’utilisation et pertes de valeur" (notes 8.2 à 8.4) 926 (2025) / 844 (2024) - depreciation,
+      amortisation and impairment of fixed assets and right-of-use assets; provisions are a separate line ("Mouvements des
+      provisions" 27 / (29)). The same perimeter as the IFRS element AdjustmentsForDepreciationAndAmortisationExpenseAnd
+      ImpairmentLoss... Read 2026-09-28 from the report's own rows.
+
+  # ---- Capex (Phase 4): combined lines printed under the company's own element, gross of disposals (checked).
+  - company: "Anheuser-Busch InBev"
+    tag: "BUD:PurchaseOfPropertyPlantAndEquipmentAndPurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Acquisition of property, plant and equipment and of intangible assets"
+    evidence: >-
+      FY2025 annual report (English ESEF report 5493008H3828EMEXB082-2025-12-31-1-en.xhtml, USD millions), consolidated cash flow statement, investing activities: "Acquisition of property, plant and equipment and of intangible assets" (notes 13/15) (3,656) in 2025 / (3,863) in 2024 - gross payments (IAS 7.16(a)); proceeds from their sale are a separate line (104 / 128). Read 2026-09-28 from the report's own rows.
+    checked_years: [2025, 2024]
+
+  - company: "Alstom"
+    tag: "ALS:PurchaseOfPropertyPlantAndEquipmentPurchaseOfIntangibleAssetsAndPaymentsForDevelopmentProjectExpenditureClassifiedAsInvestingActivities"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Acquisition d’immobilisations corporelles et incorporelles (coûts de R&D capitalisés inclus)"
+    evidence: >-
+      Universal registration document for the year to 31 March 2026 (French ESEF report Alstom-2026-03-31-1-fr.xhtml, EUR millions), tableau des flux de trésorerie: "Acquisition d’immobilisations corporelles et incorporelles (coûts de R&D capitalisés inclus)" (567) for fiscal 2026 / (482) for fiscal 2025 - gross payments including capitalised development (IAS 7.16(a)); "Produits de cession des immobilisations corporelles et incorporelles" is a separate line (13 / 12). Read 2026-09-28 from the report's own rows.
+    checked_years: [2026, 2025]
+
+  - company: "Carrefour"
+    tag: "carrefour:PurchaseOfTangibleandIntangibleFixedAssets"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Acquisitions d’immobilisations corporelles et incorporelles"
+    evidence: >-
+      FY2025 URD (French ESEF report, EUR millions), tableau des flux de trésorerie, opérations d'investissement: "Acquisitions d’immobilisations corporelles et incorporelles" (1 523) in 2025 / (1 711) in 2024 - gross payments (IAS 7.16(a)); "Cessions d’immobilisations corporelles et incorporelles" (642 / 595) and the change in amounts due to fixed-asset suppliers (2 / (27)) are separate lines. Read 2026-09-28 from the report's own rows.
+    checked_years: [2025, 2024]
+
+  - company: "D'Ieteren Group"
+    tag: "DIE:PurchaseOfPropertyPlantAndEquipmentAndPurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Acquisition d'immobilisations corporelles et incorporelles"
+    evidence: >-
+      FY2025 report (French ESEF report 549300DV5KJ23OKVTW34-2025-12-31-1-fr.xhtml, EUR millions), tableau des flux de trésorerie, activités d'investissement: "Acquisition d'immobilisations corporelles et incorporelles" (notes 13/14/15) -111,5 in 2025 / -129,8 in 2024 - gross payments (IAS 7.16(a)); proceeds from their sale are a separate line (11,1 / 21,7). Read 2026-09-28 from the report's own rows.
+    checked_years: [2025, 2024]
+
+  - company: "Stellantis"
+    tag: "stellantis:InvestmentsInPropertyPlantAndEquipmentAndIntangibleAssets"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Investments in property, plant and equipment and intangible assets"
+    evidence: >-
+      FY2025 annual report (English ESEF report stellantis-2025-12-31-en.xhtml, EUR millions), consolidated statement of cash flows: "Investments in property, plant and equipment and intangible assets" (7,987) in 2025 / (11,060) in 2024 / (10,193) in 2023 - gross payments (IAS 7.16(a)); "Proceeds from disposals of property, plant and equipment and intangible assets" is a separate line (229 / 365 / 533). Read 2026-09-28 from the report's own rows.
+    checked_years: [2025, 2024, 2023]
