@@ -43,6 +43,17 @@ st.set_page_config(page_title="IFRS Pipeline", page_icon="📊", layout="wide")
 SCREENER_SCHEMA = Path(__file__).parent / ".." / "sql" / "schema_screener.sql"
 
 
+def sqlalchemy_url(db_url: str) -> str:
+    """The connection URL with its driver named: psycopg2, the one webapp/requirements.txt installs. A plain
+    'postgresql://' means whatever SQLAlchemy's default driver is, and SQLAlchemy 2.1 changed it to psycopg 3: when
+    Streamlit Cloud rebuilt the app (about 2026-09-26) it installed 2.1 and the public dashboard failed with
+    "ModuleNotFoundError: psycopg" until 2026-09-28."""
+    for prefix in ("postgresql://", "postgres://"):
+        if db_url.startswith(prefix):
+            return "postgresql+psycopg2://" + db_url[len(prefix):]
+    return db_url
+
+
 @st.cache_resource
 def get_engine():
     load_dotenv()
@@ -65,7 +76,7 @@ def get_engine():
     # company crashed the Ratios tab, then worked after a reload. pre_ping
     # tests the connection on checkout and transparently reconnects;
     # pool_recycle retires connections before Neon's idle timeout would.
-    return create_engine(db_url, pool_pre_ping=True, pool_recycle=300)
+    return create_engine(sqlalchemy_url(db_url), pool_pre_ping=True, pool_recycle=300)
 
 
 @st.cache_data(ttl=3600)
