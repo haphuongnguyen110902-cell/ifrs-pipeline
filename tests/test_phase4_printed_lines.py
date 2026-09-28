@@ -183,6 +183,47 @@ class TestReviewedEntries:
     def test_the_line_is_read_as_what_the_company_prints(self, entries, company, tag, concept):
         assert entries[(company, tag)]["concept"] == concept
 
+    @pytest.mark.parametrize("company,tag,concept", [
+        ("BNP Paribas", "bnpp:RevenuesFromContinuingActivities", "revenue_and_operating_income"),
+        ("BNP Paribas", "bnpp:GrossOperatingIncomeFromContinuingActivities", "operating_profit_before_impairment"),
+        ("BNP Paribas", "bnpp:FinancialAssetsAtAmortisedCostLoansAndAdvancesToCustomersNoninsuranceActivities",
+         "loans_and_advances_to_customers"),
+        ("KBC Groep", "ifrs-full:OperatingExpense", "bank_operating_expenses"),
+        ("Banco BPM", "ext:GrossIncome", "revenue_and_operating_income"),
+        ("Banco BPM", "ext:OperatingCosts", "bank_operating_expenses"),
+        ("Mediobanca", "ext:MargineDiIntermediazione", "revenue_and_operating_income"),
+        ("FinecoBank", "finecobank:CostiOperativi", "bank_operating_expenses"),
+    ])
+    def test_a_bank_line_is_read_as_what_the_bank_prints(self, entries, company, tag, concept):
+        assert entries[(company, tag)]["concept"] == concept
+
+    def test_the_shared_ext_prefix_is_never_mapped_globally(self, load_script):
+        """Banco BPM and Mediobanca both use the prefix "ext:" - a global mapping would reach every filer using it."""
+        lookup = load_script("09_batch_load.py").load_mapping(str(MAPPING))
+        assert not [t for t in lookup if t.startswith("ext:")]
+
+    def test_bank_evidence_adds_up(self):
+        assert 51_223 - 19_849 == 31_374 == 29_003 + 2_371                       # BNP 2025, EUR millions
+        assert 15_504_676 + 80_487 == 15_585_163                                  # Banco BPM equity, EUR thousands
+
+    def test_bnp_2025_bank_measures(self, r11):
+        out = r11.compute_ratios(wide(revenue_and_operating_income=51_223.0, operating_profit_before_impairment=19_849.0,
+                                      impairment_loss_ifrs_9=3_350.0, loans_and_advances_to_customers=897_358.0,
+                                      deposits_from_customers=1_075_564.0, equity=132_173.0, assets=2_792_981.0)).iloc[0]
+        assert out["cost_income_ratio"] == pytest.approx(31_374 / 51_223 * 100)
+        assert out["cost_of_risk"] == pytest.approx(3_350 / 897_358 * 10_000)
+        assert out["loan_to_deposit"] == pytest.approx(897_358 / 1_075_564 * 100)
+
+    def test_every_bank_concept_the_engine_reads_is_in_the_mapping(self):
+        """bank_operating_expenses and operating_profit_before_impairment were read by the engine but defined nowhere,
+        so no bank could ever fill them: BNP's and KBC's cost/income stayed blank."""
+        mapping = yaml.safe_load(MAPPING.read_text(encoding="utf-8"))
+        known = {n for concepts in mapping.values() for n in concepts}
+        for name in ("revenue_and_operating_income", "expense_by_nature", "bank_operating_expenses",
+                     "operating_profit_before_impairment", "loans_and_advances_to_customers", "impairment_loss_ifrs_9",
+                     "deposits_from_customers", "equity", "assets", "insurance_service_expenses", "insurance_revenue"):
+            assert name in known, name
+
     def test_safran_net_financial_position_is_the_two_interest_bearing_lines(self):
         """Note 6.5: interest-bearing financial liabilities (B) 4,776 (2024) and 5,051 (2025)."""
         assert 3_788 + 988 == 4_776 and 2_446 + 2_605 == 5_051

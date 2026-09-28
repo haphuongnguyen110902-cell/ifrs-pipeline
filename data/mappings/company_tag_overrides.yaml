@@ -386,3 +386,164 @@ overrides:
       15 687 (2023), tagged ifrs-full:BondsIssued (total bonds, an element the ratio engine does not read as a
       non-current line). Note 20: bonds 1 101 + 4 557 + 3 429 + 3 307, other long-term loans 200 and hedging derivatives
       91 = 12 685. Read 2026-09-28 from the report's own rows.
+
+  # ---- Banks (Phase 4, 2026-09-28). The inputs of FINANCIAL_RATIO_META (cost/income, cost of risk, loans/deposits,
+  # equity/assets) as each bank prints them. Italian banks use the Bank of Italy Circular 262 layout: "120. Margine di
+  # intermediazione" is the total operating income and "240. Costi operativi" the operating costs (administrative expenses,
+  # net provisions for risks, depreciation and amortisation, other operating income and charges). Their "crediti verso
+  # clientela" include debt securities held at amortised cost, so they are NOT read as customer loans (loans/deposits and
+  # cost of risk stay blank for them rather than mixing securities into loans).
+
+  # BNP Paribas - FY2025 URD (French ESEF report bnp-2025-12-31-1-fr.html, EUR millions, 2025 then 2024).
+  - company: "BNP Paribas"
+    tag: "bnpp:RevenuesFromContinuingActivities"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "PRODUIT NET BANCAIRE"
+    evidence: >-
+      Compte de résultat consolidé: "PRODUIT NET BANCAIRE" 51 223 (2025) / 48 831 (2024), tagged
+      bnpp:RevenuesFromContinuingActivities. Read 2026-09-28 from the report's own row.
+
+  - company: "BNP Paribas"
+    tag: "bnpp:GrossOperatingIncomeFromContinuingActivities"
+    concept: operating_profit_before_impairment
+    statement: income_statement
+    label: Gross operating income, before impairment (banks)
+    printed_label: "RÉSULTAT BRUT D'EXPLOITATION"
+    evidence: >-
+      Compte de résultat consolidé: "RÉSULTAT BRUT D'EXPLOITATION" 19 849 (2025) / 18 638 (2024) = produit net bancaire
+      51 223 less general operating expenses and depreciation (2 371 in 2025) - the operating expenses are 51 223 - 19 849
+      = 31 374. Tagged bnpp:GrossOperatingIncomeFromContinuingActivities. Read 2026-09-28.
+
+  - company: "BNP Paribas"
+    tag: "bnpp:FinancialAssetsAtAmortisedCostLoansAndAdvancesToCustomersNoninsuranceActivities"
+    concept: loans_and_advances_to_customers
+    statement: balance_sheet
+    label: Loans and advances to customers
+    printed_label: "Prêts et créances sur la clientèle"
+    evidence: >-
+      Bilan consolidé, actifs financiers au coût amorti: "Prêts et créances sur la clientèle" (note 4.e) 897 358 (2025) /
+      900 141 (2024), tagged bnpp:FinancialAssetsAtAmortisedCostLoansAndAdvancesToCustomersNoninsuranceActivities.
+      Read 2026-09-28 from the report's own row.
+
+  - company: "BNP Paribas"
+    tag: "bnpp:FinancialLiabilitiesAtAmortisedCostDepositsFromCustomersNoninsuranceActivities"
+    concept: deposits_from_customers
+    statement: balance_sheet
+    label: Deposits from customers
+    printed_label: "Dettes envers la clientèle"
+    evidence: >-
+      Bilan consolidé, passifs financiers au coût amorti: "Dettes envers la clientèle" (note 4.g) 1 075 564 (2025) /
+      1 034 857 (2024), tagged bnpp:FinancialLiabilitiesAtAmortisedCostDepositsFromCustomersNoninsuranceActivities.
+      Read 2026-09-28 from the report's own row.
+
+  # KBC Groep - FY2025 annual report (Dutch ESEF report 213800X3Q9LSAKRUWY91-2025-12-31-1-nl.xhtml, EUR millions).
+  - company: "KBC Groep"
+    tag: "ifrs-full:Revenue"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "TOTALE OPBRENGSTEN"
+    evidence: >-
+      Geconsolideerde resultatenrekening: "TOTALE OPBRENGSTEN" (total income) 12 200 (2025) / 11 167 (2024), tagged
+      ifrs-full:Revenue. Read 2026-09-28 from the report's own row.
+
+  - company: "KBC Groep"
+    tag: "ifrs-full:OperatingExpense"
+    concept: bank_operating_expenses
+    statement: income_statement
+    label: Operating expenses (banks)
+    printed_label: "Exploitatiekosten (exclusief rechtstreeks toerekenbaar aan verzekeringscontracten)"
+    evidence: >-
+      Geconsolideerde resultatenrekening: "Exploitatiekosten (exclusief rechtstreeks toerekenbaar aan
+      verzekeringscontracten)" (note 3.7) -4 706 (2025) / -4 565 (2024), tagged ifrs-full:OperatingExpense. As its label
+      says, the costs directly attributable to insurance contracts are not in it (IFRS 17 presents them within insurance
+      service expenses). Read 2026-09-28 from the report's own row.
+
+  # Banco BPM - FY2025 report (Italian ESEF report 815600E4E6DCD2D25E30-2025-12-31-1-it.htm, EUR thousands, 2025 then 2024).
+  # "ext:" is a prefix several filers use, so these entries are for Banco BPM only.
+  - company: "Banco BPM"
+    tag: "ext:GrossIncome"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "120. Margine di intermediazione"
+    evidence: >-
+      Conto economico consolidato: "120. Margine di intermediazione" 6.157.937 (2025) / 5.840.135 (2024), tagged
+      ext:GrossIncome. Read 2026-09-28 from the report's own row.
+
+  - company: "Banco BPM"
+    tag: "ext:OperatingCosts"
+    concept: bank_operating_expenses
+    statement: income_statement
+    label: Operating expenses (banks)
+    printed_label: "240. Costi operativi"
+    evidence: >-
+      Conto economico consolidato: "240. Costi operativi" (2.838.864) (2025) / (2.919.418) (2024), tagged
+      ext:OperatingCosts. Read 2026-09-28 from the report's own row.
+
+  - company: "Banco BPM"
+    tag: "ext:TotalEquity"
+    concept: equity
+    statement: balance_sheet
+    label: Total equity
+    printed_label: "Patrimonio netto"
+    evidence: >-
+      The Circular 262 balance sheet prints no total-equity line; the statement of changes in equity closes on total
+      equity 15.585.163 at 31 December 2025 (ext:TotalEquity) = group 15.504.676 (ext:TotalEquityAttributableToOwnersOfParent)
+      + non-controlling interests 80.487 (ext:TotalNonControllingInterests). Read 2026-09-28.
+
+  # Mediobanca - report for the transition period to 31 December 2025 (Italian ESEF report
+  # PSNL19R2RXX5U3QWHI44-2025-12-31-1-it.htm, EUR thousands): the six months to 31 December 2025 and, as comparative, the
+  # fiscal year to 30 June 2025 (the year end moved from 30 June to 31 December).
+  - company: "Mediobanca"
+    tag: "ext:MargineDiIntermediazione"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "120. Margine di intermediazione"
+    evidence: >-
+      Conto economico consolidato: "120. Margine di intermediazione" 1.175.927 (six months to 31.12.2025) / 3.039.466
+      (year to 30.6.2025), tagged ext:MargineDiIntermediazione. Read 2026-09-28 from the report's own row.
+
+  - company: "Mediobanca"
+    tag: "ext:CostiOperativi"
+    concept: bank_operating_expenses
+    statement: income_statement
+    label: Operating expenses (banks)
+    printed_label: "240. Costi operativi"
+    evidence: >-
+      Conto economico consolidato: "240. Costi operativi" (578.680) (six months to 31.12.2025) / (1.544.893) (year to
+      30.6.2025), tagged ext:CostiOperativi. Read 2026-09-28 from the report's own row.
+
+  - company: "Mediobanca"
+    tag: "ext:TotalEquity"
+    concept: equity
+    statement: balance_sheet
+    label: Total equity
+    printed_label: "Patrimonio netto"
+    evidence: >-
+      The Circular 262 balance sheet prints no total-equity line; the statement of changes in equity closes on total
+      equity 11.447.879 at 31 December 2025 (ext:TotalEquity). Read 2026-09-28.
+
+  # FinecoBank - FY2025 report (Italian ESEF report, EUR thousands, 2025 then 2024).
+  - company: "FinecoBank"
+    tag: "finecobank:MargineDiIntermediazione"
+    concept: revenue_and_operating_income
+    statement: income_statement
+    label: Total operating income (banks)
+    printed_label: "120. Margine di intermediazione"
+    evidence: >-
+      Conto economico consolidato: "120. Margine di intermediazione" 1.315.205 (2025) / 1.313.797 (2024), tagged
+      finecobank:MargineDiIntermediazione. Read 2026-09-28 from the report's own row.
+
+  - company: "FinecoBank"
+    tag: "finecobank:CostiOperativi"
+    concept: bank_operating_expenses
+    statement: income_statement
+    label: Operating expenses (banks)
+    printed_label: "240. Costi operativi"
+    evidence: >-
+      Conto economico consolidato: "240. Costi operativi" (374.365) (2025) / (373.962) (2024), tagged
+      finecobank:CostiOperativi. Read 2026-09-28 from the report's own row.

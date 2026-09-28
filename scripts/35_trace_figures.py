@@ -132,7 +132,8 @@ def fetch_traceable_facts(engine, company=None) -> pd.DataFrame:
 
 def chosen_facts(facts: pd.DataFrame, used: set, prefer_own_filing: bool) -> pd.DataFrame:
     """The stored fact behind each used (company_id, year, concept) under one basis."""
-    resolved, _ = r11.resolve_fact_conflicts(facts, prefer_own_filing)
+    resolved, _ = r11.resolve_fact_conflicts(r11.reportable_facts(facts), prefer_own_filing,
+                                             r11.filing_reporting_years(facts))
     keys = pd.DataFrame(sorted(used), columns=["company_id", "year", "normalized_name"])
     return resolved.merge(keys, on=["company_id", "year", "normalized_name"])
 

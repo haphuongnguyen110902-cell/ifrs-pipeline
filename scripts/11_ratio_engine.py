@@ -205,7 +205,7 @@ def representing_filings(d: pd.DataFrame) -> set:
     return out
 
 
-def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
+def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False, filing_years=None):
     """One row per (company_id, year, concept), chosen deterministically,
     plus a report of every key where the candidates disagreed.
 
@@ -243,7 +243,8 @@ def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
     d = df.copy()
     if "filing_id" not in d.columns:
         d["filing_id"] = 0
-    d["_filing_year"] = d["filing_id"].map(filing_reporting_years(d))
+    # `filing_years` (filing_reporting_years of the unfiltered facts) when the caller set some facts aside first
+    d["_filing_year"] = d["filing_id"].map(filing_years if filing_years is not None else filing_reporting_years(d))
     start = pd.to_datetime(d["start_date"])
     end = pd.to_datetime(d["end_date"])
     is_duration = d["period_type"].eq("duration")
@@ -315,6 +316,34 @@ def reporting_years(df: pd.DataFrame) -> pd.Series:
     return pd.Series([k in good for k in zip(df["company_id"], df["year"])], index=df.index)
 
 
+def fiscal_year_end_balances(df: pd.DataFrame) -> pd.Series:
+    """False for a balance (instant) dated other than the end of its year's annual period; True for everything else.
+    Mediobanca moved its year end from 30 June to 31 December and reported the six months to 31 December 2025 as a
+    transition period (IAS 1.36): that report's 31 December 2025 balance sheet is labelled 2025 like the 30 June 2025
+    one, and the later one won - fiscal year 2025 (to June) paired its income statement with a balance sheet six months
+    later. In a year with an annual period the balance sheet is the one at that period's end; a year without one (an
+    opening balance sheet) keeps its balances."""
+    if df.empty:
+        return pd.Series([], dtype=bool)
+    start, end = pd.to_datetime(df["start_date"]), pd.to_datetime(df["end_date"])
+    instant = df["period_type"].eq("instant")
+    annual = ~instant & (end - start).dt.days.between(*ANNUAL_SPAN_DAYS)
+    ends = {}
+    for key, e in zip(zip(df.loc[annual, "company_id"], df.loc[annual, "year"]), end[annual]):
+        ends.setdefault(key, set()).add(e)
+    keep = [not is_instant or (cid, yr) not in ends or e in ends[(cid, yr)]
+            for is_instant, cid, yr, e in zip(instant, df["company_id"], df["year"], end)]
+    return pd.Series(keep, index=df.index)
+
+
+def reportable_facts(df: pd.DataFrame) -> pd.DataFrame:
+    """The facts that can feed a company-year (reporting_years and fiscal_year_end_balances). The ratio engine, the
+    figure trace and the validator all resolve conflicts on THESE, so the trace names the fact the engine used."""
+    if df.empty:
+        return df
+    return df[reporting_years(df) & fiscal_year_end_balances(df)]
+
+
 def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False, prefer_own_filing: bool = False):
     """
     Convert long-format facts into a wide table:
@@ -329,9 +358,9 @@ def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False, prefer_own_f
     return_conflicts=True also returns the conflicts report, for callers
     (main) that want to print it; every other caller is unchanged.
     """
-    if not df.empty:
-        df = df[reporting_years(df)]
-    resolved, conflicts = resolve_fact_conflicts(df, prefer_own_filing)
+    # a report's own year is read from ALL its facts, before any is set aside for the pivot
+    filing_years = filing_reporting_years(df) if not df.empty and "filing_id" in df.columns else None
+    resolved, conflicts = resolve_fact_conflicts(reportable_facts(df), prefer_own_filing, filing_years)
     wide = resolved.pivot_table(
         index=["company", "company_id", "year"],
         columns="normalized_name",

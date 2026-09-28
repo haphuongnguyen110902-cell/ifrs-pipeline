@@ -587,6 +587,16 @@ income_statement:
     display_label: Resultat från andelar i intresseföretag och joint ventures2
     xbrl_tags:
     - essi:SharesOfResultsOfAssociatesAndJointVentures2
+  # A bank's operating expenses and its result before impairment are printed under each bank's own extension (the Italian
+  # banks' "Costi operativi", BNP's "Resultat brut d'exploitation"): read through reviewed entries in
+  # company_tag_overrides.yaml, so these two concepts carry no tags of their own. 11_ratio_engine.py's cost/income ratio
+  # reads them.
+  bank_operating_expenses:
+    display_label: Operating expenses (banks)
+    xbrl_tags: []
+  operating_profit_before_impairment:
+    display_label: Gross operating income, before impairment (banks)
+    xbrl_tags: []
   revenue_and_operating_income:
     display_label: Total operating income (banks)
     xbrl_tags:
