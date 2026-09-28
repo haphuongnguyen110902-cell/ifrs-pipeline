@@ -46,3 +46,44 @@ class TestForwardMultiples:
         out = v19.compute_forward_multiples(comps, history, fx).iloc[0]
         assert out["fwd_ev_sales"] == pytest.approx(150_000.0 / (60_000.0 / 1.10))
         assert out["fwd_ev_ebitda"] == pytest.approx(150_000.0 / (20_000.0 / 1.10))
+
+
+class TestValuationKeepsOneSnapshot:
+    """A valuation is today's market value over the latest year. When that year moved on, the previous year's row stayed
+    (Kering showed P/E 9.4 for 2023 beside 388.6 for 2025) and 20_precedents.py, which reads every row, counted both."""
+
+    class _Result:
+        def fetchall(self):
+            return [(9, "Kering")]
+
+    class _Conn:
+        def __init__(self):
+            self.calls = []
+
+        def execute(self, stmt, params=None):
+            self.calls.append((str(stmt), params or {}))
+            return TestValuationKeepsOneSnapshot._Result()
+
+    class _Engine:
+        def __init__(self, conn):
+            self.conn = conn
+
+        def begin(self):
+            conn = self.conn
+
+            class _Ctx:
+                def __enter__(self):
+                    return conn
+
+                def __exit__(self, *a):
+                    return False
+            return _Ctx()
+
+    def test_older_years_are_removed_for_the_company_written(self, v19):
+        conn = self._Conn()
+        comps = pd.DataFrame([{"company": "Kering", "year": 2025, "ticker": "KER.PA", "ev_eur": 42e9, "market_cap_eur": 28e9,
+                               "net_debt_eur": 14e9, "revenue_eur": 14.7e9, "ebitda_eur": 3e9, "net_income_eur": 72e6,
+                               "ev_ebitda": 14.0, "ev_sales": 2.9, "pe": 388.6}])
+        v19.save_to_db(self._Engine(conn), comps)
+        deletes = [p for s, p in conn.calls if s.strip().startswith("DELETE FROM valuation")]
+        assert deletes == [{"cid": 9, "year": 2025}]

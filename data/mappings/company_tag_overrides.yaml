@@ -648,3 +648,16 @@ overrides:
     printed_label: "Räntebärande kortfristiga skulder, projektfinansiering"
     evidence: >-
       FY2021 report, koncernens balansräkning: the row after "Räntebärande kortfristiga skulder", same notes 29, 34, 35, 7003 (2021) / 4981 (2020); the filer's own label "Short-term borrowings, related to projects". Read 2026-09-28 from the report's own row.
+  # Hermes International - FY2025 URD (French ESEF report hermes-2025-12-31-1-fr.html, EUR millions, 2025 then 2024).
+  - company: "Hermes International"
+    tag: "hermes:DepreciationOfFixedAssetsRightOfUseAssetsAndImpairmentLosses"
+    concept: adjustments_for_depreciation_and_amortisation_expense_and_etc
+    statement: cash_flow
+    label: Depreciation, Amortization and Impairment Adjustments
+    printed_label: "Amortissements des immobilisations, droits d’utilisation et pertes de valeur"
+    evidence: >-
+      Tableau des flux de trésorerie consolidés, first add-back after "Résultat net – part du groupe": "Amortissements des
+      immobilisations, droits d’utilisation et pertes de valeur" (notes 8.2 à 8.4) 926 (2025) / 844 (2024) - depreciation,
+      amortisation and impairment of fixed assets and right-of-use assets; provisions are a separate line ("Mouvements des
+      provisions" 27 / (29)). The same perimeter as the IFRS element AdjustmentsForDepreciationAndAmortisationExpenseAnd
+      ImpairmentLoss... Read 2026-09-28 from the report's own rows.

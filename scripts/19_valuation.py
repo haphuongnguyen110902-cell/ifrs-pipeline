@@ -617,6 +617,10 @@ def save_to_db(engine, comps: pd.DataFrame) -> int:
                 "premium_ebit": r.get("premium_vs_peers_ebit_pct"),
                 "fwdevebitda": r.get("fwd_ev_ebitda"), "fwdevsales": r.get("fwd_ev_sales"),
             })
+            # a valuation is today's market value over the latest financial year: when that year moves on, the row of
+            # the previous year is a stale snapshot. 20_precedents.py reads every row, so it counted those twice.
+            conn.execute(text("DELETE FROM valuation WHERE company_id = :cid AND year <> :year"),
+                         {"cid": company_id, "year": int(r["year"])})
             rows_written += 1
     return rows_written
 
