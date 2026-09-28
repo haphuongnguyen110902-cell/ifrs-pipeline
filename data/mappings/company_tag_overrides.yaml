@@ -661,3 +661,54 @@ overrides:
       amortisation and impairment of fixed assets and right-of-use assets; provisions are a separate line ("Mouvements des
       provisions" 27 / (29)). The same perimeter as the IFRS element AdjustmentsForDepreciationAndAmortisationExpenseAnd
       ImpairmentLoss... Read 2026-09-28 from the report's own rows.
+
+  # ---- Capex (Phase 4): combined lines printed under the company's own element, gross of disposals (checked).
+  - company: "Anheuser-Busch InBev"
+    tag: "BUD:PurchaseOfPropertyPlantAndEquipmentAndPurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Acquisition of property, plant and equipment and of intangible assets"
+    evidence: >-
+      FY2025 annual report (English ESEF report 5493008H3828EMEXB082-2025-12-31-1-en.xhtml, USD millions), consolidated cash flow statement, investing activities: "Acquisition of property, plant and equipment and of intangible assets" (notes 13/15) (3,656) in 2025 / (3,863) in 2024 - gross payments (IAS 7.16(a)); proceeds from their sale are a separate line (104 / 128). Read 2026-09-28 from the report's own rows.
+    checked_years: [2025, 2024]
+
+  - company: "Alstom"
+    tag: "ALS:PurchaseOfPropertyPlantAndEquipmentPurchaseOfIntangibleAssetsAndPaymentsForDevelopmentProjectExpenditureClassifiedAsInvestingActivities"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Acquisition d’immobilisations corporelles et incorporelles (coûts de R&D capitalisés inclus)"
+    evidence: >-
+      Universal registration document for the year to 31 March 2026 (French ESEF report Alstom-2026-03-31-1-fr.xhtml, EUR millions), tableau des flux de trésorerie: "Acquisition d’immobilisations corporelles et incorporelles (coûts de R&D capitalisés inclus)" (567) for fiscal 2026 / (482) for fiscal 2025 - gross payments including capitalised development (IAS 7.16(a)); "Produits de cession des immobilisations corporelles et incorporelles" is a separate line (13 / 12). Read 2026-09-28 from the report's own rows.
+    checked_years: [2026, 2025]
+
+  - company: "Carrefour"
+    tag: "carrefour:PurchaseOfTangibleandIntangibleFixedAssets"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Acquisitions d’immobilisations corporelles et incorporelles"
+    evidence: >-
+      FY2025 URD (French ESEF report, EUR millions), tableau des flux de trésorerie, opérations d'investissement: "Acquisitions d’immobilisations corporelles et incorporelles" (1 523) in 2025 / (1 711) in 2024 - gross payments (IAS 7.16(a)); "Cessions d’immobilisations corporelles et incorporelles" (642 / 595) and the change in amounts due to fixed-asset suppliers (2 / (27)) are separate lines. Read 2026-09-28 from the report's own rows.
+    checked_years: [2025, 2024]
+
+  - company: "D'Ieteren Group"
+    tag: "DIE:PurchaseOfPropertyPlantAndEquipmentAndPurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Acquisition d'immobilisations corporelles et incorporelles"
+    evidence: >-
+      FY2025 report (French ESEF report 549300DV5KJ23OKVTW34-2025-12-31-1-fr.xhtml, EUR millions), tableau des flux de trésorerie, activités d'investissement: "Acquisition d'immobilisations corporelles et incorporelles" (notes 13/14/15) -111,5 in 2025 / -129,8 in 2024 - gross payments (IAS 7.16(a)); proceeds from their sale are a separate line (11,1 / 21,7). Read 2026-09-28 from the report's own rows.
+    checked_years: [2025, 2024]
+
+  - company: "Stellantis"
+    tag: "stellantis:InvestmentsInPropertyPlantAndEquipmentAndIntangibleAssets"
+    concept: purchase_of_property_plant_and_equipment_and_intangible_asse_etc
+    statement: cash_flow
+    label: Purchase of property plant and equipment and intangible assets
+    printed_label: "Investments in property, plant and equipment and intangible assets"
+    evidence: >-
+      FY2025 annual report (English ESEF report stellantis-2025-12-31-en.xhtml, EUR millions), consolidated statement of cash flows: "Investments in property, plant and equipment and intangible assets" (7,987) in 2025 / (11,060) in 2024 / (10,193) in 2023 - gross payments (IAS 7.16(a)); "Proceeds from disposals of property, plant and equipment and intangible assets" is a separate line (229 / 365 / 533). Read 2026-09-28 from the report's own rows.
+    checked_years: [2025, 2024, 2023]
