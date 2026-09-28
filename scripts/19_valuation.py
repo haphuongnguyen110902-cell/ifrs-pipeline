@@ -552,6 +552,12 @@ def _company_id_map(conn) -> dict:
     return {name: cid for cid, name in rows}
 
 
+def sql_params(params: dict) -> dict:
+    """A missing number goes to the database as NULL: a pandas NaN written into a NUMERIC column is stored as the
+    value 'NaN', which every reader that tests for NULL (the landing view, the screener) takes for a number."""
+    return {k: (None if isinstance(v, float) and v != v else v) for k, v in params.items()}
+
+
 def save_to_db(engine, comps: pd.DataFrame) -> int:
     rows_written = 0
     with engine.begin() as conn:
@@ -600,7 +606,7 @@ def save_to_db(engine, comps: pd.DataFrame) -> int:
                               premium_vs_peers_ebit_pct = EXCLUDED.premium_vs_peers_ebit_pct,
                               fwd_ev_ebitda = EXCLUDED.fwd_ev_ebitda, fwd_ev_sales = EXCLUDED.fwd_ev_sales,
                               computed_at = now()
-            """), {
+            """), sql_params({
                 "company": r["company"], "company_id": company_id, "sector": r.get("sector"), "year": int(r["year"]),
                 "ticker": r["ticker"], "mc": r["market_cap_eur"], "nd": r["net_debt_eur"],
                 "ev": r["ev_eur"], "rev": r["revenue_eur"], "ebitda": r["ebitda_eur"],
@@ -616,7 +622,7 @@ def save_to_db(engine, comps: pd.DataFrame) -> int:
                 "impliedev_ebit": r.get("implied_ev_from_peers_ebit"),
                 "premium_ebit": r.get("premium_vs_peers_ebit_pct"),
                 "fwdevebitda": r.get("fwd_ev_ebitda"), "fwdevsales": r.get("fwd_ev_sales"),
-            })
+            }))
             # a valuation is today's market value over the latest financial year: when that year moves on, the row of
             # the previous year is a stale snapshot. 20_precedents.py reads every row, so it counted those twice.
             conn.execute(text("DELETE FROM valuation WHERE company_id = :cid AND year <> :year"),

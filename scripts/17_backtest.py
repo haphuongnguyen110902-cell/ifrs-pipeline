@@ -199,6 +199,12 @@ def ensure_backtest_table(engine):
         conn.execute(text(ddl))
 
 
+def sql_params(params: dict) -> dict:
+    """A missing number goes to the database as NULL: a pandas NaN written into a NUMERIC column is stored as the
+    value 'NaN', which every reader that tests for NULL (the landing view, the screener) takes for a number."""
+    return {k: (None if isinstance(v, float) and v != v else v) for k, v in params.items()}
+
+
 def save_to_db(engine, results: pd.DataFrame) -> int:
     rows_written = 0
     with engine.begin() as conn:
@@ -217,13 +223,22 @@ def save_to_db(engine, results: pd.DataFrame) -> int:
                               mape = EXCLUDED.mape, n_thin_excluded = EXCLUDED.n_thin_excluded,
                               is_winner = EXCLUDED.is_winner, confidence = EXCLUDED.confidence,
                               computed_at = now()
-            """), {
+            """), sql_params({
                 "cid": int(r["company_id"]), "rn": r["ratio_name"], "method": r["method"],
                 "nf": int(r["n_folds"]), "mae": r["mae"], "rmse": r["rmse"], "bias": r["bias"],
                 "mape": r["mape"], "nte": int(r["n_thin_excluded"]), "win": bool(r["is_winner"]),
                 "conf": r.get("confidence") or None,
-            })
+            }))
             rows_written += 1
+        # a (ratio, method) this run no longer backtests for a company - its history became too short or blank (Alstom's
+        # cash conversion once its loss years are blank) - must not keep its old accuracy score. Scoped to the companies
+        # in this run.
+        kept = results[results["n_folds"] > 0]
+        for cid in results["company_id"].unique():
+            pairs = kept[kept["company_id"] == cid][["ratio_name", "method"]].drop_duplicates()
+            conn.execute(text("""DELETE FROM backtest WHERE company_id = :cid
+                                 AND NOT ((ratio_name || '|' || method) = ANY(:keep))"""),
+                         {"cid": int(cid), "keep": [f"{a}|{b}" for a, b in pairs.itertuples(index=False)]})
     return rows_written
 
 

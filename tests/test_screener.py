@@ -65,13 +65,26 @@ def test_the_pernod_ricard_null_year_case_is_skipped_not_selected(engine):
 
 
 # Blanks that are DELIBERATE, each with its reason. Anything not listed here that turns NULL is a regression.
+_BANK = {"operating_margin", "roic", "ev_ebitda", "net_debt_ebitda", "credit_band", "credit_is_da_fallback"}
+# Blanks that are DELIBERATE, each with its reason. Anything not listed here that turns NULL is a regression.
 EXPECTED_BLANKS = {
     # a payment processor: its "net cash" is merchants' money, so ROIC, comps, EV and credit are skipped on purpose
     "Adyen": {"roic", "ev_ebitda", "net_debt_ebitda", "credit_band", "credit_is_da_fallback"},
-    # ASM prints only TOTAL equity, not "equity attributable to owners of the parent" - ROIC used to stay blank here
-    # rather than assumed. It is filled now that a reviewed check (data/mappings/reviewed_note_figures.yaml's
-    # asm_no_noncontrolling_interests_* entries) proved ASM's non-controlling interests are exactly zero, which lets
-    # 11_ratio_engine.py use total equity as equity attributable to owners by definition, not a guess.
+    # banks: no operating margin, ROIC, EV multiples or net-debt credit band (FINANCIAL_RATIO_META is shown instead)
+    "BNP Paribas": _BANK, "Banco BPM": _BANK, "FinecoBank": _BANK, "KBC Groep": _BANK, "Mediobanca": _BANK,
+    "Svenska Handelsbanken": _BANK,
+    # a REIT with no quote (COFB.BR has none on yfinance, so no sector from it and no EV), and no IAS 12 total tax line
+    # tagged, so no NOPAT for ROIC
+    "Cofinimmo": {"sector_std", "roic", "ev_ebitda"},
+    # prints no non-controlling-interest line and no owners' subtotal: owners' equity cannot be isolated
+    "Dometic Group": {"roic"},
+    # no separable D&A line (JM: depreciation only; Melexis: split by asset type; Peab, RELX: none; Safran: bundled
+    # with provisions) - EBITDA is the flagged fallback, so EV/EBITDA is blank, not EV/EBIT
+    "JM": {"ev_ebitda"}, "Melexis": {"ev_ebitda"}, "Peab": {"ev_ebitda"}, "RELX": {"ev_ebitda"}, "Safran": {"ev_ebitda"},
+    # net debt is not isolable: current financial liabilities exclude the sales-financing debt, cash is consolidated
+    "Renault": {"roic", "ev_ebitda", "net_debt_ebitda", "credit_band", "credit_is_da_fallback"},
+    # EBITDA negative in 2025 (impairments): a multiple over it has no meaning
+    "Stellantis": {"ev_ebitda"},
 }
 
 
@@ -109,4 +122,5 @@ def test_query_is_a_single_round_trip_not_n_plus_one(engine):
         rows = conn.execute(text("SELECT * FROM company_latest_metrics")).fetchall()
         n_companies = conn.execute(text("SELECT COUNT(*) FROM company")).scalar()
     assert len(rows) == n_companies
-    assert all(row.operating_margin is not None for row in rows)
+    assert all(row.operating_margin is not None for row in rows
+               if "operating_margin" not in EXPECTED_BLANKS.get(row.name, set()))

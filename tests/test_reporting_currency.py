@@ -87,3 +87,51 @@ class TestValuationKeepsOneSnapshot:
         v19.save_to_db(self._Engine(conn), comps)
         deletes = [p for s, p in conn.calls if s.strip().startswith("DELETE FROM valuation")]
         assert deletes == [{"cid": 9, "year": 2025}]
+
+
+class TestMissingNumbersAreNull:
+    """A missing multiple was written as pandas NaN, which PostgreSQL stores in a NUMERIC column as the value 'NaN' -
+    the landing view and the screener test for NULL and took it for a number (6 EV/EBITDA, 14 backtest MAPEs)."""
+
+    def test_nan_becomes_none(self, v19, load_script):
+        import numpy as np
+        for mod in (v19, load_script("17_backtest.py")):
+            out = mod.sql_params({"a": float("nan"), "b": np.float64("nan"), "c": 1.5, "d": None, "e": "x"})
+            assert out == {"a": None, "b": None, "c": 1.5, "d": None, "e": "x"}
+
+
+class TestBacktestDropsWhatItNoLongerRuns:
+    class _Conn:
+        def __init__(self):
+            self.calls = []
+
+        def execute(self, stmt, params=None):
+            self.calls.append((str(stmt), params or {}))
+
+    class _Engine:
+        def __init__(self, conn):
+            self.conn = conn
+
+        def begin(self):
+            conn = self.conn
+
+            class _Ctx:
+                def __enter__(self):
+                    return conn
+
+                def __exit__(self, *a):
+                    return False
+            return _Ctx()
+
+    def test_a_pair_with_no_folds_is_deleted_not_kept(self, load_script):
+        """Alstom's cash conversion kept an accuracy score after its history became too short to backtest."""
+        m17 = load_script("17_backtest.py")
+        res = pd.DataFrame([
+            {"company_id": 3, "ratio_name": "net_margin", "method": "cagr", "n_folds": 3, "mae": 1.0, "rmse": 1.0,
+             "bias": 0.0, "mape": 5.0, "n_thin_excluded": 0, "is_winner": True},
+            {"company_id": 3, "ratio_name": "cash_conversion", "method": "cagr", "n_folds": 0, "mae": None, "rmse": None,
+             "bias": None, "mape": None, "n_thin_excluded": 0, "is_winner": False}])
+        conn = self._Conn()
+        m17.save_to_db(self._Engine(conn), res)
+        deletes = [p for s, p in conn.calls if "DELETE FROM backtest" in s]
+        assert deletes == [{"cid": 3, "keep": ["net_margin|cagr"]}]
