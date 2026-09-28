@@ -531,6 +531,27 @@ def drop_flags_for_financial_companies(flags: pd.DataFrame, financial_names: dic
     return flags[~mask].reset_index(drop=True), sorted(flags.loc[mask, "company"].unique())
 
 
+def pipeline_flags(engine, wide: pd.DataFrame, company_filter=None):
+    """(flags, suppressed company names, {financial company: reason}) exactly as the pipeline stores them: the ratio
+    flags with the off-calendar-FYE warnings, the revenue flags, and none for a financial company. main() and the live
+    tests both call this, so a test run can never leave the live table in a state the pipeline would not (it once kept
+    5 flags on banks that the pipeline suppresses)."""
+    off_calendar_fye = fetch_off_calendar_fye(engine, company_filter=company_filter)
+    flags = compute_flags(wide, off_calendar_fye)
+    rev_growth = fetch_revenue_growth(engine, company_filter=company_filter)
+    if not rev_growth.empty:
+        flags = add_revenue_flags(flags, rev_growth)
+    # not meaningful for lenders / insurers / payment processors (see drop_flags_for_financial_companies);
+    # the classification is the ratio engine's, so the two stages can never disagree on who is financial
+    r11 = _ratio_engine()
+    profiles = r11.fetch_company_profiles(engine)
+    reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
+    financial_names = {row["name"]: reasons[int(row["company_id"])]
+                       for _, row in profiles.iterrows() if int(row["company_id"]) in reasons}
+    flags, suppressed = drop_flags_for_financial_companies(flags, financial_names)
+    return flags, suppressed, financial_names
+
+
 def ensure_printable_output(stream=None) -> None:
     """Never let a print() die on an emoji. print_summary writes severity emoji; with piped or
     redirected output on Windows the stream is cp1252 and the run crashed with UnicodeEncodeError
@@ -694,23 +715,7 @@ if __name__ == "__main__":
     print(f"Analysing {wide['company'].nunique()} companies, "
           f"{wide['year'].nunique()} years...")
 
-    # compute flags from ratios
-    off_calendar_fye = fetch_off_calendar_fye(engine, company_filter=args.company)
-    flags = compute_flags(wide, off_calendar_fye)
-
-    # add revenue growth flags from raw facts
-    rev_growth = fetch_revenue_growth(engine, company_filter=args.company)
-    if not rev_growth.empty:
-        flags = add_revenue_flags(flags, rev_growth)
-
-    # not meaningful for lenders / insurers / payment processors (see the function's docstring);
-    # the classification is the ratio engine's, so the two stages can never disagree on who is financial
-    r11 = _ratio_engine()
-    profiles = r11.fetch_company_profiles(engine)
-    reasons = r11.financial_company_reasons(profiles, r11.load_reporting_model_overrides())
-    financial_names = {row["name"]: reasons[int(row["company_id"])]
-                       for _, row in profiles.iterrows() if int(row["company_id"]) in reasons}
-    flags, suppressed = drop_flags_for_financial_companies(flags, financial_names)
+    flags, suppressed, financial_names = pipeline_flags(engine, wide, company_filter=args.company)
     for name in suppressed:
         print(f"  {name}: flags suppressed - treated as a financial company ({financial_names[name]}); "
               f"revenue, margin, cash-conversion and net-debt rules are not meaningful for it")

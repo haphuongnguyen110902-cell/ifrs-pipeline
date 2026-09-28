@@ -2203,3 +2203,151 @@ The golden baselines were reviewed and regenerated.
   loaded, never guessed in code.
 - **KBC's statements** are not located by `reconcile_reports.py`'s statement patterns.
 - **A longer beta window** (2-year weekly), if the 1-year daily one proves too noisy, is a separate decision.
+
+### 2026-09-28 (Phase 4 of 5): the 35 gate40 companies loaded, every new line read from its printed row; banks
+
+**The public dashboard was down from about 2026-09-26 (PR #76).** "Keep Dashboard Awake" failed 9 runs in a row with
+"dashboard did not come up within 300s"; the app itself raised `ModuleNotFoundError: psycopg`. SQLAlchemy 2.1 made a bare
+`postgresql://` URL mean the psycopg 3 driver, and the app ships psycopg2. The dashboard now names the psycopg2 driver
+(`sqlalchemy_url`) and `webapp/requirements.txt` keeps SQLAlchemy below 2.1; a manual wake run then succeeded.
+
+**One registry.** `data/companies.yaml` holds every company with a `key` and an `lei` (validated by
+`scripts/company_registry.py`: lower-case key, 20-character LEI, both unique); the downloaders and loaders read it instead
+of their own lists. `scripts/load_from_archive.py` loads a company's packages from filings.xbrl.org, or one package from
+an official URL (`--url KEY URL`): streamed into a temporary directory, its period and LEI checked from its own XBRL
+contexts (the archive labels Unilever's FY2025 package "2026-02-12"), loaded, reconciled line by line, removed.
+
+**Reporting currency (IAS 21).** Figures were converted to EUR from the currency the shares trade in. AB InBev and
+STMicroelectronics report in USD and trade in EUR, RELX reports in GBP: their figures would have been read as EUR. The
+conversion now uses the reporting currency (`reporting_currencies`: the currency most of a year's monetary facts are
+in); only the market capitalisation uses the quote currency.
+
+**Which facts make a company-year (`reportable_facts`, shared by the engine, the figure trace and the validator).**
+- Unilever's FY2025 report tags the dividend declared on 12 February 2026 (IAS 10) on a one-day period: a "2026" of two
+  facts became Unilever's latest year. A year now needs an annual period or a balance.
+- Mediobanca moved its year end from 30 June to 31 December and reported the six months to 31 December 2025 as a
+  transition period (IAS 1.36). Its 31 December balance sheet was labelled 2025 like the 30 June one, and the later one
+  won. In a year with an annual period the balance sheet is now the one at that period's end.
+- A report's own year is read from all its facts, before any is set aside.
+
+**Every new balance sheet read row by row** (the label printed beside each tagged value, not the tag):
+- Generic IFRS elements the engine did not list: the current portion of non-current borrowings on a line of its own (Eni
+  3,434 beside 4,929 of short-term debt; AB InBev 885; Dometic 2,388; Melexis), bank overdrafts (AB InBev), loans
+  received (Webuild), one unclassified "Debt" line (Ferrari, IAS 1.60: complete on its own, used only when no split line
+  is stored), payables and receivables tagged without "current" (SKF, Ferrari, Carrefour), and the operating-profit
+  element Carrefour and Safran share with LVMH ("Résultat opérationnel", after non-recurring items).
+- Reviewed overrides (printed label and evidence): Thales and RELX working capital; RELX, Umicore, JM, Peab, Safran and
+  Cofinimmo borrowings printed under their own elements; SKF's "Långfristiga finansiella skulder" tagged BondsIssued
+  (note 20: bonds 12,394 + loans 200 + hedging derivatives 91 = 12,685).
+- **The "other financial liabilities" element is a residual.** Schneider ("Dettes financières courantes"), Arjo, Essity,
+  Moncler and Amplifon print their borrowings under it, and Recordati its short-term bank debt beside its loans. Safran
+  prints payables for fixed-asset purchases under it, Cofinimmo derivatives, Dometic and JM "other liabilities". A
+  generic rule ("a residual beside a borrowing line is not debt") was tried and rejected: it would have dropped
+  Recordati's bank debt. The engine keeps counting it; the four filers whose line is not borrowing are re-pointed to
+  `other_*_financial_liabilities_not_borrowings`.
+- **Safran's net debt was a plausible-looking wrong number:** 23 + 174 of payables less 6,789 of cash. Its borrowings are
+  "Passifs financiers ... portant intérêts" under Safran extensions. Now 2,446 + 2,605 - 6,789 = 1,738 of net cash, which
+  is exactly the "position financière nette" of Safran's note 6.5.
+
+**A ratio divided by operating profit is blank when operating profit is zero or negative** (cash conversion, net debt /
+operating profit), with the reason in `ratio.note`: Dometic 2024 showed -11.9x of "leverage" on SEK 13.4bn of net debt.
+Also blanked by the rule: Umicore 2024, Renault 2025, Shell 2020, Stellantis 2025.
+
+**Banks.** `bank_operating_expenses` and `operating_profit_before_impairment` were read by the engine but defined nowhere
+in the mapping, so no bank could fill them. Now defined, with each bank's own lines as reviewed entries: BNP ("Produit
+net bancaire", "Résultat brut d'exploitation", customer loans and deposits), KBC ("Totale opbrengsten", operating
+expenses excluding those IFRS 17 attributes to insurance contracts), Banco BPM, Mediobanca and FinecoBank (Bank of Italy
+Circular 262: "120. Margine di intermediazione", "240. Costi operativi", total equity from the statement of changes in
+equity). The prefix `ext:` is shared by several filers, so those are overrides only.
+
+| Bank (latest year) | Cost/income | Cost of risk | Loans / deposits | Equity / assets |
+|---|---|---|---|---|
+| BNP Paribas 2025 | 61.2% | 37 bp | 83.4% | 4.7% |
+| KBC 2025 | 38.6% | - | - | 7.0% |
+| Banco BPM 2025 | 46.1% | - | - | 7.6% |
+| FinecoBank 2025 | 28.5% | - | - | - |
+| Mediobanca FY to June 2025 | 50.8% | - | - | 10.9% |
+| Handelsbanken 2024 | 40.4% | -2.6 bp | 175% | 5.9% |
+
+The Italian banks' "crediti verso clientela" include debt securities held at amortised cost, so loans/deposits and cost
+of risk stay blank for them rather than mixing securities into loans.
+
+**Guard.** `tests/test_engine_concepts_exist.py` records every concept the engine reads and requires each to be a
+mapping concept. It found one more on its first run: Danone's "profit before tax, before associates" was read under a
+name removed by the duplicate cleanup (#69).
+
+**Loading (88 historical packages from filings.xbrl.org, 6 FY2025 packages from the companies' own sites).** Each was
+verified (period and LEI from its own contexts), loaded, and reconciled line by line: every reconciled statement has
+DIFFERENT = 0 - no stored figure differs from its printed one. Found on the way:
+- Solvay publishes its FY2025 ESEF report as a zip holding one XBRL Report Packages 1.0 `.xbri`; the loader now unwraps it.
+- JM's FY2023 package is defective: its report's schemaRef names `529900X0UEM9DOM6FK12-2023-12-31.xsd`, the package holds
+  `jm-2023-12-31.xsd`, so no concept resolves and nothing loads. Not patched; JM's 2023 comes from its FY2024 report's
+  comparatives.
+- Peab changed its extension prefix from `peabab:` to `peab:` in FY2025 (and used `PEA:` in FY2021), JM used Swedish
+  element names in FY2021: reviewed entries for the debt lines, and `34_link_renamed_tags.py` for 7 cash-flow lines (exact
+  comparative values). The linker rewrote the whole mapping with `yaml.dump`, which dropped every comment in it (the
+  reviewed evidence notes); it now inserts its tag lines as text.
+- `load_from_archive.py --reload` fetches again the packages it recorded (their stored official URL) and re-loads them
+  into the same filing rows, for a mapping change once the packages are gone from disk.
+
+**Owners' equity and profit from their printed parts.** Syensqo, Solvay and three banks print total equity and
+non-controlling interests but no owners' subtotal: owners' equity = total - NCI (IAS 1.54(q)-(r)); the proven-zero case
+(ASM) is the same identity. Solvay tags the owners' result only split into continuing and discontinued (IFRS 5.33(d)): the
+printed continuing line is the net-margin numerator, the total their sum. Melexis prints its profit without a split; its
+nil non-controlling share (the comprehensive-income split gives them "—", their equity is EUR 410) is a reviewed
+stated-zero note figure, and owners' profit = profit - that share (IAS 1.81B(a)). Solvay 2023's ROE is 166%: the
+Syensqo demerger gain (2,130) over the equity left after the distribution.
+
+**Investment property (IAS 40).** `ifrs-full:RentalIncomeFromInvestmentProperty` was not mapped; Cofinimmo tags its revenue
+only as that. It is now read as revenue after revenue and IFRS 15 contract revenue. Cofinimmo's margins swing with the
+fair-value changes of its buildings, which IFRS puts in operating result (2022 net margin 152%, 2023 -16%).
+
+**Deliberately not done / open:**
+- Days payables on a broader "trade and other payables" line (the caption says so): RELX's 4,268 is mostly deferred
+  income (note 20: trade payables 89, deferred income 2,390), so its DPO reads 482 days against about 10 on trade payables
+  alone. The systematic fix is a reviewed note figure for trade payables for every company on the broader line (Heineken,
+  Shell, Schneider, Thales, Carrefour, Safran, Unilever, RELX, ...); the note loader reads HTML tables only, and RELX's
+  report has none.
+- Renault's net debt stays blank: its current financial liabilities exclude the 60bn of sales-financing debt, while its
+  cash is consolidated - automotive debt less group cash would mix two perimeters.
+- The Italian banks' loans/deposits and cost of risk (their customer-loan line includes debt securities).
+- Dometic's ROIC/ROE: it prints no non-controlling-interest line and no owners' subtotal; a reviewed zero would be needed.
+- JM's and Peab's DIO: residential developers whose inventory is mostly development property (IAS 2), printed apart.
+- FY2025 packages not loaded: Syensqo (its site refuses scripts, HTTP 403), Melexis (bot check), Sandvik (only a plain
+  .xbrl instance, no package), Dometic (its site links the 2024 file for 2025), JM and Handelsbanken (no official link
+  found). Each can be loaded with `load_from_archive.py --url` or from a local file once downloaded.
+- **DCF levels (a methodology decision, open):** the growth input is each company's historical revenue CAGR and the beta a one-year daily regression. On the wider universe the DCF lands far from the market: Webuild EUR 94bn against a EUR 9bn market EV (a high CAGR over a low beta), Carrefour 5.5x, AB InBev 2.3x. The DCF tab calls itself illustrative; a growth fade toward the terminal rate and a longer beta window are the choices to make.
+- 78 sign flips between filings for one concept and year: none changes a figure (the five the engine reads are either
+  read as absolute values or used only when the owners' profit is not printed).
+
+**Found while running every stage on the 51 companies (each fixed, with a test):**
+- **Stale rows.** The ratio table upserted but never removed a company-year the engine stopped producing (Unilever's
+  "2026", a stray SKF "1981"); valuation kept the previous year's row (Kering: P/E 9.4 for 2023 beside 388.6 for 2025 -
+  and `20_precedents.py` reads every row); the DCF kept older base years (Danone 2024 EUR 162bn beside 2025 EUR 86bn);
+  the backtest kept a (ratio, method) it no longer runs. Each save now removes the company's other rows.
+- **'NaN' stored as a number.** `19_valuation.py` and `17_backtest.py` passed pandas NaN into NUMERIC columns, which
+  PostgreSQL stores as the value 'NaN'; the landing view tests for NULL and took it for a figure. Cleaned at the write.
+- **The DCF on a cash outflow.** Stellantis 2025 (an operating loss of EUR 26bn carried forward) gave an enterprise value
+  of EUR -372bn, Piaggio and STMicroelectronics (capex above the cash from operations) EUR -1.3bn / -3.3bn. A terminal
+  value on a negative free cash flow has no meaning: refused like a non-positive beta, and the DCF tab says why.
+- **Capex.** AB InBev, Alstom, Carrefour, D'Ieteren and Stellantis print one "purchase of PP&E and intangibles" line under
+  their own element; each was checked to be gross purchases (disposal proceeds printed apart) and is a reviewed entry
+  with checked_years. Capex had been the flagged 3%-of-revenue fallback (AB InBev: USD 3,656M printed). Safran prints
+  "Decaissements nets" (net of disposals) and stays a flagged fallback.
+- **D&A.** Hermes prints "Amortissements des immobilisations, droits d'utilisation et pertes de valeur" (926) as the first
+  cash-flow add-back, provisions apart - the perimeter of the IFRS D&A-and-impairment element; EV/EBITDA now 18.0.
+- **Banks' tickers.** GLEIF's ISINs for the banks' LEIs are debt securities, so OpenFIGI found no equity line: BNP.PA,
+  BAMI.MI, FBK.MI, MB.MI, SHB-A.ST validated on yfinance (exact name, currency, quoted that day). Cofinimmo has no quote.
+- **The trace** looked a missing package up on filings.xbrl.org by period only; the 6 FY2025 packages from company sites
+  and 3 Unilever packages (archive labels are publication dates) were untraceable. It now falls back to the URL each
+  filing records.
+
+**Live DB:** snapshots before and after (`snap_before_p4_run` / `snap_after_p4_run`), row-level diff reviewed. The 16
+original companies: no row added or removed, 4 values changed - Shell 2020 and Stellantis 2025 cash conversion and net
+debt / operating profit, now blank (operating loss). Tables now: ratio 3,957 rows (51 companies), credit 236, forensics
+322 flags, forecast 1,400, backtest 666, valuation 42, market risk 50, 3-statement 225 (latest base year per company
+read by the dashboard), DCF 33 (refused: 7 financial companies, Eni and Shell for a negative beta, Stellantis, Piaggio,
+STMicroelectronics for a non-positive terminal cash flow; not built: Cofinimmo, JM, Peab, RELX, Thales for no separable
+inventory line, Renault for no net debt). Golden baselines regenerated after the review.
+
+**Trace after the changes** (`35_trace_figures.py`, all 51 companies): 10,366 inputs - 10,119 equal to a line printed on a primary statement, 216 to a figure printed in the notes, 31 reviewed note figures; 0 different, 0 not found, 0 without a package. The live forensics test now saves exactly what the pipeline saves (`pipeline_flags`, shared): it used to leave 5 flags on banks that the pipeline suppresses.

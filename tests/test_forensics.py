@@ -235,10 +235,7 @@ def _pipeline_flags(forensics, engine):
     warning - which left the live table 13 flags short after every local
     test run, until the next real pipeline run."""
     wide = forensics.pivot_ratios(forensics.fetch_ratios(engine))
-    flags = forensics.compute_flags(wide, forensics.fetch_off_calendar_fye(engine))
-    rev_growth = forensics.fetch_revenue_growth(engine)
-    if not rev_growth.empty:
-        flags = forensics.add_revenue_flags(flags, rev_growth)
+    flags, _, _ = forensics.pipeline_flags(engine, wide)
     return flags, wide
 
 
