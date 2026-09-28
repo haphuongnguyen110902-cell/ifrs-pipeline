@@ -597,6 +597,13 @@ income_statement:
   operating_profit_before_impairment:
     display_label: Gross operating income, before impairment (banks)
     xbrl_tags: []
+  # IAS 40.75(f)(i): an investment-property company's revenue is its rental income (Cofinimmo prints "Huurinkomsten"
+  # 353.9M for 2025 and tags no other revenue line). 11_ratio_engine.py reads it only after revenue and IFRS 15
+  # contract revenue, so a company that tags both keeps its revenue line.
+  rental_income_from_investment_property:
+    display_label: Rental income from investment property
+    xbrl_tags:
+    - ifrs-full:RentalIncomeFromInvestmentProperty
   revenue_and_operating_income:
     display_label: Total operating income (banks)
     xbrl_tags:

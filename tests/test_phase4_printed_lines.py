@@ -255,3 +255,22 @@ class TestReviewedEntries:
                    "ifrs-full:OtherCurrentFinancialLiabilities": 174.0}
         d = debt(r11, **{lookup[t][0]: v for t, v in printed.items()})
         assert d["financial_debt"] == pytest.approx(5_051.0) and d["complete"]
+
+
+class TestInvestmentPropertyRevenue:
+    """Cofinimmo (a Belgian REIT) tags its revenue only as rental income from investment property (IAS 40.75(f)(i)),
+    an element that was not mapped: revenue, margins and days were blank in every year."""
+
+    def test_rental_income_is_the_revenue_of_a_property_company(self, r11):
+        out = r11.compute_ratios(wide(rental_income_from_investment_property=353.86,
+                                      profit_loss_from_operating_activities=271.4))
+        assert out["_revenue"].iloc[0] == pytest.approx(353.86)
+        assert out["operating_margin"].iloc[0] == pytest.approx(271.4 / 353.86 * 100)
+
+    def test_a_company_that_tags_revenue_keeps_it(self, r11):
+        out = r11.compute_ratios(wide(revenue=1_000.0, rental_income_from_investment_property=12.0))
+        assert out["_revenue"].iloc[0] == 1_000.0
+
+    def test_the_element_is_mapped(self, load_script):
+        lookup = load_script("09_batch_load.py").load_mapping(str(MAPPING))
+        assert lookup["ifrs-full:RentalIncomeFromInvestmentProperty"][0] == "rental_income_from_investment_property"

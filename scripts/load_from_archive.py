@@ -73,6 +73,20 @@ def unwrap_report_package(path: Path) -> Path:
     return inner
 
 
+def recorded_packages(engine, company_name: str) -> list:
+    """[(source_file, source_url)] of the packages this loader recorded for a company (data/raw/historical/<key>_<period>
+    .zip with the official URL they came from) - what --reload fetches again. A package loaded from a folder on disk
+    (data/raw/gate40) is not in it: re-load that one from its folder with 09_batch_load.py."""
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        rows = conn.execute(text("""
+            SELECT f.source_file, f.source_url FROM filing f JOIN company c ON c.company_id = f.company_id
+            WHERE c.name = :n AND f.source_url IS NOT NULL
+              AND replace(f.source_file, '\\', '/') LIKE 'data/raw/historical/%'
+            ORDER BY f.source_file"""), {"n": company_name}).fetchall()
+    return [(r[0], r[1]) for r in rows]
+
+
 def reconcile_summary(output: str) -> list:
     """The per-statement lines of reconcile_reports.py's output."""
     return [line.strip() for line in output.splitlines() if "lines=" in line]
@@ -122,6 +136,8 @@ def main():
     ap.add_argument("--min-year", type=int, default=2021, help="oldest fiscal year end to load")
     ap.add_argument("--limit", type=int, default=None, help="at most this many periods per company")
     ap.add_argument("--min-free-mb", type=int, default=500)
+    ap.add_argument("--reload", action="store_true", help="fetch again and re-load (upsert) the packages this loader "
+                    "recorded for --only companies, e.g. after a mapping change")
     ap.add_argument("--dry-run", action="store_true", help="list the periods, fetch nothing")
     args = ap.parse_args()
     if not args.only and not args.url:
@@ -153,6 +169,19 @@ def main():
             else:
                 results.append((name, "-", load_package(key, name, lei, unwrap_report_package(out), url,
                                                          dh.loaded_period_ends(engine, name))))
+    if args.reload:
+        for key in args.only:
+            lei, name = dh.COMPANIES[key]
+            for source_file, url in recorded_packages(engine, name):
+                print(f"\n{name}: re-load {source_file} from {url}")
+                with tempfile.TemporaryDirectory(prefix="ifrs_pkg_") as tmp:
+                    out = Path(tmp) / f"{key}_download.zip"
+                    if bdif.download(url, out, args.min_free_mb, dh.has_room) is None:
+                        results.append((name, Path(source_file).name, "download refused"))
+                        continue
+                    results.append((name, Path(source_file).name, load_package(key, name, lei, unwrap_report_package(out),
+                                                                             url, [])))
+        args.only = []
     for key in ([] if args.url else args.only):
         lei, name = dh.COMPANIES[key]
         print(f"\n{'=' * 70}\n{name} ({key}, {lei})\n{'=' * 70}")

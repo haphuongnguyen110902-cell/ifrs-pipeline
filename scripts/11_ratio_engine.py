@@ -695,7 +695,8 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # Unlike the D&A tag situation, this isn't ambiguous - it's the
     # identical concept under IFRS 15's own naming - so it's safe to add
     # as a fallback rather than leave flagged.
-    rev = get_best(wide, "revenue", "revenue_from_contracts_with_customers").abs()
+    # an investment-property company's revenue is its rental income (IAS 40.75(f)(i): Cofinimmo tags no other line)
+    rev = get_best(wide, "revenue", "revenue_from_contracts_with_customers", "rental_income_from_investment_property").abs()
 
     # --- accounting profit (IAS 12.5) ---
     # "Accounting profit is profit or loss for a period before deducting tax expense" (IAS 12.5), and the average
