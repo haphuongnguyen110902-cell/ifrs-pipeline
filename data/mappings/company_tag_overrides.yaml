@@ -107,3 +107,282 @@ overrides:
       amortisation and provisions on non-current operating assets 1,823 (of which right-of-use amortisation 985) = EBITDA
       6,569; 2022: 5,589 + 1,666 (935) = 7,255. The line therefore is the D&A the company itself adds back to reach EBITDA.
       Read 2026-09-21 from the report's own rows.
+
+  # ---- Phase 4 (2026-09-28): balance-sheet lines of the companies added in Phase 4 that the tag alone reads wrongly.
+  # Each printed row was read from the company's own ESEF report (the row that holds the tagged value), not from the tag.
+
+  # Thales - FY2025 consolidated balance sheet (French ESEF report tha-2025-12-31-1-fr.xhtml, EUR millions, 2025 then
+  # 2024). Two working-capital lines are Thales extensions.
+  - company: "Thales"
+    tag: "tha:ClientsEtAutresCreancesCourantes"
+    concept: trade_and_other_current_receivables
+    statement: balance_sheet
+    label: Trade and other current receivables
+    printed_label: "Clients et autres créances courantes"
+    evidence: >-
+      Balance sheet 31/12/25 and 31/12/24: "Clients et autres créances courantes" 6 845,8 / 7 146,2, a current-asset row
+      tagged tha:ClientsEtAutresCreancesCourantes. Read 2026-09-28 from the report's own balance-sheet row.
+
+  - company: "Thales"
+    tag: "tha:FournisseursEtAutresDettesCourantes"
+    concept: trade_and_other_current_payables
+    statement: balance_sheet
+    label: Trade and other current payables
+    printed_label: "Fournisseurs et autres dettes courantes"
+    evidence: >-
+      Balance sheet 31/12/25 and 31/12/24: "Fournisseurs et autres dettes courantes" (note 10.4) 8 652,3 / 8 332,7 among
+      current liabilities, tagged tha:FournisseursEtAutresDettesCourantes. Trade AND other payables, so the dashboard's
+      broader-payables caption applies. Read 2026-09-28 from the report's own balance-sheet row.
+
+  # RELX - FY2025 annual report (English ESEF report 549300WSX3VBUFFJOO66-2025-12-31-1-en.xhtml, GBP millions, 2024 then
+  # 2025). The report is laid out without HTML tables; each row was read from the text around its tagged value.
+  - company: "RELX"
+    tag: "rel:TradeAndOtherReceivablesCurrent"
+    concept: trade_and_other_current_receivables
+    statement: balance_sheet
+    label: Trade and other current receivables
+    printed_label: "Trade and other receivables"
+    evidence: >-
+      Consolidated statement of financial position, current assets: "Trade and other receivables" (note 19) 2,511 (2024)
+      / 2,468 (2025), tagged rel:TradeAndOtherReceivablesCurrent. Read 2026-09-28 from the report's own row.
+
+  - company: "RELX"
+    tag: "rel:NonCurrentBorrowings"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current borrowings
+    printed_label: "Debt"
+    evidence: >-
+      Consolidated statement of financial position, non-current liabilities: "Debt" (note 21) 5,132 (2024) / 5,696
+      (2025), tagged rel:NonCurrentBorrowings. RELX prints no separate lease-liability row. Read 2026-09-28 from the
+      report's own row.
+
+  - company: "RELX"
+    tag: "rel:CurrentBorrowing"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current borrowings
+    printed_label: "Debt"
+    evidence: >-
+      Consolidated statement of financial position, current liabilities: "Debt" (note 21) 1,412 (2024) / 1,571 (2025),
+      tagged rel:CurrentBorrowing. Read 2026-09-28 from the report's own row.
+
+  # Umicore - FY2024 annual report (ESEF package UMIC-2024-12-31-en.html, EUR thousands, 31/12/2023 then 31/12/2024). Both
+  # "Financial debt" rows are Umicore extensions whose names say they include lease liabilities; no lease row is printed.
+  - company: "Umicore"
+    tag: "UMI:LongTermBorrowingsAndNonCurrentLeaseLiabilities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current borrowings (including lease liabilities)
+    printed_label: "Financial debt"
+    evidence: >-
+      Consolidated balance sheet, non-current liabilities: "Financial debt" (note F25) 2,019,445 (2023) / 2,316,994
+      (2024), tagged UMI:LongTermBorrowingsAndNonCurrentLeaseLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "Umicore"
+    tag: "UMI:ShortTermBorrowingsAndCurrentLeaseLiabilities"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current borrowings (including lease liabilities)
+    printed_label: "Financial debt"
+    evidence: >-
+      Consolidated balance sheet, current liabilities: "Financial debt" (note F25) 728,698 (2023) / 1,119,745 (2024),
+      tagged UMI:ShortTermBorrowingsAndCurrentLeaseLiabilities. Read 2026-09-28 from the report's own row.
+
+  # JM - FY2024 annual report (Swedish ESEF report 529900X0UEM9DOM6FK12-2024-12-31-0-sv.xhtml, SEK millions, 2024 then
+  # 2023). JM prints its borrowings as "interest-bearing liabilities" under its own elements.
+  - company: "JM"
+    tag: "jm:LongtermInterestbearingLiabilities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Långfristiga räntebärande skulder"
+    evidence: >-
+      Koncernens balansräkning, långfristiga skulder: "Långfristiga räntebärande skulder" (notes 24, 25) 574 (2024) / 951
+      (2023), tagged jm:LongtermInterestbearingLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "JM"
+    tag: "jm:ShorttermInterestbearingLiabilities"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Kortfristiga räntebärande skulder"
+    evidence: >-
+      Koncernens balansräkning, kortfristiga skulder: "Kortfristiga räntebärande skulder" (notes 24, 25) 11 164 (2024) /
+      15 089 (2023), tagged jm:ShorttermInterestbearingLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "JM"
+    tag: "ifrs-full:OtherCurrentFinancialLiabilities"
+    concept: other_current_liabilities
+    statement: balance_sheet
+    label: Other current liabilities
+    printed_label: "Övriga kortfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning, kortfristiga skulder: "Övriga kortfristiga skulder" (other current liabilities) 1 052
+      (2024) / 1 241 (2023), printed after trade payables and apart from JM's interest-bearing liabilities, but tagged with
+      the IFRS element for other current FINANCIAL liabilities, which the ratio engine counts as borrowing. Read
+      2026-09-28 from the report's own row.
+
+  # Peab - FY2024 annual report (Swedish ESEF report peabab-2024-12-31-0-sv.xhtml, SEK millions, 2024 then 2023). Peab
+  # prints its borrowings as interest-bearing liabilities, with the project financing on rows of its own.
+  - company: "Peab"
+    tag: "peabab:InterestBearingLongTermLiabilities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Räntebärande långfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning: "Räntebärande långfristiga skulder" (notes 27, 32, 33) 6 094 (2024) / 7 046 (2023), tagged
+      peabab:InterestBearingLongTermLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "peabab:InterestBearingLongTermLiabilitiesProjectFinancing"
+    concept: noncurrent_portion_of_other_noncurrent_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande långfristiga skulder, projektfinansiering"
+    evidence: >-
+      Koncernens balansräkning: "Räntebärande långfristiga skulder, projektfinansiering" (notes 27, 32, 33) 53 (2024) /
+      193 (2023), tagged peabab:InterestBearingLongTermLiabilitiesProjectFinancing. Read 2026-09-28 from the report's own
+      row.
+
+  - company: "Peab"
+    tag: "peabab:InterestBearingCurrentLiabilties"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Räntebärande kortfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning: "Räntebärande kortfristiga skulder" (notes 27, 32, 33) 5 368 (2024) / 4 246 (2023), tagged
+      peabab:InterestBearingCurrentLiabilties (the filer's own spelling). Read 2026-09-28 from the report's own row.
+
+  - company: "Peab"
+    tag: "peabab:InterestBearingShortTermLiabilitiesProjectFinancing"
+    concept: other_current_borrowings_and_current_portion_of_other_noncur_etc
+    statement: balance_sheet
+    label: Current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande kortfristiga skulder, projektfinansiering"
+    evidence: >-
+      Koncernens balansräkning: "Räntebärande kortfristiga skulder, projektfinansiering" (notes 27, 32, 33) 2 859 (2024) /
+      6 933 (2023), tagged peabab:InterestBearingShortTermLiabilitiesProjectFinancing. Read 2026-09-28 from the report's
+      own row.
+
+  # Dometic Group - FY2024 annual report (Swedish ESEF report dome-2024-12-31-0-sv.xhtml, SEK millions, 2024 then 2023).
+  # Its borrowings are "Långfristig upplåning" and "Kortfristig upplåning"; two "other liabilities" rows carry the IFRS
+  # elements for other FINANCIAL liabilities, which the ratio engine counts as borrowing.
+  - company: "Dometic Group"
+    tag: "ifrs-full:OtherNoncurrentFinancialLiabilities"
+    concept: other_noncurrent_liabilities
+    statement: balance_sheet
+    label: Other non-current liabilities
+    printed_label: "Övriga långfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning, långfristiga skulder: "Övriga långfristiga skulder" (other non-current liabilities, note
+      3) 5 (2024) / – (2023), printed apart from "Långfristig upplåning" 13 077 / 16 335 and the lease rows. Read
+      2026-09-28 from the report's own row.
+
+  - company: "Dometic Group"
+    tag: "ifrs-full:OtherCurrentFinancialLiabilities"
+    concept: other_current_liabilities
+    statement: balance_sheet
+    label: Other current liabilities
+    printed_label: "Övriga kortfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning, kortfristiga skulder: "Övriga kortfristiga skulder" (other current liabilities, notes 3,
+      29) 950 (2024) / 1 266 (2023), printed apart from "Kortfristig upplåning" 2 388 / – and the lease rows. Read
+      2026-09-28 from the report's own row.
+
+  # Safran - FY2025 URD (French ESEF report Safran-2025-12-31-1-FR.xhtml, EUR millions, 31.12.2024 then 31.12.2025).
+  # Safran prints its borrowings as "interest-bearing financial liabilities" under its own elements, and its note 6.5
+  # defines its net financial position as cash (A) less exactly those two rows (B): 4 776 = 3 788 + 988 (2024) and
+  # 5 051 = 2 446 + 2 605 (2025). The "other financial liabilities" rows are therefore not borrowing.
+  - company: "Safran"
+    tag: "safran:NonCurrentInterestBearingFinancialLiablities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing financial liabilities
+    printed_label: "Passifs financiers non courants portant intérêts"
+    evidence: >-
+      Bilan consolidé, passifs non courants: "Passifs financiers non courants portant intérêts" (note 6.5.2) 3 788 (2024)
+      / 2 446 (2025), tagged safran:NonCurrentInterestBearingFinancialLiablities (the filer's own spelling). Note 6.5:
+      "Passifs financiers portant intérêts (B)" 4 776 / 5 051 = this row + the current one. Read 2026-09-28.
+
+  - company: "Safran"
+    tag: "safran:CurrentInterestBearingFinancialLiabilities"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing financial liabilities
+    printed_label: "Passifs financiers courants portant intérêts"
+    evidence: >-
+      Bilan consolidé, passifs courants: "Passifs financiers courants portant intérêts" (note 6.5.2) 988 (2024) / 2 605
+      (2025), tagged safran:CurrentInterestBearingFinancialLiabilities. Read 2026-09-28 from the report's own row.
+
+  - company: "Safran"
+    tag: "ifrs-full:OtherNoncurrentFinancialLiabilities"
+    concept: other_noncurrent_financial_liabilities_not_borrowings
+    statement: balance_sheet
+    label: Other non-current financial liabilities (not borrowings)
+    printed_label: "Autres passifs financiers non courants"
+    evidence: >-
+      Bilan consolidé: "Autres passifs financiers non courants" (note 6.1.6) 11 (2024) / 23 (2025), printed apart from
+      the interest-bearing rows; Safran's net financial position (note 6.5) leaves it out. Read 2026-09-28.
+
+  - company: "Safran"
+    tag: "ifrs-full:OtherCurrentFinancialLiabilities"
+    concept: other_current_financial_liabilities_not_borrowings
+    statement: balance_sheet
+    label: Other current financial liabilities (not borrowings)
+    printed_label: "Autres passifs financiers courants"
+    evidence: >-
+      Bilan consolidé: "Autres passifs financiers courants" (note 6.2.4) 148 (2024) / 174 (2025). Note 6.2.4: payables on
+      acquisitions of property, plant, equipment and intangibles 144 / 168 and on acquisitions of securities 4 / 6 - not
+      borrowing; Safran's net financial position (note 6.5) leaves it out. Read 2026-09-28.
+
+  # Cofinimmo - FY2025 universal registration document (Dutch ESEF report 549300TM914CSF6KI389-2025-12-31-1-nl.xhtml, EUR
+  # thousands, 2025 then 2024), balance sheet in the Belgian REIT format: "B. Financiële schulden" = "a.
+  # Kredietinstellingen" + "b. Financiële leasing" + "c. Overige". The bank lines are Cofinimmo extensions.
+  - company: "Cofinimmo"
+    tag: "cofb:LongTermBankBorrowings"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current bank borrowings
+    printed_label: "a. Kredietinstellingen"
+    evidence: >-
+      Geconsolideerde balans, "B. Langlopende financiële schulden" 1.588.536 / 1.753.269 = "a. Kredietinstellingen"
+      511.296 / 590.186 (tagged cofb:LongTermBankBorrowings) + "b. Financiële leasing" 0 + "c. Overige" 1.077.239 /
+      1.163.082. Read 2026-09-28 from the report's own rows.
+
+  - company: "Cofinimmo"
+    tag: "cofb:CurrentBankBorrowingsAndCurrentPortionOfNonCurrentBankBorrowings"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current bank borrowings
+    printed_label: "a. Kredietinstellingen"
+    evidence: >-
+      Geconsolideerde balans, "B. Kortlopende financiële schulden" 999.696 / 834.068 = "a. Kredietinstellingen" 159.712 /
+      119.068 (tagged cofb:CurrentBankBorrowingsAndCurrentPortionOfNonCurrentBankBorrowings) + "b. Financiële leasing" 0
+      + "c. Overige" 839.984 / 715.000. Read 2026-09-28 from the report's own rows.
+
+  - company: "Cofinimmo"
+    tag: "ifrs-full:OtherNoncurrentFinancialLiabilities"
+    concept: other_noncurrent_financial_liabilities_not_borrowings
+    statement: balance_sheet
+    label: Other non-current financial liabilities (not borrowings)
+    printed_label: "C. Andere langlopende financiële verplichtingen"
+    evidence: >-
+      Geconsolideerde balans: "C. Andere langlopende financiële verplichtingen" 18.003 / 19.749, printed apart from "B.
+      Langlopende financiële schulden". The fair-value note splits the 18.003 into "Afgeleide instrumenten" (derivatives)
+      3.709 and "Overige" 14.294 (level 3) - not borrowing. Read 2026-09-28.
+
+  # SKF - FY2024 annual report (Swedish ESEF report skf-2024-12-31-0-sv.xhtml, SEK millions, 2024 then 2023).
+  - company: "SKF"
+    tag: "ifrs-full:BondsIssued"
+    concept: noncurrent_financial_liabilities
+    statement: balance_sheet
+    label: Non-current financial liabilities
+    printed_label: "Långfristiga finansiella skulder"
+    evidence: >-
+      Koncernens balansräkningar, långfristiga skulder: "Långfristiga finansiella skulder" (note 20) 12 685 (2024) /
+      15 687 (2023), tagged ifrs-full:BondsIssued (total bonds, an element the ratio engine does not read as a
+      non-current line). Note 20: bonds 1 101 + 4 557 + 3 429 + 3 307, other long-term loans 200 and hedging derivatives
+      91 = 12 685. Read 2026-09-28 from the report's own rows.

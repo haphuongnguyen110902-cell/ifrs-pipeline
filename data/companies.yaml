@@ -14,37 +14,51 @@
 companies:
   loreal_2025:
     name: "L'Oreal"
+    key: loreal
+    lei: 529900JI1GG6F7RKVI53
     expected_currency: EUR
     sector: Consumer / Beauty
     country: France
   LVMH_2024:
     name: "LVMH"
+    key: lvmh
+    lei: IOG4E947OATN0KJYSD45
     expected_currency: EUR
     sector: Luxury Goods
     country: France
   Kering_2023:
     name: "Kering"
+    key: kering
+    lei: 549300VGEJKB7SVUZR78
     expected_currency: EUR
     sector: Luxury Goods
     country: France
     note: "FY2021-2023 only - download Kering_2025.zip for more recent data"
   essilorluxottica_new:
     name: "EssilorLuxottica"
+    key: essilorluxottica
+    lei: 549300M3VH1A3ER1TB49
     expected_currency: EUR
     sector: Consumer / Eyewear
     country: France
   puig:
     name: "Puig Brands"
+    key: puig
+    lei: 549300OVHNSX30L1AQ94
     expected_currency: EUR
     sector: Consumer / Beauty
     country: Spain
   danone:
     name: "Danone"
+    key: danone
+    lei: 969500KMUQ2B6CBAF162
     expected_currency: EUR
     sector: Consumer Staples
     country: France
   pernod_ricard:
     name: "Pernod Ricard"
+    key: pernod_ricard
+    lei: 52990097YFPX9J0H5D87
     expected_currency: EUR
     sector: Consumer / Beverages
     country: France
@@ -52,36 +66,50 @@ companies:
     note: "FYE June 30 - comparisons with Dec 31 filers mix different economic periods"
   essity:
     name: "Essity"
+    key: essity
+    lei: 549300G8E6YUVJ1DA153
     expected_currency: SEK
     sector: Consumer / Hygiene
     country: Sweden
   Moncler_2025:
     name: "Moncler"
+    key: moncler
+    lei: 815600EBD7FB00525B20
     expected_currency: EUR
     sector: Luxury Apparel
     country: Italy
   Shell_2025:
     name: "Shell"
+    key: shell
+    lei: 21380068P1DRHMJ8KU70
     expected_currency: USD
     sector: Energy
     country: United Kingdom
   Amplifon_2025:
     name: "Amplifon"
+    key: amplifon
+    lei: ZYXJDNVM2JI3VBM8G556
     expected_currency: EUR
     sector: Consumer Health Retail
     country: Italy
   heineken:
     name: "Heineken"
+    key: heineken
+    lei: 724500K5PTPSST86UQ23
     expected_currency: EUR
     sector: Consumer / Beverages
     country: Netherlands
   schneider_electric_se:
     name: "Schneider Electric"
+    key: schneider
+    lei: 969500A1YF1XUYYXS284
     expected_currency: EUR
     sector: Industrials / Electrical Equipment
     country: France
   adyen:
     name: "Adyen"
+    key: adyen
+    lei: 724500973ODKK3IFQ447
     expected_currency: EUR
     sector: Financials / Payments
     country: Netherlands
@@ -89,11 +117,277 @@ companies:
     reporting_model_reason: "payments processor - client money sits in payables to merchants and financial institutions (EUR 6.4bn vs EUR 0.3bn of trade payables at FY2025 in the loaded filing), so working-capital and leverage ratios are meaningless; yfinance labels it Technology, hence the explicit override"
   asm_international:
     name: "ASM International"
+    key: asm
+    lei: 7245001I22ND6ZFHX623
     expected_currency: EUR
     sector: Technology / Semiconductor Equipment
     country: Netherlands
   recordati:
     name: "Recordati"
+    key: recordati
+    lei: 815600FBF92FD3531704
     expected_currency: EUR
     sector: Healthcare / Pharmaceuticals
     country: Italy
+  # Phase 4 (2026-09-24): the gate40 companies. name/country/ticker from universe_membership or the report's own
+  # NameOfReportingEntity (legal form removed); LEI and currency from each package; sector from yfinance.
+  alstom:
+    name: "Alstom"
+    expected_currency: EUR
+    sector: Industrials / Railroads
+    country: France
+    key: alstom
+    lei: 96950032TUYMW11FB530
+    fiscal_year_end: "March 31"
+  anheuser_busch_inbev:
+    name: "Anheuser-Busch InBev"
+    expected_currency: USD
+    sector: Consumer Defensive / Beverages - Brewers
+    country: Belgium
+    key: anheuser_busch_inbev
+    lei: 5493008H3828EMEXB082
+  arjo:
+    name: "Arjo"
+    expected_currency: SEK
+    sector: Healthcare / Medical Distribution
+    country: Sweden
+    key: arjo
+    lei: 549300OWGJPYKC6JF790
+  assa_abloy:
+    name: "Assa Abloy"
+    expected_currency: SEK
+    sector: Industrials / Security & Protection Services
+    country: Sweden
+    key: assa_abloy
+    lei: 549300YECS8HKCIMMB67
+  banco_bpm:
+    name: "Banco BPM"
+    expected_currency: EUR
+    sector: Financials / Banks
+    country: Italy
+    key: banco_bpm
+    lei: 815600E4E6DCD2D25E30
+    reporting_model: financial
+    reporting_model_reason: "bank - lending and deposit-taking are its business, so cost-of-sales, working-capital, cash-conversion, ROIC and net-debt ratios do not apply; the bank measures (cost/income, cost of risk, loans/deposits) are shown instead"
+  bnp_paribas:
+    name: "BNP Paribas"
+    expected_currency: EUR
+    sector: Financials / Banks
+    country: France
+    key: bnp_paribas
+    lei: R0MUWSFPU8MPRO8K5P83
+    reporting_model: financial
+    reporting_model_reason: "bank - lending and deposit-taking are its business, so cost-of-sales, working-capital, cash-conversion, ROIC and net-debt ratios do not apply; the bank measures (cost/income, cost of risk, loans/deposits) are shown instead"
+  carrefour:
+    name: "Carrefour"
+    expected_currency: EUR
+    sector: Consumer Defensive / Grocery Stores
+    country: France
+    key: carrefour
+    lei: 549300B8P6MUJ1YWTS08
+  cofinimmo:
+    name: "Cofinimmo"
+    expected_currency: EUR
+    sector: Real Estate
+    country: Belgium
+    key: cofinimmo
+    lei: 549300TM914CSF6KI389
+    note: "real-estate investment company: investment property at fair value (IAS 40) is its main asset"
+  d_ieteren_group:
+    name: "D'Ieteren Group"
+    expected_currency: EUR
+    sector: Consumer Cyclical / Auto & Truck Dealerships
+    country: Belgium
+    key: d_ieteren_group
+    lei: 549300DV5KJ23OKVTW34
+  diasorin:
+    name: "DiaSorin"
+    expected_currency: EUR
+    sector: Healthcare / Diagnostics & Research
+    country: Italy
+    key: diasorin
+    lei: 8156002878BDF0EE4348
+  dometic_group:
+    name: "Dometic Group"
+    expected_currency: SEK
+    sector: Consumer Cyclical / Leisure
+    country: Sweden
+    key: dometic_group
+    lei: 549300STIPMK5VSA7Y59
+  eni:
+    name: "Eni"
+    expected_currency: EUR
+    sector: Energy / Oil & Gas Integrated
+    country: Italy
+    key: eni
+    lei: BUCRF72VH5RBN7X3VL35
+  ferrari_n_v:
+    name: "Ferrari"
+    expected_currency: EUR
+    sector: Consumer Cyclical / Auto Manufacturers
+    country: Netherlands
+    key: ferrari_n_v
+    lei: 549300RIVY5EX8RCON76
+  finecobank:
+    name: "FinecoBank"
+    expected_currency: EUR
+    sector: Financials / Banks
+    country: Italy
+    key: finecobank
+    lei: 549300L7YCATGO57ZE10
+    reporting_model: financial
+    reporting_model_reason: "bank - lending and deposit-taking are its business, so cost-of-sales, working-capital, cash-conversion, ROIC and net-debt ratios do not apply; the bank measures (cost/income, cost of risk, loans/deposits) are shown instead"
+  hermes_international:
+    name: "Hermes International"
+    expected_currency: EUR
+    sector: Consumer Cyclical / Luxury Goods
+    country: France
+    key: hermes_international
+    lei: 969500Y4IJGHJE2MTJ13
+  jm_ab:
+    name: "JM"
+    expected_currency: SEK
+    sector: Consumer Cyclical / Residential Construction
+    country: Sweden
+    key: jm_ab
+    lei: 529900X0UEM9DOM6FK12
+  kbc_groep:
+    name: "KBC Groep"
+    expected_currency: EUR
+    sector: Financials / Banks
+    country: Belgium
+    key: kbc_groep
+    lei: 213800X3Q9LSAKRUWY91
+    reporting_model: financial
+    reporting_model_reason: "bank - lending and deposit-taking are its business, so cost-of-sales, working-capital, cash-conversion, ROIC and net-debt ratios do not apply; the bank measures (cost/income, cost of risk, loans/deposits) are shown instead"
+  mediobanca:
+    name: "Mediobanca"
+    expected_currency: EUR
+    sector: Financials / Banks
+    country: Italy
+    key: mediobanca
+    lei: PSNL19R2RXX5U3QWHI44
+    reporting_model: financial
+    reporting_model_reason: "bank - lending and deposit-taking are its business, so cost-of-sales, working-capital, cash-conversion, ROIC and net-debt ratios do not apply; the bank measures (cost/income, cost of risk, loans/deposits) are shown instead"
+  melexis:
+    name: "Melexis"
+    expected_currency: EUR
+    sector: Technology / Semiconductors
+    country: Belgium
+    key: melexis
+    lei: 549300QRPSGOJRPUFO80
+  peab:
+    name: "Peab"
+    expected_currency: SEK
+    sector: Industrials / Engineering & Construction
+    country: Sweden
+    key: peab
+    lei: 549300FQS4VD3153I854
+  piaggio:
+    name: "Piaggio"
+    expected_currency: EUR
+    sector: Consumer Cyclical / Auto Manufacturers
+    country: Italy
+    key: piaggio
+    lei: 8156000256C2431C2E92
+  relx_plc:
+    name: "RELX"
+    expected_currency: GBP
+    sector: Industrials / Specialty Business Services
+    country: United Kingdom
+    key: relx_plc
+    lei: 549300WSX3VBUFFJOO66
+  renault:
+    name: "Renault"
+    expected_currency: EUR
+    sector: Consumer Cyclical / Auto Manufacturers
+    country: France
+    key: renault
+    lei: 969500F7JLTX36OUI695
+  safran:
+    name: "Safran"
+    expected_currency: EUR
+    sector: Industrials / Aerospace & Defense
+    country: France
+    key: safran
+    lei: 969500UIC89GT3UL7L24
+  sandvik:
+    name: "Sandvik"
+    expected_currency: SEK
+    sector: Industrials / Specialty Industrial Machinery
+    country: Sweden
+    key: sandvik
+    lei: 5299008ZUAXN43LVZF54
+  skf_group:
+    name: "SKF"
+    expected_currency: SEK
+    sector: Industrials / Tools & Accessories
+    country: Sweden
+    key: skf_group
+    lei: 894500JU9WRAJQOVBI12
+    note: "its ESEF reports carry LEI 894500JU9WRAJQOVBI12 (GLEIF: 'SKF Group', AU, registration lapsed) - the LEI filings.xbrl.org files them under; AB SKF's own active LEI is 549300B6HWYEE57O8J84 (GLEIF, SE)"
+  solvay:
+    name: "Solvay"
+    expected_currency: EUR
+    sector: Basic Materials / Chemicals
+    country: Belgium
+    key: solvay
+    lei: 549300MMVL80RTBP3O28
+  stellantis:
+    name: "Stellantis"
+    expected_currency: EUR
+    sector: Consumer Cyclical / Auto Manufacturers
+    country: Netherlands
+    key: stellantis
+    lei: 549300LKT9PW7ZIBDF31
+  stmicroelectronics:
+    name: "STMicroelectronics"
+    expected_currency: USD
+    sector: Technology / Semiconductors
+    country: Netherlands
+    key: stmicroelectronics
+    lei: 213800Z8NOHIKRI42W10
+  svenska_handelsbanken:
+    name: "Svenska Handelsbanken"
+    expected_currency: SEK
+    sector: Financials / Banks
+    country: Sweden
+    key: svenska_handelsbanken
+    lei: NHBDILHZTYCNBV5UYZ31
+    reporting_model: financial
+    reporting_model_reason: "bank - lending and deposit-taking are its business, so cost-of-sales, working-capital, cash-conversion, ROIC and net-debt ratios do not apply; the bank measures (cost/income, cost of risk, loans/deposits) are shown instead"
+  syensqo:
+    name: "Syensqo"
+    expected_currency: EUR
+    sector: Basic Materials / Chemicals
+    country: Belgium
+    key: syensqo
+    lei: 549300060XNJ90PLNS10
+  thales:
+    name: "Thales"
+    expected_currency: EUR
+    sector: Industrials / Aerospace & Defense
+    country: France
+    key: thales
+    lei: 529900FNDVTQJOVVPZ19
+  umicore:
+    name: "Umicore"
+    expected_currency: EUR
+    sector: Industrials / Waste Management
+    country: Belgium
+    key: umicore
+    lei: 529900F3AIQECS8ZSV61
+  unilever_plc:
+    name: "Unilever"
+    expected_currency: EUR
+    sector: Consumer Defensive / Household & Personal Products
+    country: United Kingdom
+    key: unilever_plc
+    lei: 549300MKFYEKVRWML317
+  webuild:
+    name: "Webuild"
+    expected_currency: EUR
+    sector: Industrials / Engineering & Construction
+    country: Italy
+    key: webuild
+    lei: 549300UKR289DF4UXQ47

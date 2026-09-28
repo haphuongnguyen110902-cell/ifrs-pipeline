@@ -129,6 +129,19 @@ class TestDashboardCaption:
         assert caption(pd.DataFrame({"ratio_name": ["dpo"], "value": [1.0]})) is None
         assert caption(self.frame([None, None])) is None
 
+    def test_the_line_tagged_without_current_gets_it_too(self, caption):
+        """Carrefour tags its "Fournisseurs et autres crediteurs" with the IFRS element that has no "current" in it."""
+        assert caption(self.frame([["trade_and_other_payables"]])) is not None
+        assert caption(self.frame([["trade_and_other_payables_to_trade_suppliers"]])) is None
+
+    def test_the_dashboard_list_is_the_engines(self, caption, r11):
+        """The dashboard cannot import the engine (it has no pipeline dependencies), so it keeps its own copy: a
+        broader line added to one and not the other would silently drop the caption."""
+        tree = ast.parse((REPO / "webapp" / "app.py").read_text(encoding="utf-8"))
+        node = next(n for n in tree.body if isinstance(n, ast.Assign)
+                    and any(getattr(t, "id", "") == "BROADER_PAYABLES" for t in n.targets))
+        assert set(ast.literal_eval(node.value)) == set(r11.BROADER_PAYABLES)
+
     def test_only_the_dpo_rows_decide(self, caption):
         df = pd.DataFrame({"ratio_name": ["dpo", "ccc"], "source_concepts": [[TRADE], [BROADER]]})
         assert caption(df) is None

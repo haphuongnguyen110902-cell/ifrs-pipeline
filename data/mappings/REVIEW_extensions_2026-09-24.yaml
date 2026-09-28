@@ -1,0 +1,1563 @@
+_instructions: 'Fill in ''statement'' for each entry: income_statement / balance_sheet
+  / cash_flow / other. When done: python scripts/12_apply_review.py'
+needs_review:
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughOtherComprehensiveIncome
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_ot_etc
+  display_label: Increase (decrease) in number of shares outstanding through other
+    comprehensive income
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughProfitLoss
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_pr_etc
+  display_label: Increase (decrease) in number of shares outstanding through profit
+    (loss)
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughComprehensiveIncome
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_co_etc
+  display_label: Increase (decrease) in number of shares outstanding through comprehensive
+    income
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughChangesInOwnershipInterestsInSubsidiaries
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_ch_etc
+  display_label: Increase (decrease) in number of shares outstanding through changes
+    in ownership interests in subsidiaries
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughConversionOfConvertibleInstruments
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_co_etc
+  display_label: Increase (decrease) in number of shares outstanding through conversion
+    of convertible instruments
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughDividendsPaid
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_di_etc
+  display_label: Increase (decrease) in number of shares outstanding through dividends
+    paid
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughIssueOfEquity
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_is_etc
+  display_label: Increase (decrease) in number of shares outstanding through issue
+    of equity
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseThroughSubordinatedLiabilities
+  suggested_key: increase_decrease_through_subordinated_liabilities
+  display_label: Increase (decrease) through subordinated liabilities
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughShareBasedPaymentTransactionsFreeShares
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_sh_etc
+  display_label: Increase (decrease) in number of shares outstanding through share-based
+    payment transactions, free shares
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ALS:IncreaseDecreaseInNumberOfSharesOutstandingThroughShareBasedPaymentTransactions
+  suggested_key: increase_decrease_in_number_of_shares_outstanding_through_sh_etc
+  display_label: Increase (decrease) in number of shares outstanding through share-based
+    payment transactions
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'changes in equity'
+  used_by:
+  - alstom
+- xbrl_tag: ext:TangibleAssets
+  suggested_key: tangible_assets
+  display_label: TangibleAssets
+  statement: REVIEW
+  balance: debit
+  reason: periodType=instant
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:TaxAssets
+  suggested_key: tax_assets
+  display_label: TaxAssets
+  statement: REVIEW
+  balance: debit
+  reason: periodType=instant
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:InsuranceLiabilities
+  suggested_key: insurance_liabilities
+  display_label: InsuranceLiabilities
+  statement: REVIEW
+  balance: credit
+  reason: periodType=instant
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:OtherReservesOther
+  suggested_key: other_reserves_other
+  display_label: OtherReservesOther
+  statement: REVIEW
+  balance: credit
+  reason: periodType=instant
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:TotalProfitLossAttributableToOwnersOfParent
+  suggested_key: total_profit_loss_attributable_to_owners_of_parent
+  display_label: Total Profit (loss), attributable to owners of parent
+  statement: REVIEW
+  balance: credit
+  reason: periodType=instant
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:InterestIncomeAndSimilarRevenues
+  suggested_key: interest_income_and_similar_revenues
+  display_label: InterestIncomeAndSimilarRevenues
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:InterestExpenseAndSimilarCharges
+  suggested_key: interest_expense_and_similar_charges
+  display_label: InterestExpenseAndSimilarCharges
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetInterestMargin
+  suggested_key: net_interest_margin
+  display_label: NetInterestMargin
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetGainsLossesFromHedgeAccounting
+  suggested_key: net_gains_losses_from_hedge_accounting
+  display_label: NetGainsLossesFromHedgeAccounting
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainsLossesOnDisposalsandRepurchaseOfFinancialAssetsandLiabilities
+  suggested_key: gains_losses_on_disposalsand_repurchase_of_financial_assetsa_etc
+  display_label: GainsLossesOnDisposalsandRepurchaseOfFinancialAssetsandLiabilities
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'purchaseof' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainLossArisingFromDisposalOfFinancialAssetsMeasuredAtAmortisedCost
+  suggested_key: gain_loss_arising_from_disposal_of_financial_assets_measured_etc
+  display_label: GainLossArisingFromDisposalOfFinancialAssetsMeasuredAtAmortisedCost
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainLossOnDisposalsOfFinancialAssetsAtFairValueThroughOtherComprehensiveIncome
+  suggested_key: gain_loss_on_disposals_of_financial_assets_at_fair_value_thr_etc
+  display_label: GainLossOnDisposalsOfFinancialAssetsAtFairValueThroughOtherComprehensiveIncome
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'othercomprehensiveincome' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainLossArisingFromRepurchaseOfFinancialLiabilities
+  suggested_key: gain_loss_arising_from_repurchase_of_financial_liabilities
+  display_label: GainLossArisingFromRepurchaseOfFinancialLiabilities
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'purchaseof' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetGainsLossesOnOtherFinancialAssetsLiabilitiesAtFairValueThroughProfitOrLoss
+  suggested_key: net_gains_losses_on_other_financial_assets_liabilities_at_fa_etc
+  display_label: NetGainsLossesOnOtherFinancialAssetsLiabilitiesAtFairValueThroughProfitOrLoss
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainsLossesOnFinancialAssetsLiabilitiesDesignatedAtFairValueThroughProfitOrLoss
+  suggested_key: gains_losses_on_financial_assets_liabilities_designated_at_f_etc
+  display_label: GainsLossesOnFinancialAssetsLiabilitiesDesignatedAtFairValueThroughProfitOrLoss
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainsLossesOnFinancialAssetsLiabilitiesMandatorilyAtFairValueThroughProfitOrLoss
+  suggested_key: gains_losses_on_financial_assets_liabilities_mandatorily_at__etc
+  display_label: GainsLossesOnFinancialAssetsLiabilitiesMandatorilyAtFairValueThroughProfitOrLoss
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GrossIncome
+  suggested_key: gross_income
+  display_label: GrossIncome
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIFRS9OnFinancialAssetsAtAmortisedCost
+  suggested_key: impairment_loss_impairment_gain_and_reversal_of_impairment_l_etc
+  display_label: ImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIFRS9OnFinancialAssetsAtAmortisedCost
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIFRS9OnFinancialAssetsAtFairValueThroughOtherComprehensiveIncome
+  suggested_key: impairment_loss_impairment_gain_and_reversal_of_impairment_l_etc
+  display_label: ImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIFRS9OnFinancialAssetsAtFairValueThroughOtherComprehensiveIncome
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'othercomprehensiveincome' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainsLossesFromContractualChangesWithoutderecognition
+  suggested_key: gains_losses_from_contractual_changes_withoutderecognition
+  display_label: GainsLossesFromContractualChangesWithoutderecognition
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetProfitFromFinancialActivities
+  suggested_key: net_profit_from_financial_activities
+  display_label: NetProfitFromFinancialActivities
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:IncomeFromReinsuranceContractsHeld
+  suggested_key: income_from_reinsurance_contracts_held
+  display_label: IncomeFromReinsuranceContractsHeld
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ExpensesFromReinsuranceContractsHeld
+  suggested_key: expenses_from_reinsurance_contracts_held
+  display_label: ExpensesFromReinsuranceContractsHeld
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:BalanceOfFinanceIncomeExpensesFromInsuranceActivities
+  suggested_key: balance_of_finance_income_expenses_from_insurance_activities
+  display_label: BalanceOfFinanceIncomeExpensesFromInsuranceActivities
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ProfitLossFromFinancialAndInsuranceActivities
+  suggested_key: profit_loss_from_financial_and_insurance_activities
+  display_label: ProfitLossFromFinancialAndInsuranceActivities
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:AdministrativeExpenseStaffCosts
+  suggested_key: administrative_expense_staff_costs
+  display_label: AdministrativeExpenseStaffCosts
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:OtherAdministrativeExpense
+  suggested_key: other_administrative_expense
+  display_label: OtherAdministrativeExpense
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetProvisionsForRisksAndCharges
+  suggested_key: net_provisions_for_risks_and_charges
+  display_label: NetProvisionsForRisksAndCharges
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetProvisionsForRisksAndChargesCommitmentsAndFinancialGuaranteesGiven
+  suggested_key: net_provisions_for_risks_and_charges_commitments_and_financi_etc
+  display_label: NetProvisionsForRisksAndChargesCommitmentsAndFinancialGuaranteesGiven
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetProvisionsForRisksAndChargesOtherNetProvision
+  suggested_key: net_provisions_for_risks_and_charges_other_net_provision
+  display_label: NetProvisionsForRisksAndChargesOtherNetProvision
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossTangibleAssets
+  suggested_key: depreciation_amortisation_and_impairment_loss_reversal_of_im_etc
+  display_label: DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossTangibleAssets
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsOtherThanGoodwill
+  suggested_key: depreciation_amortisation_and_impairment_loss_reversal_of_im_etc
+  display_label: DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsOtherThanGoodwill
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:OperatingCosts
+  suggested_key: operating_costs
+  display_label: OperatingCosts
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainsLossesOnTangibleAndIntangibleAssetsOtherThanGoodwillMeasuredAtFairValue
+  suggested_key: gains_losses_on_tangible_and_intangible_assets_other_than_go_etc
+  display_label: GainsLossesOnTangibleAndIntangibleAssetsOtherThanGoodwillMeasuredAtFairValue
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:Goodwillimpairment
+  suggested_key: goodwillimpairment
+  display_label: Goodwillimpairment
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:OtherComprehensiveIncomeNetOfTaxTangibleAssets
+  suggested_key: other_comprehensive_income_net_of_tax_tangible_assets
+  display_label: OtherComprehensiveIncomeNetOfTaxTangibleAssets
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'othercomprehensiveincome' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ForeignInvestmentsHedging
+  suggested_key: foreign_investments_hedging
+  display_label: ForeignInvestmentsHedging
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ForeignExchangeDifferences
+  suggested_key: foreign_exchange_differences
+  display_label: ForeignExchangeDifferences
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:CashFlowHedging
+  suggested_key: cash_flow_hedging
+  display_label: CashFlowHedging
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainsLossesOnFinancialAssetsOtherThanEquityInstrumentsMeasuredAtFairValueThroughOtherComprehensiveIncomeNetOfTax
+  suggested_key: gains_losses_on_financial_assets_other_than_equity_instrumen_etc
+  display_label: GainsLossesOnFinancialAssetsOtherThanEquityInstrumentsMeasuredAtFairValueThroughOtherComprehensiveIncomeNetOfTax
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'othercomprehensiveincome' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:TotalEquity
+  suggested_key: total_equity
+  display_label: TotalEquity
+  statement: REVIEW
+  balance: credit
+  reason: periodType=instant
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:PreviousYearProfitLossAllocationReserves
+  suggested_key: previous_year_profit_loss_allocation_reserves
+  display_label: PreviousYearProfitLossAllocationReserves
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:TotalEquityAttributableToOwnersOfParent
+  suggested_key: total_equity_attributable_to_owners_of_parent
+  display_label: Total Equity Attributable To Owners Of Parent
+  statement: REVIEW
+  balance: credit
+  reason: periodType=instant
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:IncreaseDecreaseofReserves
+  suggested_key: increase_decreaseof_reserves
+  display_label: IncreaseDecreaseofReserves
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ExtraordinaryDividendsDistribution
+  suggested_key: extraordinary_dividends_distribution
+  display_label: ExtraordinaryDividendsDistribution
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:IncreaseDecreaseThroughTreasuryShareDerivatives
+  suggested_key: increase_decrease_through_treasury_share_derivatives
+  display_label: Increase (decrease) through treasury share derivatives
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'increasedecreasethrough' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:IncreaseDecreaseduetoEquityInstruments
+  suggested_key: increase_decreasedueto_equity_instruments
+  display_label: IncreaseDecreaseduetoEquityInstruments
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:Acconti_su_dividendi
+  suggested_key: acconti_su_dividendi
+  display_label: Acconti_su_dividendi
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainLossOnFinancialAssetsHeldForTradingAndOnOtherFinancialAssetsLiabilitiesAtFairValueThroughProfitOrLoss
+  suggested_key: gain_loss_on_financial_assets_held_for_trading_and_on_other__etc
+  display_label: GainLossOnFinancialAssetsHeldForTradingAndOnOtherFinancialAssetsLiabilitiesAtFairValueThroughProfitOrLoss
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:GainLossOnHedgeAccounting
+  suggested_key: gain_loss_on_hedge_accounting
+  display_label: GainLossOnHedgeAccounting
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetLossesRecoveriesOnCreditImpairment
+  suggested_key: net_losses_recoveries_on_credit_impairment
+  display_label: NetLossesRecoveriesOnCreditImpairment
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetValueAdjustmentsWriteBacksOnTangibleAndIntangibleAssets
+  suggested_key: net_value_adjustments_write_backs_on_tangible_and_intangible_etc
+  display_label: NetValueAdjustmentsWriteBacksOnTangibleAndIntangibleAssets
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetProvisionsForRisksAndChargesAndOtherExpensesIncome
+  suggested_key: net_provisions_for_risks_and_charges_and_other_expenses_inco_etc
+  display_label: NetProvisionsForRisksAndChargesAndOtherExpensesIncome
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetRevenuesAndCostsOfInsuranceContractsIssuedAndReinsuranceCeded
+  suggested_key: net_revenues_and_costs_of_insurance_contracts_issued_and_rei_etc
+  display_label: NetRevenuesAndCostsOfInsuranceContractsIssuedAndReinsuranceCeded
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:UnpaidDutiesTaxesAndTaxCredits
+  suggested_key: unpaid_duties_taxes_and_tax_credits
+  display_label: UnpaidDutiesTaxesAndTaxCredits
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ImpairmentWriteBacksAfterTaxOnDiscontinuedOperations
+  suggested_key: impairment_write_backs_after_tax_on_discontinued_operations
+  display_label: ImpairmentWriteBacksAfterTaxOnDiscontinuedOperations
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:CashFlowsFromUsedInFinancialAssetsClassifiedAsOperatingactivities
+  suggested_key: cash_flows_from_used_in_financial_assets_classified_as_opera_etc
+  display_label: CashFlowsFromUsedInFinancialAssetsClassifiedAsOperatingactivities
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:CashFlowsFromUsedInFinancialLiabilitiesClassifiedAsOperatingactivities
+  suggested_key: cash_flows_from_used_in_financial_liabilities_classified_as__etc
+  display_label: CashFlowsFromUsedInFinancialLiabilitiesClassifiedAsOperatingactivities
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:AdjustmentsForIncreaseDecreaseInFinancialLiabilitiesAtAmortisedCost
+  suggested_key: adjustments_for_increase_decrease_in_financial_liabilities_a_etc
+  display_label: AdjustmentsForIncreaseDecreaseInFinancialLiabilitiesAtAmortisedCost
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'adjustmentsfor' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:AdjustmentsForIncreaseDecreaseOfFinancialLiabilitiesDesignatedAtFairValue
+  suggested_key: adjustments_for_increase_decrease_of_financial_liabilities_d_etc
+  display_label: AdjustmentsForIncreaseDecreaseOfFinancialLiabilitiesDesignatedAtFairValue
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'adjustmentsfor' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:CashFlowsFromIncreaseDecreaseOfOtherLiabilities
+  suggested_key: cash_flows_from_increase_decrease_of_other_liabilities
+  display_label: CashFlowsFromIncreaseDecreaseOfOtherLiabilities
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:CashFlowsFromUsedInInsuranceReinsuranceContracts
+  suggested_key: cash_flows_from_used_in_insurance_reinsurance_contracts
+  display_label: CashFlowsFromUsedInInsuranceReinsuranceContracts
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetCashFlowsFromInsuranceContractsIssuedWhichAreLiabilitiesAssets
+  suggested_key: net_cash_flows_from_insurance_contracts_issued_which_are_lia_etc
+  display_label: NetCashFlowsFromInsuranceContractsIssuedWhichAreLiabilitiesAssets
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:NetCashFlowsFromReinsuranceCessionsConstitutingAssetsLiabilities
+  suggested_key: net_cash_flows_from_reinsurance_cessions_constituting_assets_etc
+  display_label: NetCashFlowsFromReinsuranceCessionsConstitutingAssetsLiabilities
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:CashFlowsFromInvestingActivities
+  suggested_key: cash_flows_from_investing_activities
+  display_label: CashFlowsFromInvestingActivities
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:ProceedsFromSalesOfTangibleAssetsClassifiedAsInvestingactivities
+  suggested_key: proceeds_from_sales_of_tangible_assets_classified_as_investi_etc
+  display_label: ProceedsFromSalesOfTangibleAssetsClassifiedAsInvestingactivities
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'proceedsfrom' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:CashFlowsUsedInInvestingActivities
+  suggested_key: cash_flows_used_in_investing_activities
+  display_label: ' CashFlowsUsedInInvestingActivities'
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'cashflow' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:PurchaseOfTangibleAssetsClassifiedAsInvestingactivities
+  suggested_key: purchase_of_tangible_assets_classified_as_investingactivitie_etc
+  display_label: PurchaseOfTangibleAssetsClassifiedAsInvestingactivities
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'purchaseof' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:OtherInflowsOutflowsFromIssuePurchaseOfTreasuryshares
+  suggested_key: other_inflows_outflows_from_issue_purchase_of_treasuryshares
+  display_label: OtherInflowsOutflowsFromIssuePurchaseOfTreasuryshares
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'purchaseof' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:OtherInflowsOutflowsFromIssuePurchaseOfEquityinstruments
+  suggested_key: other_inflows_outflows_from_issue_purchase_of_equityinstrume_etc
+  display_label: OtherInflowsOutflowsFromIssuePurchaseOfEquityinstruments
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'purchaseof' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:OtherInflowsOutflowsFromSalePurchaseofMinoritycontrol
+  suggested_key: other_inflows_outflows_from_sale_purchaseof_minoritycontrol
+  display_label: OtherInflowsOutflowsFromSalePurchaseofMinoritycontrol
+  statement: REVIEW
+  balance: debit
+  reason: name keyword 'purchaseof' (LOW_CONF)
+  used_by:
+  - banco_bpm
+- xbrl_tag: ext:Cash_and_cash_equivalent_RF
+  suggested_key: cash_and_cash_equivalent__r_f
+  display_label: cash_and_cash_equivalent_RF
+  statement: REVIEW
+  balance: debit
+  reason: periodType=instant
+  used_by:
+  - banco_bpm
+- xbrl_tag: ifrs-full:RentalIncomeFromInvestmentProperty
+  suggested_key: rental_income_from_investment_property
+  display_label: Rental income from investment property
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: cofb:WritebackOfLeasePaymentsSoldAndDiscounted
+  suggested_key: writeback_of_lease_payments_sold_and_discounted
+  display_label: II. Terugnemingen van overgedragen en verdisconteerde huren
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: cofb:CostsPayableByTenantAndBorneByLandlordOnRentalDamageAndRedecorationAtEndOfLease
+  suggested_key: costs_payable_by_tenant_and_borne_by_landlord_on_rental_dama_etc
+  display_label: Kosten van de huurders en gedragen door de eigenaar op huurschade
+    en wederinstaatstelling op het einde van de huurovereenkomst
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: cofb:RentalChargesAndTaxesNormallyPayableByTenantsOnLetProperties
+  suggested_key: rental_charges_and_taxes_normally_payable_by_tenants_on_let__etc
+  display_label: Huurlasten en belastingen normaal gedragen door de huurder op verhuurde
+    gebouwen
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: cofb:TechnicalCosts
+  suggested_key: technical_costs
+  display_label: Technische kosten
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: cofb:CommercialCosts
+  suggested_key: commercial_costs
+  display_label: Commerciële kosten
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: cofb:ChargesAndTaxesOnUnletProperties
+  suggested_key: charges_and_taxes_on_unlet_properties
+  display_label: Kosten en taksen van niet-verhuurde goederen
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: ifrs-full:PropertyManagementExpense
+  suggested_key: property_management_expense
+  display_label: Property management expense
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: cofb:OtherPropertyCharges
+  suggested_key: other_property_charges
+  display_label: Andere vastgoedkosten
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: cofb:PropertyCharges
+  suggested_key: property_charges
+  display_label: Vastgoedkosten
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: ifrs-full:GainsLossesOnDisposalsOfInvestmentProperties
+  suggested_key: gains_losses_on_disposals_of_investment_properties
+  display_label: Gains (losses) on disposals of investment properties
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: ifrs-full:GainsLossesOnFairValueAdjustmentInvestmentProperty
+  suggested_key: gains_losses_on_fair_value_adjustment_investment_property
+  display_label: Gains (losses) on fair value adjustment, investment property
+  statement: REVIEW
+  balance: n/a
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: ifrs-full:GainsLossesOnFinancialAssetsAtFairValueThroughProfitOrLoss
+  suggested_key: gains_losses_on_financial_assets_at_fair_value_through_profi_etc
+  display_label: Gains (losses) on financial assets at fair value through profit or
+    loss
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: ifrs-full:TaxExpenseIncomeAtApplicableTaxRate
+  suggested_key: tax_expense_income_at_applicable_tax_rate
+  display_label: Tax expense (income) at applicable tax rate
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - cofinimmo
+- xbrl_tag: DIE:TotalContributionsAndDistributions
+  suggested_key: total_contributions_and_distributions
+  display_label: Total contributions and distributions
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - d_ieteren_group
+- xbrl_tag: DIE:NetCapitalExpenditureClassifiedAsInvestingActivities
+  suggested_key: net_capital_expenditure_classified_as_investing_activities
+  display_label: Net capital expenditure, classified as investing activities
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'cash flow'
+  used_by:
+  - d_ieteren_group
+- xbrl_tag: dia:GainsLossesOnExchangeDifferencesOnTranslation
+  suggested_key: gains_losses_on_exchange_differences_on_translation
+  display_label: Gains Losses On Exchange Differences On Translation
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - diasorin
+- xbrl_tag: ifrs-full:DividendsRecognisedAsDistributionsToOwnersOfParentRelatingToPriorYears
+  suggested_key: dividends_recognised_as_distributions_to_owners_of_parent_re_etc
+  display_label: Dividends recognised as distributions to owners of parent, relating
+    to prior years
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - eni
+- xbrl_tag: eni:PurchaseOfInvestments
+  suggested_key: purchase_of_investments
+  display_label: '- partecipazioni'
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'purchaseof' (LOW_CONF)
+  used_by:
+  - eni
+- xbrl_tag: kbc:FinancialAssetsExcludingCashCashBalancesWithCentralBanksAndDemandDeposits
+  suggested_key: financial_assets_excluding_cash_cash_balances_with_central_b_etc
+  display_label: Financiële activa
+  statement: REVIEW
+  balance: debit
+  reason: periodType=instant
+  used_by:
+  - kbc_groep
+- xbrl_tag: kbc:IncreaseDecreaseThroughIssueOrRepurchaseOfAdditionalTier1Instruments
+  suggested_key: increase_decrease_through_issue_or_repurchase_of_additional__etc
+  display_label: Uitgifte/terugkoop additional tier 1-instrumenten
+  statement: REVIEW
+  balance: credit
+  reason: name keyword 'purchaseof' (LOW_CONF)
+  used_by:
+  - kbc_groep
+- xbrl_tag: kbc:PurchaseSaleOfTreasuryShares
+  suggested_key: purchase_sale_of_treasury_shares
+  display_label: Aankoop/verkoop van eigen aandelen
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - kbc_groep
+- xbrl_tag: ifrs-full:ChangesInEquity
+  suggested_key: changes_in_equity
+  display_label: Increase (decrease) in equity
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - kbc_groep
+- xbrl_tag: kbc:ChangesInOperatingAssetsExcludingCashAndCashEquivalents
+  suggested_key: changes_in_operating_assets_excluding_cash_and_cash_equivale_etc
+  display_label: Wijzigingen in bedrijfsactiva (exclusief geldmiddelen en kasequivalenten)
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - kbc_groep
+- xbrl_tag: kbc:IncreaseDecreaseInOperatingLiabilitiesExcludingCashAndCashEquivalents
+  suggested_key: increase_decrease_in_operating_liabilities_excluding_cash_an_etc
+  display_label: Wijzigingen in bedrijfsverplichtingen (exclusief geldmiddelen en
+    kasequivalenten)
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - kbc_groep
+- xbrl_tag: ifrs-full:DividendsReceived
+  suggested_key: dividends_received
+  display_label: Dividends received
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - kbc_groep
+- xbrl_tag: ext:AttivitaMateriali
+  suggested_key: attivita_materiali
+  display_label: Attivita materiali
+  statement: REVIEW
+  balance: debit
+  reason: periodType=instant
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AltreRiserve
+  suggested_key: altre_riserve
+  display_label: Altre riserve
+  statement: REVIEW
+  balance: credit
+  reason: periodType=instant
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtilePerditaDiPertinenzaDellaCapogruppo
+  suggested_key: utile_perdita_di_pertinenza_della_capogruppo
+  display_label: Utile perdita di pertinenza della capogruppo
+  statement: REVIEW
+  balance: credit
+  reason: periodType=instant
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:InteressiAttiviEProventiAssimilati
+  suggested_key: interessi_attivi_e_proventi_assimilati
+  display_label: Interessi attivi e proventi assimilati
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:InteressiPassiviEOneriAssimilati
+  suggested_key: interessi_passivi_e_oneri_assimilati
+  display_label: Interessi passivi e oneri assimilati
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:MargineDiInteresse
+  suggested_key: margine_di_interesse
+  display_label: Margine di interesse
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RisultatoNettoDellaAttivitaDiCopertura
+  suggested_key: risultato_netto_della_attivita_di_copertura
+  display_label: Risultato netto della attivita di copertura
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtiliPerditeDaCessioneORiacquistoDiAttivitaEPassivitaFinanziarie
+  suggested_key: utili_perdite_da_cessione_o_riacquisto_di_attivita_e_passivi_etc
+  display_label: Utili perdite da cessione o riacquisto di attivita e passivita finanziarie
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtilePerditaDaCessioneDiAttivitaFinanziarieAlCostoAmmortizzato
+  suggested_key: utile_perdita_da_cessione_di_attivita_finanziarie_al_costo_a_etc
+  display_label: Utile perdita da cessione di attivita finanziarie al costo ammortizzato
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtilePerditaDaCessioneDiAttivitaFinanziarieValutateAlFairValueConImpattoSullaRedditivitaComplessiva
+  suggested_key: utile_perdita_da_cessione_di_attivita_finanziarie_valutate_a_etc
+  display_label: Utile perdita da cessione di attivita finanziarie valutate al fair
+    value con impatto sulla redditivita complessiva
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtilePerditaDaRiacquistoDiPassivitaFinanziarie
+  suggested_key: utile_perdita_da_riacquisto_di_passivita_finanziarie
+  display_label: Utile perdita da riacquisto di passivita finanziarie
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RisultatoNettoDelleAltreAttivitaPassivitaFinanziarieValutateAlFairValueConImpattoAContoEconomico
+  suggested_key: risultato_netto_delle_altre_attivita_passivita_finanziarie_v_etc
+  display_label: Risultato netto delle altre attivita passivita finanziarie valutate
+    al fair value con impatto a conto economico
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtiliPerditeDaAttivitaEPassivitaFinanziarieDesignateAlFairValueConImpattoAContoEconomico
+  suggested_key: utili_perdite_da_attivita_e_passivita_finanziarie_designate__etc
+  display_label: Utili perdite da attivita e passivita finanziarie designate al fair
+    value con impatto a conto economico
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtiliPerditeDaAttivitaPassivitaFinanziarieObbligatoriamenteValutateAlFairValueConImpattoAContoEconomico
+  suggested_key: utili_perdite_da_attivita_passivita_finanziarie_obbligatoria_etc
+  display_label: Utili perdite da attivita passivita finanziarie obbligatoriamente
+    valutate al fair value con impatto a conto economico
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:MargineDiIntermediazione
+  suggested_key: margine_di_intermediazione
+  display_label: Margine di intermediazione
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RettificheRipreseDiValoreNettePerRischioDiCreditoSuAttivitaFinanziarieValutateAlCostoAmmortizzatoInBaseAIFRS9
+  suggested_key: rettifiche_riprese_di_valore_nette_per_rischio_di_credito_su_etc
+  display_label: Rettifiche riprese di valore nette per rischio di credito su attivita
+    finanziarie valutate al costo ammortizzato in base a IFRS 9
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RettificheRipreseDiValoreNettePerRischioDiCreditoSuAttivitaFinanziarieValutateAlFairValueConImpattoSullaRedditivitaComplessivaInBaseAIFRS9
+  suggested_key: rettifiche_riprese_di_valore_nette_per_rischio_di_credito_su_etc
+  display_label: Rettifiche riprese di valore nette per rischio di credito su attivita
+    finanziarie valutate al fair value con impatto sulla redditivita complessiva in
+    base a IFRS 9
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtiliPerditeDaModificheContrattualiSenzaCancellazioni
+  suggested_key: utili_perdite_da_modifiche_contrattuali_senza_cancellazioni
+  display_label: Utili perdite da modifiche contrattuali senza cancellazioni
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RisultatoNettoDellaGestioneFinanziaria
+  suggested_key: risultato_netto_della_gestione_finanziaria
+  display_label: Risultato netto della gestione finanziaria
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:SaldoAltriProventiOneriDellaGestioneAssicurativa
+  suggested_key: saldo_altri_proventi_oneri_della_gestione_assicurativa
+  display_label: Saldo altri proventi oneri della gestione assicurativa
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RisultatoNettoDellaGestioneFinanziariaEAssicurativa
+  suggested_key: risultato_netto_della_gestione_finanziaria_e_assicurativa
+  display_label: Risultato netto della gestione finanziaria e assicurativa
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:SpeseAmministrativeSpesePerIlPersonale
+  suggested_key: spese_amministrative_spese_per_il_personale
+  display_label: Spese amministrative spese per il personale
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:SpeseAmministrativeAltreSpeseAmministrative
+  suggested_key: spese_amministrative_altre_spese_amministrative
+  display_label: Spese amministrative altre spese amministrative
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AccantonamentiNettiAiFondiPerRischiEOneri
+  suggested_key: accantonamenti_netti_ai_fondi_per_rischi_e_oneri
+  display_label: Accantonamenti netti ai fondi per rischi e oneri
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AccantonamentiNettiAiFondiPerRischiEOneriPerImpegniEGaranzieRilasciate
+  suggested_key: accantonamenti_netti_ai_fondi_per_rischi_e_oneri_per_impegni_etc
+  display_label: Accantonamenti netti ai fondi per rischi e oneri per impegni e garanzie
+    rilasciate
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AccantonamentiNettiAiFondiPerRischiEOneriPerAltriAccantonamentiNetti
+  suggested_key: accantonamenti_netti_ai_fondi_per_rischi_e_oneri_per_altri_a_etc
+  display_label: Accantonamenti netti ai fondi per rischi e oneri per altri accantonamenti
+    netti
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RettificheRipreseDiValoreNetteSuAttivitaMaterialiRilevateAContoEconomico
+  suggested_key: rettifiche_riprese_di_valore_nette_su_attivita_materiali_ril_etc
+  display_label: Rettifiche riprese di valore nette su attivita materiali rilevate
+    a conto economico
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RettificheRipreseDiValoreNetteSuAttivitaImmaterialiRilevateAContoEconomico
+  suggested_key: rettifiche_riprese_di_valore_nette_su_attivita_immateriali_r_etc
+  display_label: Rettifiche riprese di valore nette su attivita immateriali rilevate
+    a conto economico
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:CostiOperativi
+  suggested_key: costi_operativi
+  display_label: Costi operativi
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RisultatoNettoDellaValutazioneAlFairValueDelleAttivitaMaterialiEImmaterialiDiverseDallavviamento
+  suggested_key: risultato_netto_della_valutazione_al_fair_value_delle_attivi_etc
+  display_label: Risultato netto della valutazione al fair value delle attivita materiali
+    e immateriali diverse dall'avviamento
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RettificheDiValoreDellavviamento
+  suggested_key: rettifiche_di_valore_dellavviamento
+  display_label: Rettifiche di valore dell'avviamento
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RedditivitaComplessivaAlNettoDelleImposteAttivitaMateriali
+  suggested_key: redditivita_complessiva_al_netto_delle_imposte_attivita_mate_etc
+  display_label: Redditivita complessiva al netto delle imposte attivita materiali
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RedditivitaComplessivaAlNettoDelleImposteAttivitaImmateriali
+  suggested_key: redditivita_complessiva_al_netto_delle_imposte_attivita_imma_etc
+  display_label: Redditivita complessiva al netto delle imposte attivita immateriali
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AttivitaNonCorrentiEGruppiDiAttivitaInViaDiDismissione
+  suggested_key: attivita_non_correnti_e_gruppi_di_attivita_in_via_di_dismiss_etc
+  display_label: Attivita non correnti e gruppi di attivita in via di dismissione
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:CoperturaDiInvestimentiEsteri
+  suggested_key: copertura_di_investimenti_esteri
+  display_label: Copertura di investimenti esteri
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:DifferenzeDiCambio
+  suggested_key: differenze_di_cambio
+  display_label: Differenze di cambio
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:CoperturaDeiFlussiFinanziari
+  suggested_key: copertura_dei_flussi_finanziari
+  display_label: Copertura dei flussi finanziari
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RedditivitaComplessivaAlNettoDelleImposteStrumentiDiCoperturaElementiNonDesignati
+  suggested_key: redditivita_complessiva_al_netto_delle_imposte_strumenti_di__etc
+  display_label: Redditivita complessiva al netto delle imposte strumenti di copertura
+    elementi non designati
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:UtiliPerditeSuAttivitaFinanziarieDiverseDaiTitoliDiCapitaleValutateAlFairValueConImpattoSullaRedditivitaComplessivaAlNettoDelleImposte
+  suggested_key: utili_perdite_su_attivita_finanziarie_diverse_dai_titoli_di__etc
+  display_label: Utili perdite su attivita finanziarie diverse dai titoli di capitale
+    valutate al fair value con impatto sulla redditivita complessiva al netto delle
+    imposte
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:RedditivitaComplessivaRelativaAdAttivitaNonCorrentiEGruppiDiAttivitaInViaDiDismissioneClassificatiComeDisponibiliPerLaVenditaDaRiclassificareAContoEconomico
+  suggested_key: redditivita_complessiva_relativa_ad_attivita_non_correnti_e__etc
+  display_label: Redditivita complessiva relativa ad attivita non correnti e gruppi
+    di attivita in via di dismissione classificati come disponibili per la vendita
+    da riclassificare a conto economico
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AllocazioneRisultatoEsercizioPrecedenteRiserve
+  suggested_key: allocazione_risultato_esercizio_precedente_riserve
+  display_label: Allocazione risultato esercizio precedente, Riserve
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:IncrementiDecrementiDiRiserve
+  suggested_key: incrementi_decrementi_di_riserve
+  display_label: Incrementi decrementi di riserve
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:DistribuzioneStraordinariaDividendi
+  suggested_key: distribuzione_straordinaria_dividendi
+  display_label: Distribuzione straordinaria dividendi
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:VariazioneStrumentiDiCapitale
+  suggested_key: variazione_strumenti_di_capitale
+  display_label: Variazione strumenti di capitale
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:DerivatiSuAzioniProprie
+  suggested_key: derivati_su_azioni_proprie
+  display_label: Derivati su azioni proprie
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AfflussiDeflussiDiCassaNettiDaCommissioniEProvvigioniDaAttivitaOperative
+  suggested_key: afflussi_deflussi_di_cassa_netti_da_commissioni_e_provvigion_etc
+  display_label: Afflussi deflussi di cassa netti  da commissioni e provvigioni da
+    attivita operative
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:CashReceiptsAndPaymentsFromInsuranceContractsIssuedAndReinsuranceCeded
+  suggested_key: cash_receipts_and_payments_from_insurance_contracts_issued_a_etc
+  display_label: 'CashReceiptsAndPaymentsFromInsuranceContractsIssuedAndReinsuranceCeded '
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AltriAfflussiDeflussiDaAttivitaOperativeCessateAlNettoDelleImposte
+  suggested_key: altri_afflussi_deflussi_da_attivita_operative_cessate_al_net_etc
+  display_label: Altri afflussi deflussi da attivita operative cessate al netto delle
+    imposte
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:LiquiditaGenerataAssorbitaDalleAttivitaFinanziarieClassificateComeAttivitaOperative
+  suggested_key: liquidita_generata_assorbita_dalle_attivita_finanziarie_clas_etc
+  display_label: Liquidita generata assorbita dalle attivita finanziarie classificate
+    come attivita operative
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:LiquiditaGenerataAssorbitaDallePassivitaFinanziarieClassificateComeAttivitaOperative
+  suggested_key: liquidita_generata_assorbita_dalle_passivita_finanziarie_cla_etc
+  display_label: Liquidita generata assorbita dalle passivita finanziarie classificate
+    come attivita operative
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:LiquiditàGenerataassorbitaDaiContrattiDiAssicurazioneEmessiEDalleCessioniInRiassicurazione
+  suggested_key: liquidità_generataassorbita_dai_contratti_di_assicurazione__etc
+  display_label: Liquidità generata/assorbita dai contratti di assicurazione emessi
+    e dalle cessioni in riassicurazione
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:LiquiditaGenerataDaAttivitaDiInvestimento
+  suggested_key: liquidita_generata_da_attivita_di_investimento
+  display_label: Liquidita generata da attivita di investimento
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:ProventiDalleVenditeDiAttivitaMaterialiClassificateComeAttivitaDiInvestimento
+  suggested_key: proventi_dalle_vendite_di_attivita_materiali_classificate_co_etc
+  display_label: Proventi dalle vendite di attivita materiali classificate come attivita
+    di investimento
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AcquistiDiAttivitaMaterialiClassificateComeAttivitaDiInvestimento
+  suggested_key: acquisti_di_attivita_materiali_classificate_come_attivita_di_etc
+  display_label: Acquisti di attivita materiali classificate come attivita di investimento
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AltriAfflussiDeflussiDaEmissioniAcquistiDiAzioniProprie
+  suggested_key: altri_afflussi_deflussi_da_emissioni_acquisti_di_azioni_prop_etc
+  display_label: Altri afflussi deflussi da emissioni acquisti di azioni proprie
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AltriAfflussiDeflussiDaEmissioniAcquistiDiStrumentiDiCapitale
+  suggested_key: altri_afflussi_deflussi_da_emissioni_acquisti_di_strumenti_d_etc
+  display_label: Altri afflussi deflussi da emissioni acquisti di strumenti di capitale
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ext:AltriAfflussiDeflussiDallaVenditaAcquistoDiControlloDiTerzi
+  suggested_key: altri_afflussi_deflussi_dalla_vendita_acquisto_di_controllo__etc
+  display_label: Altri afflussi deflussi dalla vendita acquisto di controllo di terzi
+  statement: REVIEW
+  balance: debit
+  reason: ''
+  used_by:
+  - mediobanca
+- xbrl_tag: ren:OtherIncomeAndExpenseFomOperatingActivities
+  suggested_key: other_income_and_expense_fom_operating_activities
+  display_label: Other income and expense from operating activities
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'income statement'
+  used_by:
+  - renault
+- xbrl_tag: ren:OtherComprehensiveIncomeFromEntitiesFullyConsolidatedBeforeTax
+  suggested_key: other_comprehensive_income_from_entities_fully_consolidated__etc
+  display_label: Other comprehensive income from entities fully consolidated before
+    tax
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'comprehensive income'
+  used_by:
+  - renault
+- xbrl_tag: ren:ComprehensiveIncomeBeforeTax
+  suggested_key: comprehensive_income_before_tax
+  display_label: Comprehensive income before tax
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'comprehensive income'
+  used_by:
+  - renault
+- xbrl_tag: ren:ComprehensiveIncomeRelatedTax
+  suggested_key: comprehensive_income_related_tax
+  display_label: Comprehensive income related tax
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'comprehensive income'
+  used_by:
+  - renault
+- xbrl_tag: ren:CashFlowsBeforeInterestsAndTax
+  suggested_key: cash_flows_before_interests_and_tax
+  display_label: Cash flows before interests and tax
+  statement: REVIEW
+  balance: n/a
+  reason: role keyword 'cash flow'
+  used_by:
+  - renault
+- xbrl_tag: ren:CashFlowsFromOperatingActivitiesBeforeInterestAndTax
+  suggested_key: cash_flows_from_operating_activities_before_interest_and_tax
+  display_label: Cash flows from operating activities before interest and tax
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'cash flow'
+  used_by:
+  - renault
+- xbrl_tag: ren:CashFlowsFromLiabilities
+  suggested_key: cash_flows_from_liabilities
+  display_label: Cash flows from liabilities
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'cash flow'
+  used_by:
+  - renault
+- xbrl_tag: ren:IncreaseDecreaseInLiabilitiesFromAutomotiveActivities
+  suggested_key: increase_decrease_in_liabilities_from_automotive_activities
+  display_label: Increase decrease in liabilities from automotive activities
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'cash flow'
+  used_by:
+  - renault
+- xbrl_tag: SOL:RepurchaseOfHybridCapital
+  suggested_key: repurchase_of_hybrid_capital
+  display_label: Repurchase of hybrid capital
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - solvay
+- xbrl_tag: SOL:CouponPaymentsOnHybridCapital
+  suggested_key: coupon_payments_on_hybrid_capital
+  display_label: Coupon payments on hybrid capital
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - solvay
+- xbrl_tag: SOL:IncreaseDecreaseThroughDemerger
+  suggested_key: increase_decrease_through_demerger
+  display_label: Increase (decrease) through demerger
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - solvay
+- xbrl_tag: hand:Foersaekringsnetto
+  suggested_key: foersaekringsnetto
+  display_label: Försäkringsnetto
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - svenska_handelsbanken
+- xbrl_tag: hand:ResultatFoereKreditfoerlusterRiskskattOchResolutionsavgift
+  suggested_key: resultat_foere_kreditfoerluster_riskskatt_och_resolutionsavg_etc
+  display_label: Resultat före kreditförluster, riskskatt och resolutionsavgift
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - svenska_handelsbanken
+- xbrl_tag: ifrs-full:GainsLossesOnDisposalsOfPropertyPlantAndEquipment
+  suggested_key: gains_losses_on_disposals_of_property_plant_and_equipment
+  display_label: Gains (losses) on disposals of property, plant and equipment
+  statement: REVIEW
+  balance: credit
+  reason: ''
+  used_by:
+  - svenska_handelsbanken
+- xbrl_tag: SYE:CashReceiptsFromRepaymentOfAdvancesAndLoansMadeToOtherPartiesRelatedToDemergedEntityClassifiedAsInvestingActivities
+  suggested_key: cash_receipts_from_repayment_of_advances_and_loans_made_to_o_etc
+  display_label: Cash receipts from repayment of advances and loans made to other
+    parties related to demerged entity
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'cash flow'
+  used_by:
+  - syensqo
+- xbrl_tag: SYE:IncreaseDecreaseThroughTransactionsWithDemergedEntity
+  suggested_key: increase_decrease_through_transactions_with_demerged_entity
+  display_label: Increase (decrease) through transactions with demerged entity
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - syensqo
+- xbrl_tag: tha:ResultatOperationnelApresResultatDesSocietesMisesEnEquivalence
+  suggested_key: resultat_operationnel_apres_resultat_des_societes_mises_en_e_etc
+  display_label: Resultat Operationnel Apres Resultat Des Societes Mises En Equivalence
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'résultat global'
+  used_by:
+  - thales
+- xbrl_tag: tha:ResultatOperationnelCourant
+  suggested_key: resultat_operationnel_courant
+  display_label: Resultat Operationnel Courant
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'résultat global'
+  used_by:
+  - thales
+- xbrl_tag: tha:ResultatDesCessionsVariationsDePerimetreEtAutres
+  suggested_key: resultat_des_cessions_variations_de_perimetre_et_autres
+  display_label: Resultat Des Cessions, Variations De Perimetre Et Autres
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'résultat global'
+  used_by:
+  - thales
+- xbrl_tag: tha:AchatVenteDeTitresDAutocontroleNombreDActions
+  suggested_key: achat_vente_de_titres_d_autocontrole_nombre_d_actions
+  display_label: (Achat) Vente De Titres D'Autocontrole, Nombre D actions
+  statement: REVIEW
+  balance: n/a
+  reason: ''
+  used_by:
+  - thales
+- xbrl_tag: tha:AnnulationDActionsPropresNombreDActions
+  suggested_key: annulation_d_actions_propres_nombre_d_actions
+  display_label: Annulation D'Actions Propres, Nombre D'Actions
+  statement: REVIEW
+  balance: n/a
+  reason: ''
+  used_by:
+  - thales
+- xbrl_tag: tha:VersementDesContributionsDeRetraiteRegimesAPrestationsDefinies
+  suggested_key: versement_des_contributions_de_retraite_regimes_a_prestation_etc
+  display_label: Versement Des Contributions De Retraite (Regimes A Prestations Definies)
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'flux de tr'
+  used_by:
+  - thales
+- xbrl_tag: tha:InvestissementNetDExploitation
+  suggested_key: investissement_net_d_exploitation
+  display_label: Investissement Net D exploitation
+  statement: REVIEW
+  balance: credit
+  reason: role keyword 'flux de tr'
+  used_by:
+  - thales
+- xbrl_tag: tha:InvestissementFinancierNet
+  suggested_key: investissement_financier_net
+  display_label: Investissement Financier Net
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'flux de tr'
+  used_by:
+  - thales
+- xbrl_tag: ul:IncreaseDecreaseThroughOtherChangesInEquityHyperinflationAdjustment
+  suggested_key: increase_decrease_through_other_changes_in_equity_hyperinfla_etc
+  display_label: Increase (Decrease) Through Other Changes In Equity, Hyperinflation
+    Adjustment
+  statement: REVIEW
+  balance: debit
+  reason: role keyword 'changes in equity'
+  used_by:
+  - unilever_plc

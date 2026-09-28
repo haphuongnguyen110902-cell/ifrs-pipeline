@@ -366,11 +366,13 @@ if __name__ == "__main__":
               f"or add it to TICKER_MAP first.")
         sys.exit(1)
 
-    if quote_ccy != "EUR":
-        print(f"\n{args.company} reports in {quote_ccy} - converting base-year financials to EUR "
+    # the financials are converted from the currency they are reported in, the market cap from the quote currency
+    report_ccy = base.get("currency") or quote_ccy
+    if report_ccy != "EUR":
+        print(f"\n{args.company} reports in {report_ccy} - converting base-year financials to EUR "
               f"using 18_fx_convert.py's stored historical rates before projecting.")
         fx_lookup = fx18.load_fx_lookup(engine)
-        base = convert_base_to_eur(base, quote_ccy, fx_lookup)
+        base = convert_base_to_eur(base, report_ccy, fx_lookup)
 
     growth = args.growth if args.growth is not None else tsm.default_growth_rate(base)
     projection = tsm.project(base, args.years, growth, args.interest_rate)

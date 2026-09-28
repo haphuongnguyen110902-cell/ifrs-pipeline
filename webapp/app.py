@@ -285,7 +285,7 @@ def gating_caption(ratios: pd.DataFrame):
     return f"Blank on purpose, not missing data: {labels}. {reasons}."
 
 
-BROADER_PAYABLES = ("trade_and_other_current_payables", "other_current_payables")
+BROADER_PAYABLES = ("trade_and_other_current_payables", "trade_and_other_payables", "other_current_payables")
 
 
 def payables_basis_caption(ratios: pd.DataFrame):

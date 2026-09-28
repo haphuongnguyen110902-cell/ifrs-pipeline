@@ -289,6 +289,32 @@ def resolve_fact_conflicts(df: pd.DataFrame, prefer_own_filing: bool = False):
         conflicts.reset_index(drop=True)
 
 
+def reporting_currencies(facts: pd.DataFrame) -> dict:
+    """{(company_id, year): the currency most of that year's monetary facts are stored in} - the presentation
+    currency (IAS 21) the figures are in. Figures are converted to EUR from THIS currency, never from the currency the
+    shares are quoted in: Anheuser-Busch InBev and STMicroelectronics report in USD and trade in EUR, RELX reports in
+    GBP. (19_valuation.py used the quote currency as a stand-in, true only for the first eleven companies.)"""
+    if facts.empty or "currency" not in facts.columns:
+        return {}
+    m = facts[facts["currency"].astype(str).str.fullmatch(r"[A-Z]{3}")]
+    return m.groupby(["company_id", "year"])["currency"].agg(lambda s: s.value_counts().idxmax()).to_dict()
+
+
+def reporting_years(df: pd.DataFrame) -> pd.Series:
+    """True for the facts whose (company, year) is a reporting year: one with an annual duration (300-400 days) or a
+    balance. A fiscal year is named by the year its period ends, so a short period after the year end would otherwise
+    open a year of its own: Unilever's FY2025 report tags the dividend declared on 12 February 2026 (IAS 10) on a
+    one-day period, and a "2026" of two facts became Unilever's latest year - on the landing table and as the
+    3-statement model's base year."""
+    if df.empty:
+        return pd.Series([], dtype=bool)
+    start, end = pd.to_datetime(df["start_date"]), pd.to_datetime(df["end_date"])
+    days = (end - start).dt.days
+    anchors = df["period_type"].eq("instant") | days.between(300, 400)
+    good = set(zip(df.loc[anchors, "company_id"], df.loc[anchors, "year"]))
+    return pd.Series([k in good for k in zip(df["company_id"], df["year"])], index=df.index)
+
+
 def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False, prefer_own_filing: bool = False):
     """
     Convert long-format facts into a wide table:
@@ -303,6 +329,8 @@ def pivot_to_wide(df: pd.DataFrame, return_conflicts: bool = False, prefer_own_f
     return_conflicts=True also returns the conflicts report, for callers
     (main) that want to print it; every other caller is unchanged.
     """
+    if not df.empty:
+        df = df[reporting_years(df)]
     resolved, conflicts = resolve_fact_conflicts(df, prefer_own_filing)
     wide = resolved.pivot_table(
         index=["company", "company_id", "year"],
@@ -344,15 +372,26 @@ def safe_div(numerator, denominator, scale=1):
 # prints (verified with scripts/reconcile_reports.py); the set follows the IFRS taxonomy's own elements.
 NONCURRENT_DEBT_LINES = (
     "longterm_borrowings", "noncurrent_portion_of_noncurrent_bonds_issued",
-    "noncurrent_portion_of_other_noncurrent_borrowings", "other_noncurrent_financial_liabilities",
+    "noncurrent_portion_of_other_noncurrent_borrowings",
+    "noncurrent_portion_of_noncurrent_loans_received",   # Webuild "Finanziamenti bancari e altri finanziamenti"
+    "other_noncurrent_financial_liabilities",
     "noncurrent_lease_liabilities",
 )
 CURRENT_DEBT_LINES = (
     "shortterm_borrowings", "current_borrowings_and_current_portion_of_noncurrent_borr_etc",
+    # the current portion of non-current borrowings, printed as its own line: beside short-term borrowings (Eni "Quote a
+    # breve di passivita finanziarie a lungo termine" 3,434 next to 4,929 of short-term debt) or as the only current
+    # borrowing line (AB InBev "Interest-bearing loans and borrowings" 885, Dometic "Kortfristig upplaning" 2,388)
+    "current_portion_of_longterm_borrowings",
+    "current_bank_overdrafts",   # AB InBev prints "Bank overdrafts" (14M) as a line of its own
     "current_bonds_issued_and_current_portion_of_noncurrent_bonds_etc",
     "other_current_borrowings_and_current_portion_of_other_noncur_etc", "other_current_financial_liabilities",
     "current_lease_liabilities",
 )
+# IAS 1.60: a company may present its balance sheet by liquidity, without a current / non-current split - Ferrari
+# prints one "Debt" line (2,884M). Such a total is the whole of the borrowings, so it counts as complete on its own;
+# it is used ONLY when no split borrowing line is stored (it would contain them).
+UNCLASSIFIED_DEBT_TOTALS = ("borrowings",)
 # IFRS "financial liabilities" SUBTOTALS (IAS 1.54(m)). Whether a printed subtotal CONTAINS the detail lines
 # or sits BESIDE them (Amplifon prints 984M of non-current financial liabilities beside 364M of lease
 # liabilities; Kering 13M beside 10,026M of borrowings) cannot be told from the numbers - only from the
@@ -366,8 +405,12 @@ FINANCIAL_LIABILITY_TOTALS = {
                                       "other_current_borrowings_and_current_portion_of_other_noncur_etc"),
 }
 # parent -> child: the taxonomy's "current borrowings and current portion of non-current borrowings" contains
-# short-term borrowings, so counting both would double count (no company stores both today)
-CONTAINS = {"current_borrowings_and_current_portion_of_noncurrent_borr_etc": ("shortterm_borrowings",)}
+# short-term borrowings, the current portion and overdrafts, and short-term borrowings may contain overdrafts, so a child
+# stored beside its parent is dropped (no company stores both today): it can understate, never double count
+CONTAINS = {"current_borrowings_and_current_portion_of_noncurrent_borr_etc": ("shortterm_borrowings",
+                                                                              "current_portion_of_longterm_borrowings",
+                                                                              "current_bank_overdrafts"),
+            "shortterm_borrowings": ("current_bank_overdrafts",)}
 
 
 def _financial_debt_row(row: pd.Series):
@@ -387,6 +430,10 @@ def _financial_debt_row(row: pd.Series):
                 if child in used and used[parent] >= used[child]:
                     del used[child]
     if not used:
+        for total in UNCLASSIFIED_DEBT_TOTALS:
+            t = row.get(total)
+            if pd.notna(t):
+                return abs(float(t)), total, True
         return float("nan"), "", False
     non_current = set(NONCURRENT_DEBT_LINES) | {t for t in FINANCIAL_LIABILITY_TOTALS if t.startswith("noncurrent")}
     current = set(CURRENT_DEBT_LINES) | {t for t in FINANCIAL_LIABILITY_TOTALS if t.startswith("current")}
@@ -439,10 +486,12 @@ def get_best(wide: pd.DataFrame, *names: str) -> pd.Series:
 
 PAYABLES_CONCEPTS = (
     "trade_and_other_current_payables_to_trade_suppliers",   # trade payables only - preferred
+    "trade_and_other_payables_to_trade_suppliers",           # the same, tagged without "current" (SKF, Ferrari)
     "trade_and_other_current_payables",                      # broader: trade AND other payables
+    "trade_and_other_payables",                              # the same, tagged without "current" (Carrefour)
     "other_current_payables",                                # weakest fallback
 )
-BROADER_PAYABLES = frozenset(PAYABLES_CONCEPTS[1:])
+BROADER_PAYABLES = frozenset({"trade_and_other_current_payables", "trade_and_other_payables", "other_current_payables"})
 
 
 DISCONTINUED_TO_OWNERS = ("income_from_discontinued_operations_attributable_to_owner_etc",
@@ -505,6 +554,24 @@ def by_nature_notes(ratios: pd.DataFrame) -> dict:
     return notes
 
 
+EBIT_NOT_POSITIVE_NOTE = "operating profit is zero or negative in this year, so a figure divided by it has no meaning"
+EBIT_DIVIDED_RATIOS = ("cash_conversion", "net_debt_ebitda_proxy")
+
+
+def ebit_not_positive_notes(ratios: pd.DataFrame) -> dict:
+    """{(company_id, year, ratio): why it is blank} for the ratios divided by operating profit in a year where it is
+    zero or negative - only where the ratio is actually blank."""
+    if "_ebit_not_positive" not in ratios.columns:
+        return {}
+    notes = {}
+    hit = ratios[ratios["_ebit_not_positive"].fillna(False).astype(bool)]
+    for _, row in hit.iterrows():
+        for name in EBIT_DIVIDED_RATIOS:
+            if name in row.index and pd.isna(row[name]):
+                notes[(int(row["company_id"]), int(row["year"]), name)] = EBIT_NOT_POSITIVE_NOTE
+    return notes
+
+
 def source_concepts_for(ratio_name: str, row) -> list | None:
     """The stored concepts a ratio was built from where that matters for reading it (ratio.source_concepts): DPO and
     the cash conversion cycle carry the payables line they were read from, ROIC/ROE the equity basis, net margin the
@@ -534,7 +601,7 @@ def source_concepts_for(ratio_name: str, row) -> list | None:
 # rate and growth keep the restated, like-for-like figures.
 AS_REPORTED_COLUMNS = ("dso", "dio", "dpo", "ccc", "roic", "roe", "cash_conversion", "net_debt_ebitda_proxy",
                        "_payables_basis", "_equity_basis", "_net_debt", "_debt_basis", "_ebitda", "_da_total",
-                       "_da_basis", "_receivables", "_inventories", "_payables")
+                       "_da_basis", "_receivables", "_inventories", "_payables", "_ebit_not_positive")
 
 
 def compute_ratios(wide: pd.DataFrame, wide_as_reported: pd.DataFrame = None) -> pd.DataFrame:
@@ -606,6 +673,9 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
         "profit_loss_from_operating_activities",                          # standard IFRS
         "resultat_dexploitation",                                          # L'Oreal
         "profit_loss_from_operating_activities_after_share_of_prof_etc",  # LVMH
+        # operating profit after the share of associates "in operating activity" (Carrefour "Resultat operationnel",
+        # Safran): after non-recurring items, like every other company's operating profit
+        "profit_loss_from_operating_activities_after_share_of_prof_etc_v2",
     )
     finance_costs = get_best(wide, "finance_costs", "interest_expense").abs()
     ebit_derived = pbt_printed.combine_first(accounting_profit) + finance_costs
@@ -645,8 +715,13 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["net_margin"] = safe_div(net_continuing, rev, scale=100)
 
     # --- cash conversion ---
+    # CFO / operating profit, and net debt / operating profit below, mean nothing when operating profit is zero or
+    # negative (an impairment year: Dometic and Umicore 2024) - the sign flips and a plausible-looking figure comes out
+    # (Dometic: -11.9x "leverage" on SEK 13.4bn of net debt). Blank, with the reason stored (ebit_not_positive_notes).
     cfo = get_col(wide, "cash_flows_from_used_in_operating_activities")
-    r["cash_conversion"] = safe_div(cfo, ebit, scale=100)
+    ebit_positive = ebit > 0
+    r["_ebit_not_positive"] = ebit.notna() & ~ebit_positive
+    r["cash_conversion"] = safe_div(cfo, ebit, scale=100).where(ebit_positive)
 
     # --- working capital: DSO / DIO / DPO / CCC ---
     # Controller's daily tool, not a bank's - this is exactly the kind of
@@ -654,6 +729,7 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     receivables = get_best(wide,
         "current_trade_receivables",              # specific tag - preferred
         "trade_and_other_current_receivables",    # broader fallback (includes non-trade)
+        "trade_and_other_receivables",            # the same, tagged without "current" (Carrefour)
     )
     inventory = get_best(wide, "inventories", "inventories_total")
     payables = get_best(wide, *PAYABLES_CONCEPTS)
@@ -719,7 +795,7 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["roe"] = safe_div(net, equity_parent, scale=100)
 
     # --- Net Debt / Operating Profit ---
-    r["net_debt_ebitda_proxy"] = safe_div(r["_net_debt"], ebit)
+    r["net_debt_ebitda_proxy"] = safe_div(r["_net_debt"], ebit).where(ebit_positive)
 
     # --- absolute values kept for downstream use (valuation, EV multiples) ---
     # Prefixed with _ so RATIO_META (which drives print/DB/Excel) never picks
@@ -1155,7 +1231,7 @@ if __name__ == "__main__":
     financial = financial_company_reasons(fetch_company_profiles(engine), load_reporting_model_overrides())
     ratios, notes, n_blanked = gate_financial_ratios(ratios, financial)
     notes.update(net_margin_notes(ratios))
-    for key, text_note in by_nature_notes(ratios).items():
+    for key, text_note in {**ebit_not_positive_notes(ratios), **by_nature_notes(ratios)}.items():
         notes.setdefault(key, text_note)              # a financial-company reason, if any, stays the stated one
     gated_names = sorted(ratios.loc[ratios["company_id"].isin(list(financial)), "company"].unique())
     if gated_names:
