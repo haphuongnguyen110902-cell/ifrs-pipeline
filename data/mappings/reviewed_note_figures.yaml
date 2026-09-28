@@ -363,3 +363,26 @@ figures:
     evidence: >-
       Same statements as asm_no_noncontrolling_interests_2025 (both years appear side by side on the same balance sheet
       and across all five years of the summary table).
+  # ------------------------------------------------------------------------------------------------------------- Melexis
+  # Melexis prints its profit ("Winst van het boekjaar") without splitting it between owners and non-controlling
+  # interests; the split it prints is of total comprehensive income, with the non-controlling line nil ("—") in both years.
+  # Its non-controlling interests in equity are EUR 410 in both balance sheets. The profit attributable to them is
+  # therefore nil and the owners' profit is the profit (IAS 1.81B(a)).
+  - id: melexis_no_nci_profit_fy2024
+    kind: stated_zero
+    company: "Melexis"
+    report: melexis.zip
+    years: [2024, 2023]
+    currency: EUR
+    concept: profit_loss_attributable_to_noncontrolling_interests
+    statement: income_statement
+    label: Profit (Loss) Attributable to Non-controlling Interests
+    perimeter: "profit attributable to non-controlling interests: nil (the printed comprehensive-income split gives them nothing)"
+    checks:
+      - no_row_matching: {from: '^Totaalresultaat toe te rekenen aan:$', to: '^Belangen zonder overheersende zeggenschap$', pattern: 'overheersende zeggenschap'}
+    evidence: >-
+      FY2024 report (Dutch ESEF package mele-2024-12-31-nl), consolidated statement of comprehensive income:
+      "Totaalresultaat toe te rekenen aan: De aandeelhouders van de moedermaatschappij 170.324.206 / 210.384.016;
+      Belangen zonder overheersende zeggenschap — / —" (2024 / 2023, EUR). Balance sheet: "Belangen zonder overheersende
+      zeggenschap" 410 / 410. The income statement prints the profit ("Winst van het boekjaar" 171.4M / 209.5M) with no
+      split. Read 2026-09-28.

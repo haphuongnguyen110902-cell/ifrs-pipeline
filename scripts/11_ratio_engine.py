@@ -572,7 +572,10 @@ def owners_profit(wide: pd.DataFrame, net: pd.Series) -> pd.Series:
     means none (IFRS 5.33(a)); a discontinued total whose owners' share is unknown leaves it blank."""
     disc_owners, disc_total = _discontinued_to_owners(wide)
     no_discontinued = disc_owners.isna() & (disc_total.isna() | disc_total.eq(0))
-    return net.combine_first(get_col(wide, CONTINUING_TO_OWNERS) + disc_owners.mask(no_discontinued, 0))
+    # or profit less the non-controlling share (IAS 1.81B(a): the two shares make the profit) - Melexis prints no split
+    # of its profit; its nil non-controlling share is a reviewed figure (reviewed_note_figures.yaml)
+    by_share = get_col(wide, "profit_loss") - get_col(wide, "profit_loss_attributable_to_noncontrolling_interests")
+    return net.combine_first(get_col(wide, CONTINUING_TO_OWNERS) + disc_owners.mask(no_discontinued, 0)).combine_first(by_share)
 
 
 def net_margin_notes(ratios: pd.DataFrame) -> dict:

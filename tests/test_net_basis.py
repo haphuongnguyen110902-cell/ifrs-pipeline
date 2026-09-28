@@ -149,3 +149,12 @@ class TestOwnersSharesPrintedSeparately:
     def test_a_printed_total_wins(self, r11):
         w = self.row(income_from_continuing_operations_attributable_to_owners__etc=223.0)
         assert r11.owners_profit(w, pd.Series([230.0]))[0] == 230.0
+
+    def test_profit_less_the_non_controlling_share(self, r11):
+        """Melexis prints its profit without a split; its non-controlling share is a reviewed nil (IAS 1.81B(a))."""
+        w = self.row(profit_loss=171_446_322.0, profit_loss_attributable_to_noncontrolling_interests=0.0)
+        assert r11.owners_profit(w, pd.Series([float("nan")]))[0] == 171_446_322.0
+
+    def test_an_unknown_non_controlling_share_is_never_taken_as_nil(self, r11):
+        w = self.row(profit_loss=171_446_322.0)
+        assert pd.isna(r11.owners_profit(w, pd.Series([float("nan")]))[0])
