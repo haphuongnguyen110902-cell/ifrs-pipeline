@@ -688,7 +688,8 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     pbt_printed = get_best(wide,
         "profit_loss_before_tax",
         "resultat_avant_impot_et_societes_mises_en_equivalence",             # L'Oreal: before associates
-        "profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc",  # Danone: before associates
+        "profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc_x",  # Danone (dan:): before associates
+        "dan_profit_loss_before_tax_before_share_associates",                  # Danone (DAN:, older reports)
     )
     accounting_profit = (continuing_profit + tax).combine_first(pbt_printed)
 

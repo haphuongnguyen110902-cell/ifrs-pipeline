@@ -68,6 +68,8 @@ class TestGenericDebtLines:
         assert d["financial_debt"] == 150.0
 
     def test_webuild_loans_received_are_borrowings(self, r11):
+        """Printed at 31 December 2024 (EUR millions): bank and other loans 137.8, bonds 1,892.2, overdrafts and current
+        portion of loans 490.3."""
         d = debt(r11, noncurrent_portion_of_noncurrent_loans_received=137.8, noncurrent_portion_of_noncurrent_bonds_issued=1_892.2,
                  current_borrowings_and_current_portion_of_noncurrent_borr_etc=490.3)
         assert d["financial_debt"] == pytest.approx(2_520.3) and "noncurrent_portion_of_noncurrent_loans_received" in d["basis"]
@@ -139,10 +141,14 @@ class TestRatiosOverANonPositiveOperatingProfit:
     -11.9x of "leverage". A multiple over a zero or negative denominator is not meaningful: blank, reason stored."""
 
     def test_dometic_2024_is_blank_with_its_reason(self, r11):
-        out = r11.compute_ratios(wide(revenue=26_000.0, profit_loss_from_operating_activities=-1_186.0,
-                                      cash_flows_from_used_in_operating_activities=3_000.0,
-                                      longterm_borrowings=13_077.0, current_portion_of_longterm_borrowings=2_388.0,
-                                      cash_and_cash_equivalents=2_054.0))
+        """Printed FY2024 (SEK millions): revenue 24,620; operating profit -1,123; cash from operations 3,869;
+        borrowings 13,077 + 2,388, lease liabilities 1,716 + 443; cash 4,213."""
+        out = r11.compute_ratios(wide(revenue_from_contracts_with_customers=24_620.0,
+                                      profit_loss_from_operating_activities=-1_123.0,
+                                      cash_flows_from_used_in_operating_activities=3_869.0,
+                                      longterm_borrowings=13_077.0, noncurrent_lease_liabilities=1_716.0,
+                                      current_portion_of_longterm_borrowings=2_388.0, current_lease_liabilities=443.0,
+                                      cash_and_cash_equivalents=4_213.0))
         assert out["_net_debt"].iloc[0] == pytest.approx(13_411.0)
         assert pd.isna(out["net_debt_ebitda_proxy"].iloc[0]) and pd.isna(out["cash_conversion"].iloc[0])
         notes = r11.ebit_not_positive_notes(out)

@@ -39,7 +39,7 @@ class TestEffectiveTaxRate:
         """Danone 2025: profit 1,887 (associates 92 included), tax 741; its printed subtotal before associates 2,536
         does not decide the rate."""
         r = r11.compute_ratios(row(profit_loss=1_887.0, income_tax_expense_continuing_operations=741.0,
-                                   profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc=2_536.0))
+                                   profit_loss_before_tax_before_share_of_profit_loss_of_associ_etc_x=2_536.0))
         assert r["tax_rate"].iloc[0] == pytest.approx(100 * 741.0 / 2_628.0)
 
     def test_the_discontinued_result_is_left_out(self, r11):
