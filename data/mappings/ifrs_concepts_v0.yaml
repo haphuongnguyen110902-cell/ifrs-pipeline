@@ -5119,30 +5119,37 @@ cash_flow:
     display_label: Ökning (-)/Minskning (+) av projekt- och exploateringsfastigheter
     xbrl_tags:
     - peabab:IncreaseDecreaseProjectAndDevelopmentProperties
+    - peab:IncreaseDecreaseProjectAndDevelopmentProperties
   cash_flow_before_financing:
     display_label: Kassaflöde före finansiering
     xbrl_tags:
     - peabab:CashFlowBeforeFinancing
+    - peab:CashFlowBeforeFinancing
   raised_loans:
     display_label: Upptagna lån
     xbrl_tags:
     - peabab:RaisedLoans
+    - peab:RaisedLoans
   loan_amortization:
     display_label: Amortering av lån
     xbrl_tags:
     - peabab:LoanAmortization
+    - peab:LoanAmortization
   raised_loans_swedish_tenant_owner_associations:
     display_label: Upptagna lån svenska bostadsrättsföreningar
     xbrl_tags:
     - peabab:RaisedLoansSwedishTenantOwnerAssociations
+    - peab:RaisedLoansSwedishTenantOwnerAssociations
   loan_amortization_swedish_tenant_owner_associations:
     display_label: Amortering av lån svenska bostadsrättsföreningar
     xbrl_tags:
     - peabab:LoanAmortizationSwedishTenantOwnerAssociations
+    - peab:LoanAmortizationSwedishTenantOwnerAssociations
   changeinissuedcommercialpapers:
     display_label: Förändring av emitterade företagscertifikat
     xbrl_tags:
     - peabab:Changeinissuedcommercialpapers
+    - peab:ChangeInIssuedCommercialPapers
   change_in_issued_commercial_papers:
     display_label: Förändring av emitterade företagscertifikat
     xbrl_tags:

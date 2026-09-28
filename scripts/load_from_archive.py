@@ -57,6 +57,22 @@ def periods_to_load(filings: list, loaded_ends: list, min_year: int, limit=None)
     return [(p, by_period[p]) for p in dh.periods_still_needed(eligible, loaded_ends, limit)]
 
 
+def unwrap_report_package(path: Path) -> Path:
+    """The report package inside a download. XBRL Report Packages 1.0 name an inline package `.xbri` (itself a zip);
+    Solvay publishes its FY2025 ESEF report as a zip holding that one `.xbri` and nothing else. Such a download is
+    unwrapped next to itself; any other download is returned as it is (and checked as a package afterwards)."""
+    import zipfile
+    with zipfile.ZipFile(path) as z:
+        names = [n for n in z.namelist() if not n.endswith("/")]
+        if len(names) != 1 or not names[0].lower().endswith(".xbri"):
+            return path
+        inner = path.with_name(path.stem + "_package.zip")
+        with z.open(names[0]) as src, open(inner, "wb") as dst:
+            shutil.copyfileobj(src, dst)
+    print(f"  the download holds one report package ({names[0]}): using it")
+    return inner
+
+
 def reconcile_summary(output: str) -> list:
     """The per-statement lines of reconcile_reports.py's output."""
     return [line.strip() for line in output.splitlines() if "lines=" in line]
@@ -135,7 +151,8 @@ def main():
             if bdif.download(url, out, args.min_free_mb, dh.has_room) is None:
                 results.append((name, "-", "download refused"))
             else:
-                results.append((name, "-", load_package(key, name, lei, out, url, dh.loaded_period_ends(engine, name))))
+                results.append((name, "-", load_package(key, name, lei, unwrap_report_package(out), url,
+                                                         dh.loaded_period_ends(engine, name))))
     for key in ([] if args.url else args.only):
         lei, name = dh.COMPANIES[key]
         print(f"\n{'=' * 70}\n{name} ({key}, {lei})\n{'=' * 70}")
@@ -159,7 +176,8 @@ def main():
                 if not dh.download_filing(filing, out, args.min_free_mb):
                     results.append((name, label.isoformat(), "download refused"))
                     continue
-                results.append((name, label.isoformat(), load_package(key, name, lei, out, url, loaded_ends)))
+                results.append((name, label.isoformat(), load_package(key, name, lei, unwrap_report_package(out), url,
+                                                                      loaded_ends)))
     print(f"\n{'=' * 70}\nSUMMARY\n{'=' * 70}")
     for name, label, status in results:
         print(f"  {name:28s} {label:12s} {status}")

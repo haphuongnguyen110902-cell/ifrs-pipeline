@@ -56,3 +56,28 @@ class TestRecordedSource:
     def test_without_record_as_the_real_path(self, ld):
         p = Path("data/raw/historical/carrefour_2024-12-31.zip")
         assert ld.recorded_source(p, None) == str(p)
+
+
+class TestReportPackageInAZip:
+    """Solvay publishes its FY2025 ESEF report as a zip holding one XBRL Report Packages 1.0 file (`.xbri`, itself a
+    zip); the package check looked for a reports/ folder in the outer zip and refused it."""
+
+    @staticmethod
+    def _package(path, report="549300MMVL80RTBP3O28-2025-12-31-1-en/reports/report.xhtml"):
+        import zipfile
+        with zipfile.ZipFile(path, "w") as z:
+            z.writestr(report, "<html/>")
+        return path
+
+    def test_the_one_xbri_inside_is_used(self, lfa, tmp_path):
+        import zipfile
+        inner = self._package(tmp_path / "solvay.xbri")
+        outer = tmp_path / "solvay_download.zip"
+        with zipfile.ZipFile(outer, "w") as z:
+            z.write(inner, "549300MMVL80RTBP3O28-2025-12-31-1-en.xbri")
+        got = lfa.unwrap_report_package(outer)
+        assert got != outer and any("/reports/" in n for n in zipfile.ZipFile(got).namelist())
+
+    def test_an_ordinary_package_is_left_alone(self, lfa, tmp_path):
+        pkg = self._package(tmp_path / "skf_download.zip")
+        assert lfa.unwrap_report_package(pkg) == pkg

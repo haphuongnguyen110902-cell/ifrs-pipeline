@@ -547,3 +547,49 @@ overrides:
     evidence: >-
       Conto economico consolidato: "240. Costi operativi" (374.365) (2025) / (373.962) (2024), tagged
       finecobank:CostiOperativi. Read 2026-09-28 from the report's own row.
+
+  # Peab - FY2025 annual report (Swedish ESEF report peab-2025-12-31-1-sv, SEK millions, 2025 then 2024). From FY2025 Peab's
+  # extension prefix is "peab:" instead of "peabab:", same element names; the 2024 comparatives equal the FY2024 report.
+  - company: "Peab"
+    tag: "peab:InterestBearingLongTermLiabilities"
+    concept: longterm_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities
+    printed_label: "Räntebärande långfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande långfristiga skulder" (notes 27, 32, 33) 5 853 / 6 094, tagged
+      peab:InterestBearingLongTermLiabilities; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingLongTermLiabilities). Read 2026-09-28 from the
+      report's own row.
+
+  - company: "Peab"
+    tag: "peab:InterestBearingLongTermLiabilitiesProjectFinancing"
+    concept: noncurrent_portion_of_other_noncurrent_borrowings
+    statement: balance_sheet
+    label: Non-current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande långfristiga skulder, projektfinansiering"
+    evidence: >-
+      Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande långfristiga skulder, projektfinansiering" (notes 27, 32, 33) 5 / 53, tagged
+      peab:InterestBearingLongTermLiabilitiesProjectFinancing; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingLongTermLiabilitiesProjectFinancing). Read 2026-09-28 from the
+      report's own row.
+
+  - company: "Peab"
+    tag: "peab:InterestBearingCurrentLiabilties"
+    concept: shortterm_borrowings
+    statement: balance_sheet
+    label: Current interest-bearing liabilities
+    printed_label: "Räntebärande kortfristiga skulder"
+    evidence: >-
+      Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande kortfristiga skulder" (notes 27, 32, 33) 3 419 / 5 368, tagged
+      peab:InterestBearingCurrentLiabilties; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingCurrentLiabilties). Read 2026-09-28 from the
+      report's own row.
+
+  - company: "Peab"
+    tag: "peab:InterestBearingShortTermLiabilitiesProjectFinancing"
+    concept: other_current_borrowings_and_current_portion_of_other_noncur_etc
+    statement: balance_sheet
+    label: Current interest-bearing liabilities, project financing
+    printed_label: "Räntebärande kortfristiga skulder, projektfinansiering"
+    evidence: >-
+      Koncernens balansräkning 2025-12-31 / 2024-12-31: "Räntebärande kortfristiga skulder, projektfinansiering" (notes 27, 32, 33) 2 360 / 2 859, tagged
+      peab:InterestBearingShortTermLiabilitiesProjectFinancing; the 2024 figure equals the FY2024 report's (tag peabab:InterestBearingShortTermLiabilitiesProjectFinancing). Read 2026-09-28 from the
+      report's own row.

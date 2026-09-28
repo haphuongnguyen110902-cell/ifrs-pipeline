@@ -139,13 +139,21 @@ def main(argv=None):
     if not args.apply:
         print(f"\nDRY RUN: {len(all_links)} link(s) proposed. Pass --apply to write them.")
         return 0
-    data = yaml.safe_load(MAPPING.read_text(encoding="utf-8"))
-    where = {name: st for st, cs in data.items() for name in cs}
+    # edited as text: a yaml.dump rewrite dropped every comment in the mapping (the reviewed evidence notes)
+    text = MAPPING.read_bytes().decode("utf-8")
+    nl = "\r\n" if "\r\n" in text else "\n"
+    lines = text.split(nl)
     for link in all_links:
-        tags = data[where[link["concept"]]][link["concept"]]["xbrl_tags"]
-        if link["tag"] not in tags:
-            tags.append(link["tag"])
-    MAPPING.write_text(yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False), encoding="utf-8")
+        start = lines.index(f"  {link['concept']}:")
+        end = next((i for i in range(start + 1, len(lines))
+                    if lines[i] and not lines[i].startswith("    ") and not lines[i].lstrip().startswith("#")), len(lines))
+        if f"    - {link['tag']}" in lines[start:end]:
+            continue
+        last = max(i for i in range(start, end) if lines[i].startswith("    - ") or lines[i].strip() == "xbrl_tags: []")
+        if lines[last].strip() == "xbrl_tags: []":
+            lines[last] = "    xbrl_tags:"
+        lines.insert(last + 1, f"    - {link['tag']}")
+    MAPPING.write_bytes(nl.join(lines).encode("utf-8"))
     old = (yaml.safe_load(EVIDENCE.read_text(encoding="utf-8")) or {}).get("links", []) if EVIDENCE.exists() else []
     EVIDENCE.write_text(yaml.dump({"_about": "Renamed extension tags linked to their predecessor's concept by "
                                              "value evidence (scripts/34_link_renamed_tags.py).",
