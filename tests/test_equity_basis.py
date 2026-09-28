@@ -49,9 +49,20 @@ class TestBasisRecorded:
         r = r11.compute_ratios(wide(equity=4_005.8))
         assert r["_equity_basis"].iloc[0] == "" and pd.isna(r["roe"].iloc[0])
 
-    def test_a_nonzero_nci_is_never_substituted(self, r11):
+    def test_a_printed_nonzero_nci_is_subtracted_never_ignored(self, r11):
+        """IAS 1.54(q)-(r): the owners' share is total equity less the printed non-controlling interests (Syensqo 2024:
+        7,482 - 50). Total equity itself is never passed off as the owners' share."""
         r = r11.compute_ratios(wide(equity=4_005.8, noncontrolling_interests=12.0))
-        assert r["_equity_basis"].iloc[0] == "" and pd.isna(r["roe"].iloc[0])
+        assert r["_equity_basis"].iloc[0] == "equity less non-controlling interests"
+        assert r["roe"].iloc[0] == pytest.approx(100 * 60.0 / (4_005.8 - 12.0))
+
+    def test_the_dashboard_caption_is_for_the_proven_zero_only(self):
+        tree = ast.parse((REPO / "webapp" / "app.py").read_text(encoding="utf-8"))
+        fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "equity_basis_caption")
+        ns = {"pd": pd}
+        exec(compile(ast.Module(body=[fn], type_ignores=[]), "app.py", "exec"), ns)
+        frame = pd.DataFrame({"ratio_name": ["roe"], "source_concepts": [["equity less non-controlling interests"]]})
+        assert ns["equity_basis_caption"](frame) is None
 
     def test_rows_are_independent(self, r11):
         w = pd.DataFrame([

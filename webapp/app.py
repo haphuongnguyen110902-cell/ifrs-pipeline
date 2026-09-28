@@ -312,7 +312,8 @@ def equity_basis_caption(ratios: pd.DataFrame):
     if "source_concepts" not in ratios.columns:
         return None
     hits = ratios[ratios["ratio_name"].isin(["roic", "roe"])].dropna(subset=["source_concepts"])
-    flagged = [r for r in hits["source_concepts"] if any("non-controlling" in c for c in r)]
+    # only the proven-zero basis: "equity less non-controlling interests" is two printed lines, nothing to caption
+    flagged = [r for r in hits["source_concepts"] if any(c == "equity (no non-controlling interests)" for c in r)]
     if not flagged:
         return None
     return ("ROIC and ROE here use total equity as equity attributable to owners of the parent: this company's own "

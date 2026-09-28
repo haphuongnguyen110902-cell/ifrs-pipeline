@@ -544,14 +544,35 @@ def continuing_profit_to_owners(wide: pd.DataFrame, net: pd.Series):
     note, which ESEF does not tag line by line): not available, never assumed. No discontinued line at all means
     none: IFRS 5.33(a) requires it on the face of the income statement, and ESEF tags every figure there.
     `unsplit` marks the rows left blank for that reason, so the stored ratio can say why (net_margin_notes)."""
+    disc_owners, disc_total = _discontinued_to_owners(wide)
+    unknown_split = disc_owners.isna() & disc_total.notna() & disc_total.ne(0)
+    derived = (net - disc_owners.fillna(0)).mask(unknown_split)
+    # the owners' continuing result as the company prints it (Solvay), when it does - a printed line before a derived one
+    continuing = get_col(wide, CONTINUING_TO_OWNERS).combine_first(derived)
+    basis = [NET_BASIS_CONTINUING if pd.notna(v) and v != 0 else "" for v in disc_owners]
+    return continuing, basis, unknown_split & continuing.isna() & net.notna()
+
+
+CONTINUING_TO_OWNERS = "income_from_continuing_operations_attributable_to_owners__etc"
+EQUITY_BASIS_ZERO_NCI = "equity (no non-controlling interests)"
+EQUITY_BASIS_LESS_NCI = "equity less non-controlling interests"
+
+
+def _discontinued_to_owners(wide: pd.DataFrame):
+    """(owners' share of the discontinued result - printed, or total less the non-controlling share -, total)."""
     disc_owners = get_best(wide, *DISCONTINUED_TO_OWNERS)
     disc_total = get_col(wide, "profit_loss_from_discontinued_operations")
     disc_nci = get_col(wide, "profit_loss_from_discontinued_operations_attributable_to__etc")
-    disc_owners = disc_owners.combine_first(disc_total - disc_nci)
-    unknown_split = disc_owners.isna() & disc_total.notna() & disc_total.ne(0)
-    continuing = (net - disc_owners.fillna(0)).mask(unknown_split)
-    basis = [NET_BASIS_CONTINUING if pd.notna(v) and v != 0 else "" for v in disc_owners]
-    return continuing, basis, unknown_split & net.notna()
+    return disc_owners.combine_first(disc_total - disc_nci), disc_total
+
+
+def owners_profit(wide: pd.DataFrame, net: pd.Series) -> pd.Series:
+    """Profit attributable to owners of the parent: the printed line, else the printed continuing and discontinued
+    owners' shares added up (IFRS 5.33(d); IAS 1.81B). Solvay tags only the two shares. No discontinued line at all
+    means none (IFRS 5.33(a)); a discontinued total whose owners' share is unknown leaves it blank."""
+    disc_owners, disc_total = _discontinued_to_owners(wide)
+    no_discontinued = disc_owners.isna() & (disc_total.isna() | disc_total.eq(0))
+    return net.combine_first(get_col(wide, CONTINUING_TO_OWNERS) + disc_owners.mask(no_discontinued, 0))
 
 
 def net_margin_notes(ratios: pd.DataFrame) -> dict:
@@ -740,7 +761,7 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     r["_by_nature"] = rev.notna() & gp_tag.isna() & cogs_tag.isna()
 
     # --- net margin ---
-    net = get_col(wide, "profit_loss_attributable_to_owners_of_parent")
+    net = owners_profit(wide, get_col(wide, "profit_loss_attributable_to_owners_of_parent"))
     net_continuing, r["_net_basis"], r["_net_unsplit"] = continuing_profit_to_owners(wide, net)
     r["net_margin"] = safe_div(net_continuing, rev, scale=100)
 
@@ -813,9 +834,16 @@ def _compute_ratios(wide: pd.DataFrame) -> pd.DataFrame:
     # owners of the parent - a plain accounting identity, not a per-company guess (see reviewed_note_figures.yaml's
     # asm_no_noncontrolling_interests_* entries for what "proven" means here). _equity_basis is the audit trail
     # (ratio.source_concepts, like _payables_basis below), so the dashboard can caption it.
+    # IAS 1.54(q)-(r): non-controlling interests are presented within equity, so where both are printed and the owners'
+    # subtotal is not, the owners' share is total equity less them - an identity of two printed lines (Syensqo and
+    # Solvay print "Total equity" and "Non-controlling interests" only). The proven-zero case above is the same
+    # identity with a zero.
+    total_equity = get_col(wide, "equity")
     via_proven_zero_nci = equity_parent.isna() & (nci_raw == 0)
-    r["_equity_basis"] = ["equity (no non-controlling interests)" if v else "" for v in via_proven_zero_nci]
-    equity_parent = equity_parent.fillna(get_col(wide, "equity").where(nci_raw == 0))
+    via_printed_nci = equity_parent.isna() & total_equity.notna() & nci_raw.notna() & (nci_raw != 0)
+    r["_equity_basis"] = [EQUITY_BASIS_ZERO_NCI if z else EQUITY_BASIS_LESS_NCI if d else ""
+                          for z, d in zip(via_proven_zero_nci, via_printed_nci)]
+    equity_parent = equity_parent.fillna(total_equity - nci_raw)
     nci = nci_raw.fillna(0)
     invested_capital = equity_parent + nci + r["_net_debt"]
     nopat = ebit * (1 - r["tax_rate"].clip(0, 40) / 100)  # tax_rate is in %, divide back
