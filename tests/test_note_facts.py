@@ -200,7 +200,7 @@ class TestSpecFile:
         mapping = yaml.safe_load((ROOT / "data" / "mappings" / "ifrs_concepts_v0.yaml").read_text(encoding="utf-8"))
         known = {(n, st) for st, cs in mapping.items() for n in cs}
         specs = m33.load_specs()
-        assert {s["company"] for s in specs} == {"LVMH", "L'Oreal", "Essity", "ASM International", "Melexis"}
+        assert {s["company"] for s in specs} == {"LVMH", "L'Oreal", "Essity", "ASM International", "Melexis", "Dometic Group"}
         for s in specs:
             assert (s["concept"], s["statement"]) in known, s["id"]
             assert s["checks"] and len(s["evidence"]) > 40 and s["perimeter"]

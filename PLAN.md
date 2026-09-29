@@ -2351,3 +2351,38 @@ STMicroelectronics for a non-positive terminal cash flow; not built: Cofinimmo, 
 inventory line, Renault for no net debt). Golden baselines regenerated after the review.
 
 **Trace after the changes** (`35_trace_figures.py`, all 51 companies): 10,366 inputs - 10,119 equal to a line printed on a primary statement, 216 to a figure printed in the notes, 31 reviewed note figures; 0 different, 0 not found, 0 without a package. The live forensics test now saves exactly what the pipeline saves (`pipeline_flags`, shared): it used to leave 5 flags on banks that the pipeline suppresses.
+
+### 2026-09-29 (Phase 5 of 5): coverage and alignment guards
+
+What the plan agreed on 2026-09-23 set out - every registry company in the app, each on its latest annual report, every
+figure from its printed report - is now checked by tests, so it cannot silently stop being true.
+
+**DB-free (CI, `tests/test_registry_alignment.py`):** every company named in `company_tag_overrides.yaml` and
+`reviewed_note_figures.yaml` exists in the registry (the loader matches (company, tag) exactly, so a drifted name makes a
+correction silently not apply); every registry entry has a key and an LEI; every financial company states its reason; no
+string the dashboard can display names a registry company (docstrings excepted).
+
+**Live (`tests/test_coverage_live.py`, skipped without a database):** the `company` table holds exactly the registry
+(names and LEIs); every company has facts and ratios; each company's latest ratio year is its newest report's year; the
+companies behind on FY2025 are exactly the reasoned list (Syensqo, Melexis, Sandvik, Dometic, JM, Handelsbanken - a
+company that catches up or falls behind fails the test); the ratio table holds only what the engine produces; no analytics
+table stores 'NaN'; one current valuation and DCF per company; every reviewed override matches a stored fact; every
+reviewed note figure is stored.
+
+**What the guards found on their first run:**
+- LVMH, EssilorLuxottica, Shell and Schneider Electric had no LEI in the `company` table (the registry had them). Each
+  LEI verified on GLEIF (legal name, ACTIVE, ISSUED) and filled where empty.
+- The landing page's leverage footnote, shown for every company, quoted LVMH's 2024 net debt (and a test pinned it) - the
+  generic-wording rule of CLAUDE.md. Now generic; the guard above keeps it so.
+
+**Also fixed:**
+- A forensics "baseline distorted" detail cited a THIN_DENOMINATOR flag that fires only when a ratio is also extreme,
+  so it could point at nothing (Alstom 2026 cited a 2025 flag that did not exist); it now states the margin itself.
+- Dometic's ROIC and ROE were blank (no owners' subtotal, no NCI line). A reviewed stated-zero figure, checked against
+  the printed rows - the equity section is headed "attributable to the parent company's shareholders" and its four lines
+  add up to "SUMMA EGET KAPITAL" (25 465 / 25 992) - fills 2023-2024 (ROE 5.1% / -9.0%). The check was proven able to
+  refuse (a pattern for a row that exists is refused).
+
+**Deliberately not done:** the methodology decisions listed in Phase 4 (DCF growth and beta window, the payables basis,
+the Italian banks' loan line, Renault's net-debt perimeter) are the user's to take; the unloaded FY2025 packages wait for
+filings.xbrl.org or a manual download (`load_from_archive.py --only ... --min-year 2025` loads them when they appear).
