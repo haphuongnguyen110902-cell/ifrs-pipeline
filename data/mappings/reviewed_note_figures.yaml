@@ -386,3 +386,26 @@ figures:
       Belangen zonder overheersende zeggenschap — / —" (2024 / 2023, EUR). Balance sheet: "Belangen zonder overheersende
       zeggenschap" 410 / 410. The income statement prints the profit ("Winst van het boekjaar" 171.4M / 209.5M) with no
       split. Read 2026-09-28.
+  # ------------------------------------------------------------------------------------------------------- Dometic Group
+  # Dometic prints one equity section headed "equity attributable to the parent company's shareholders" whose lines add up
+  # exactly to "SUMMA EGET KAPITAL" - no non-controlling-interest row. Owners' equity is then total equity (the ASM case).
+  - id: dometic_no_noncontrolling_interests_fy2024
+    kind: stated_zero
+    company: "Dometic Group"
+    report: dometic_group.zip
+    years: [2024, 2023]
+    period: instant
+    currency: SEK
+    concept: noncontrolling_interests
+    statement: balance_sheet
+    label: Non-controlling Interests
+    perimeter: "no non-controlling interests: the equity section is headed 'attributable to the parent company's shareholders' and its lines add up to total equity"
+    checks:
+      - no_row_matching: {from: '^EGET KAPITAL$', to: '^SUMMA EGET KAPITAL$', pattern: 'bestämmande inflytande|minoritet'}
+    evidence: >-
+      FY2024 report (Swedish ESEF report dome-2024-12-31-0-sv.xhtml, SEK millions), koncernens balansräkning: under "EGET
+      KAPITAL" the heading "Eget kapital hänförligt till moderbolagets aktieägare", then Aktiekapital 1 / 1, Övrigt
+      tillskjutet kapital 14 777 / 14 777, Övriga reserver 6 598 / 4 238, Balanserade vinstmedel 4 089 / 6 976, and
+      "SUMMA EGET KAPITAL" 25 465 / 25 992 (2024 / 2023) - the four lines add up to the total in both years; no row for
+      "innehav utan bestämmande inflytande" (the phrase appears only in the consolidation policy, note 2.2). Read
+      2026-09-29 from the report's own rows.

@@ -71,7 +71,16 @@ class TestFootnote:
     def test_it_explains_both_reasons_in_plain_words(self, app):
         note = app["LEVERAGE_FOOTNOTE"]
         assert note.startswith("* n/a*") and "EBITDA" in note and "EBIT" in note
-        assert "lease" in note and "LVMH" in note and ".py" not in note
+        assert "lease" in note and ".py" not in note
+
+    def test_it_names_no_company(self, app):
+        """It is shown for every company: a figure of one company in it (it once quoted LVMH's 2024 net debt) would be
+        read as the visitor's company's, and goes stale with the next report (CLAUDE.md: generic wording stays
+        generic; a company's own finding belongs in its override's dashboard_note)."""
+        import yaml
+        names = {e["name"] for e in yaml.safe_load((APP.parent.parent / "data" / "companies.yaml").read_text(encoding="utf-8"))
+                 ["companies"].values()}
+        assert [n for n in names if n in app["LEVERAGE_FOOTNOTE"]] == []
 
     def test_the_marker_and_the_footnote_agree(self, app):
         assert app["NOT_SHOWN"] == "n/a*" and app["LEVERAGE_FOOTNOTE"].startswith("* " + app["NOT_SHOWN"])

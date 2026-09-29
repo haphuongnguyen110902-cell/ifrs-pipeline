@@ -406,3 +406,20 @@ class TestSaveToDbScope:
         forensics.save_to_db(engine, pd.DataFrame([_flag("Alpha")]), evaluated_companies=["Ghost"])
         assert self.deleted_ids(engine) == [[1]]
         assert "no company_id found for 'Ghost'" in capsys.readouterr().out
+
+
+def test_a_distorted_baseline_states_the_margin_not_a_flag_that_may_not_exist(forensics):
+    """Alstom 2026: the cash-conversion drop said 2025 had a thin operating profit '(see THIN_DENOMINATOR flag)', but that
+    flag fires only when a ratio is also extreme - 2025's 209.9% was not - so it pointed at nothing. It now states the
+    margin itself."""
+    wide = pd.DataFrame([
+        {"company": "X", "year": 2025, "operating_margin": 2.0, "cash_conversion": 209.9,
+         "net_debt_ebitda_proxy": 1.0, "tax_rate": 25.0},
+        {"company": "X", "year": 2026, "operating_margin": 8.0, "cash_conversion": 163.8,
+         "net_debt_ebitda_proxy": 1.0, "tax_rate": 25.0},
+    ])
+    flags = forensics.compute_flags(wide)
+    drop = flags[flags["flag_id"] == "CASH_CONVERSION_DROP"].iloc[0]
+    assert "2025 had a thin Operating Profit (2.0% margin)" in drop["detail"]
+    assert "THIN_DENOMINATOR" not in drop["detail"]
+    assert flags[flags["flag_id"] == "THIN_DENOMINATOR"].empty

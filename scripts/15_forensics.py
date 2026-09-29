@@ -314,11 +314,14 @@ def compute_flags(wide: pd.DataFrame, off_calendar_fye: dict = None) -> pd.DataF
                                             and abs(prior_op_margin.iloc[0]) < THIN_MARGIN_THRESHOLD)
                         if thin_prior_year or thin_this_year:
                             distorted_year = year - 1 if thin_prior_year else year
+                            thin_margin = prior_op_margin.iloc[0] if thin_prior_year else op_margin
+                            # the margin itself, not "see THIN_DENOMINATOR": that flag fires only when a ratio is also
+                            # extreme, so the reference could point at nothing (Alstom 2026 cited a 2025 flag that
+                            # did not exist)
                             flag("CASH_CONVERSION_DROP", delta_cc,
                                  f"Cash conversion: {prior_cc.iloc[0]:.1f}% → {cc:.1f}% (Δ{delta_cc:.1f}pp) "
                                  f"— baseline distorted: {distorted_year} had a thin Operating Profit "
-                                 f"denominator (see THIN_DENOMINATOR flag), so this delta overstates "
-                                 f"real deterioration",
+                                 f"({thin_margin:.1f}% margin), so this delta overstates real deterioration",
                                  severity_override="low")
                         else:
                             flag("CASH_CONVERSION_DROP", delta_cc,
@@ -337,8 +340,8 @@ def compute_flags(wide: pd.DataFrame, off_calendar_fye: dict = None) -> pd.DataF
                     if thin_this_year:
                         flag("HIGH_LEVERAGE", leverage,
                              f"Net Debt / Op. Profit: {leverage:.1f}x — baseline distorted: "
-                             f"Operating Profit was thin this year ({op_margin:.1f}% margin, "
-                             f"see THIN_DENOMINATOR flag), so this multiple overstates real leverage",
+                             f"Operating Profit was thin this year ({op_margin:.1f}% margin), "
+                             f"so this multiple overstates real leverage",
                              severity_override="low")
                     else:
                         flag("HIGH_LEVERAGE", leverage, f"Net Debt / Op. Profit: {leverage:.1f}x")

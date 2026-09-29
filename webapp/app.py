@@ -218,8 +218,8 @@ LEVERAGE_FOOTNOTE = (
     "cannot be derived. A multiple built on EBIT but labelled EBITDA would overstate leverage, so it is not "
     "shown; net debt and EBIT are still shown, and \"Net Debt vs Op. Profit\" on the Ratios tab is on an "
     "EBIT basis. Net debt here includes IFRS 16 lease liabilities, whereas many companies' own headline "
-    "\"net financial debt\" excludes them (LVMH 2024: about €9.2bn as reported, about €31bn here, of which "
-    "€17.8bn is leases), so figures can differ from a company's press release."
+    "\"net financial debt\" excludes them, so for a company with large leases (stores, offices, fleets) it can be "
+    "well above the figure in its press release; the lease lines are on its balance sheet."
 )
 
 

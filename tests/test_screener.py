@@ -76,8 +76,6 @@ EXPECTED_BLANKS = {
     # a REIT with no quote (COFB.BR has none on yfinance, so no sector from it and no EV), and no IAS 12 total tax line
     # tagged, so no NOPAT for ROIC
     "Cofinimmo": {"sector_std", "roic", "ev_ebitda"},
-    # prints no non-controlling-interest line and no owners' subtotal: owners' equity cannot be isolated
-    "Dometic Group": {"roic"},
     # no separable D&A line (JM: depreciation only; Melexis: split by asset type; Peab, RELX: none; Safran: bundled
     # with provisions) - EBITDA is the flagged fallback, so EV/EBITDA is blank, not EV/EBIT
     "JM": {"ev_ebitda"}, "Melexis": {"ev_ebitda"}, "Peab": {"ev_ebitda"}, "RELX": {"ev_ebitda"}, "Safran": {"ev_ebitda"},
